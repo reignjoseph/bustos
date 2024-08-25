@@ -3,9 +3,24 @@ import sqlite3
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
+#___________________________________
+import logging
+from logging import FileHandler
+
+
+
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
+# Configure logging
+if not app.debug:
+    file_handler = FileHandler('error.log')
+    file_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(file_handler)
+
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error(f'An error occurred: {error}')
+    return "Internal Server Error", 500
 
 app.config['UPLOAD_FOLDER'] = 'static/images/employer-uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
