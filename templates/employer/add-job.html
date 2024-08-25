@@ -1,0 +1,87 @@
+
+<div class="add-job-container mt-5" style="display: none;">
+    <h2>Post a Job Vacancy</h2>
+
+    <form class="abc" action="/post_job" method="POST" enctype="multipart/form-data">
+        <div class="container1 form-group">
+            <label for="title">Job Title</label>
+            <input type="text" class="form-control" id="title" name="title" required placeholder="Title">
+        </div>
+        <div class="container2 form-group">
+            <label for="position">Position</label>
+            <input type="text" class="form-control" id="position" name="position" required placeholder="Type of Position">
+        </div>
+        <div class="container3 form-group">
+            <label for="description">Job Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Description"></textarea>
+        </div>
+        <div class="container4 form-group">
+            <label for="image">Job Image</label>
+            <input type="file" class="form-control-file" id="image" name="image" required>
+        </div>
+        <div class="container5 form-group">
+            <label for="location">Location</label>
+            <input type="text" class="form-control" id="location" name="location" required placeholder="Enter specific address">
+        </div>
+        <!-- Modal for Google Maps picker -->
+
+        <div class="container6 form-group">
+            <label for="natureOfWork">Nature of Work</label>
+            <input type="text" class="form-control" id="natureOfWork" name="natureOfWork" required >
+        </div>
+        <div class="container7 form-group">
+            <label for="salary">Salary</label>
+            <input type="text" class="form-control" id="salary" name="salary" required placeholder="Enter salary amount">
+        </div>
+        <div class="container8 form-group">
+            <label for="jobStatus">Job Status</label>
+            <input type="text" class="form-control" id="jobStatus" name="jobStatus" required >
+        </div>
+        
+        <div class="container9 form-group">
+            <label for="company">Company</label>
+            <input type="text" class="form-control" id="company" name="company" required placeholder="Enter Company name">
+        </div>
+        <div class="container10 form-group">
+            <label for="closingDate">Closing Date and Time</label>
+            <input type="text" class="form-control" id="closingDate" name="closingDate" required placeholder="Click to set">
+        </div>
+        <button type="submit" class="btn-postjob btn btn-primary">Post Job</button>
+    </form>
+</div>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<!-- Flatpickr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<!-- Initialize Flatpickr -->
+<script>
+flatpickr("#closingDate", {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+});
+</script>
+
+<script>
+document.getElementById('image').addEventListener('change', function(event) {
+    var file = event.target.files[0]; // Get the selected file
+
+    if (file) {
+        var reader = new FileReader(); // Create a FileReader object
+
+        reader.onload = function(e) {
+            // Create an image element
+            var img = document.createElement('img');
+            img.src = e.target.result; // Set the image source to the file's data URL
+            img.style.maxWidth = '100%'; // Optional: limit the width of the preview
+            img.style.height = 'auto'; // Optional: maintain aspect ratio
+
+            // Clear previous image previews
+            var viewImageContainer = document.querySelector('.view-image');
+            viewImageContainer.innerHTML = ''; // Clear any previous content
+            viewImageContainer.appendChild(img); // Add the new image
+        };
+
+        reader.readAsDataURL(file); // Read the file as a data URL
+    }
+});
+</script>

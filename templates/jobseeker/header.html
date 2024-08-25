@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/jobseeker/header.css">
+    <link rel="stylesheet" href="/static/css/jobseeker/jobseeker.css">
+    <!-- <link rel="stylesheet" href="/static/css/jobseeker/notification.css"> -->
+    <!-- Bootstrap and custom JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/static/js/script.js" defer=""></script>
+    <title>{% block title %}Home{% endblock %}</title>
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header style="padding: 10px;">
+        <div class="container" style="max-width: -webkit-fill-available;">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <a href="/jobseeker" class="logo-box">
+                    <img src="/static/images/jobahanap.png" style="max-width: 200px;" alt="Logo">
+                </a>
+                <button class="menu-icon btn btn-primary d-md-none" onclick="toggleMenu()">☰</button>
+                <div class="boxes-container close" id="boxes-container">
+                    <a href="/jobseeker" class="box">
+                        <img class="image" src="/static/images/home.png" alt="Logo">
+                    Home</a>
+                    <a href="../notification" class="box">
+                        <img class="image" src="/static/images/notification.png" alt="Logo">
+                    Notification</a>
+                    <a href="/status" class="box">
+                        <img class="image" src="/static/images/status.png" alt="Logo">
+                    Status</a>
+                    <a href="/rate" class="box">
+                        <img class="image" src="/static/images/rating.png" alt="Logo">
+                    Rate</a>
+                    <a href="/jobseeker/profile" class="box">
+                        <img class="image" src="/static/images/profile.png" alt="Logo">
+                    Profile</a>
+                    <a href="/logout" class="box">
+                        <img class="image" src="/static/images/logout.png" alt="Logo">
+                    Log Out</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- Page specific content will go here -->
+        {% endblock %}
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer</title>
+    <link rel="stylesheet" href="/static/css/employer/header.css">
+    <link rel="stylesheet" href="/static/css/employer/add-job.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DateTimePicker CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.6/css/tempusdominus-bootstrap-4.min.css">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+
+
+</head>
+<body>
+    <div class="container_class">
+        <div class="sidebar">
+            <div>
+                <img src="/static/images/peso_logo.png" style="max-width: 200px;" alt="Logo">
+            </div>
+            <div class="profile">
+                <img src="/static/images/employer-images/avatar.png" style="max-width: 40px;" alt="Logo">
+                <p>Your Name</p>
+            </div>
+            <div class="menu-item">
+               <img src="/static/images/home.png" style="max-width: 40px;" alt="Logo">
+                <span>Home</span>
+            </div>
+            <div class="menu-item" onclick="openAddJob()">
+               <img src="/static/images/add-job.png" style="max-width: 40px;" alt="Logo">
+                <span>Add Job</span>
+            </div>
+            <div class="menu-item">
+               <img src="/static/images/notification.png" style="max-width: 40px;" alt="Logo">
+                <span>Notification</span>
+            </div>
+            <div class="menu-item">
+               <img src="/static/images/user.png" style="max-width: 40px;" alt="Logo">
+                <span>Applicant</span>
+            </div>
+            <div class="menu-item">
+                <img src="/static/images/signin.png" style="max-width: 40px;" alt="Logo">
+                <span>Logout</span>
+            </div>
+        </div>
+    
+    </div>
+    <main> 
+
+        <div class="add-job-container mt-5" style="display: none;">
+            <h2>Post a Job Vacancy</h2>
+        
+            <form class="abc" action="/post_job" method="POST" enctype="multipart/form-data">
+                <div class="container1 form-group">
+                    <label for="title">Job Title</label>
+                    <input type="text" class="form-control" id="title" name="title" required placeholder="Title">
+                </div>
+                <div class="container2 form-group">
+                    <label for="position">Position</label>
+                    <input type="text" class="form-control" id="position" name="position" required placeholder="Type of Position">
+                </div>
+                <div class="container3 form-group">
+                    <label for="description">Job Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Description"></textarea>
+                </div>
+                <div class="container4 form-group">
+                    <label for="image">Job Image</label>
+                    <input type="file" class="form-control-file" id="image" name="image" required>
+                </div>
+                <div class="container5 form-group">
+                    <label for="location">Location</label>
+                    <input type="text" class="form-control" id="location" name="location" required placeholder="Enter specific address">
+                </div>
+                <!-- Modal for Google Maps picker -->
+        
+                <div class="container6 form-group">
+                    <label for="natureOfWork">Nature of Work</label>
+                    <input type="text" class="form-control" id="natureOfWork" name="natureOfWork" required >
+                </div>
+                <div class="container7 form-group">
+                    <label for="salary">Salary</label>
+                    <input type="text" class="form-control" id="salary" name="salary" required placeholder="Enter salary amount">
+                </div>
+                <div class="container8 form-group">
+                    <label for="jobStatus">Job Status</label>
+                    <input type="text" class="form-control" id="jobStatus" name="jobStatus" >
+                </div>
+                
+                <div class="container9 form-group">
+                    <label for="company">Company</label>
+                    <input type="text" class="form-control" id="company" name="company" required placeholder="Enter Company name">
+                </div>
+                <div class="container10 form-group">
+                    <label for="closingDate">Closing Date and Time</label>
+                    <input type="text" class="form-control" id="closingDate" name="closingDate" placeholder="Click to set">
+                </div>
+                <button type="submit" class="btn-postjob btn btn-primary">Post Job</button>
+            </form>
+        </div>
+    </main>
+    <script>
+        function openAddJob() {
+            var addJobContainer = document.querySelector('.add-job-container');
+            addJobContainer.style.display = 'block';
+        }
+    </script>
+    
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <!-- Flatpickr JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+        <!-- Initialize Flatpickr -->
+        <script>
+        flatpickr("#closingDate", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+        });
+        </script>
+        
+        <script>
+        document.getElementById('image').addEventListener('change', function(event) {
+            var file = event.target.files[0]; // Get the selected file
+        
+            if (file) {
+                var reader = new FileReader(); // Create a FileReader object
+        
+                reader.onload = function(e) {
+                    // Create an image element
+                    var img = document.createElement('img');
+                    img.src = e.target.result; // Set the image source to the file's data URL
+                    img.style.maxWidth = '100%'; // Optional: limit the width of the preview
+                    img.style.height = 'auto'; // Optional: maintain aspect ratio
+        
+                    // Clear previous image previews
+                    var viewImageContainer = document.querySelector('.view-image');
+                    viewImageContainer.innerHTML = ''; // Clear any previous content
+                    viewImageContainer.appendChild(img); // Add the new image
+                };
+        
+                reader.readAsDataURL(file); // Read the file as a data URL
+            }
+        });
+        </script>
+</body>
+</html>

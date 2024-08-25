@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer</title>
+    <link rel="stylesheet" href="/static/css/employer/header.css">
+    <link rel="stylesheet" href="/static/css/employer/add-job.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DateTimePicker CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.6/css/tempusdominus-bootstrap-4.min.css">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+
+
+</head>
+<body>
+    <div class="container_class">
+        <div class="sidebar">
+            <div>
+                <img src="/static/images/peso_logo.png" style="max-width: 200px;" alt="Logo">
+            </div>
+            <div class="profile">
+                <img src="/static/images/employer-images/avatar.png" style="max-width: 40px;" alt="Logo">
+                <p>Your Name</p>
+            </div>
+            <div class="menu-item">
+               <img src="/static/images/home.png" style="max-width: 40px;" alt="Logo">
+                <span>Home</span>
+            </div>
+            <div class="menu-item" onclick="openAddJob()">
+               <img src="/static/images/add-job.png" style="max-width: 40px;" alt="Logo">
+                <span>Add Job</span>
+            </div>
+            <div class="menu-item">
+               <img src="/static/images/notification.png" style="max-width: 40px;" alt="Logo">
+                <span>Notification</span>
+            </div>
+            <div class="menu-item">
+               <img src="/static/images/user.png" style="max-width: 40px;" alt="Logo">
+                <span>Applicant</span>
+            </div>
+            <div class="menu-item">
+                <img src="/static/images/signin.png" style="max-width: 40px;" alt="Logo">
+                <span>Logout</span>
+            </div>
+        </div>
+    
+    </div>
+    <main> 
+        {% block content %}
+        <!-- Page specific content will go here -->
+        {% endblock %}
+    </main>
+    <script>
+        function openAddJob() {
+            var addJobContainer = document.querySelector('.add-job-container');
+            addJobContainer.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

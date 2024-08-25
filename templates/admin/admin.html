@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Sidebar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: repeat(12, 1fr);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .sidebar img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .sidebar .profile {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .sidebar .profile .name {
+            margin-top: 5px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .sidebar .menu-item {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        .sidebar .menu-item img {
+            margin-right: 10px;
+        }
+
+        .sidebar .menu-item span {
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div>
+            <img src="logo-company.png" alt="Company Logo">
+        </div>
+        <div class="profile">
+            <img src="logo-profile.png" alt="Profile Logo">
+            <div class="name">Admin Name</div>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Dashboard Icon">
+            <span>Dashboard</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Employers Icon">
+            <span>Employers</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Job Seekers Icon">
+            <span>Job Seekers</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Jobs Icon">
+            <span>Jobs</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Announcement Icon">
+            <span>Announcement</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Notifications Icon">
+            <span>Notifications</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Reports Icon">
+            <span>Reports</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Registration Control Icon">
+            <span>Registration Control</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Ratings Icon">
+            <span>Ratings</span>
+        </div>
+        <div class="menu-item">
+            <img src="icon.png" alt="Sign Out Icon">
+            <span>Sign Out</span>
+        </div>
+    </div>
+</body>
+</html>

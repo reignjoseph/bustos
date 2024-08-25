@@ -1,0 +1,546 @@
+body, html {
+    background: linear-gradient(to bottom, #3636fb, lightblue, white);
+    height: min-content;
+    width: -webkit-fill-available;
+    background-repeat: no-repeat;
+    background-size: 100% 170%;
+    position: relative;
+    display: block;
+}
+
+.logo-box {
+    width: auto;
+    height: auto;
+}
+
+.menu-icon {
+    font-size: 24px;
+    cursor: pointer;
+    display: none;
+}
+
+.boxes-container {
+    font-weight: normal;
+    display: flex;
+    gap: 50px;
+    opacity: 1;
+    font-size: 13px;
+    text-shadow: 0 0 black;
+}
+
+.box {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: -webkit-center;
+    color: black;
+}
+
+.image {
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
+    border: 1px solid;
+    border-radius: 30%;
+    width: 40px;
+    padding: 2px;
+    border-color: black;
+}
+
+.home {
+    border: 1px solid #000;
+    width: 50px;
+    height: 50px;
+    color: #fff;
+}
+
+.footer {
+    position: absolute;
+    width: -webkit-fill-available;
+    height: 3vw;
+    bottom: 0px;
+    left: 0;
+    background-color: #4e69ff;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    font-size: 1.5vw;
+    align-items: center;
+    flex-wrap: nowrap;
+    padding: 15px 10px 0px 0px;
+    border-radius: 15px 15px 0px 0px;
+}
+
+.footer a {
+    color: #fff;
+    text-decoration: none;
+}
+
+/* IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII */
+main {
+    grid-template-columns: repeat(2, 50%);
+    display: grid;
+    grid-template-rows: 36vw 31vw 15vw auto;
+    top: 8vw;
+    position: relative;
+}
+
+main .container1 {
+    position: relative;
+    /* border: 1px solid; */
+    grid-column: 1/span 2;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: min-content;
+    height: auto;
+}
+
+main .container1 h1 {
+    /* position: relative; */
+    /* border: 1px solid; */
+    grid-row: 1;
+    grid-column: 2;
+    height: max-content;
+    width: max-content;
+    font-weight: bold;
+    align-self: center;
+    transform: translate(0vw, -10vw);
+    font-size: 4vw;
+}
+
+main .container1 img {
+    /* position:relative; */
+    /* border:1px solid; */
+    grid-row: 1;
+    grid-column: 1;
+    /* This will cover the container with the image, cropping it if necessary */
+    /* Adjust the position if needed */
+    /* background-color: antiquewhite; */
+    display: block;
+    width: 39vw;
+    place-self: end;
+    transform: translate(4vw, -2vw);
+}
+
+main .container1 p {
+    position: relative;
+    /* border:1px solid; */
+    grid-row: 1;
+    grid-column: 2;
+    height: fit-content;
+    width: 39vw;
+    top: 14vw;
+    place-self: baseline;
+    font-size: 2vw;
+    text-align: justify;
+}
+
+main .container2 {
+    position: relative;
+    /* border: 1px solid; */
+    grid-column: 1/span 2;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 1fr;
+    height: auto;
+    /* overflow: hidden; */
+    /* background: antiquewhite; */
+}
+
+main .container2 img {
+    position: relative;
+    /* border:1px solid; */
+    grid-row: 1;
+    grid-column: 2;
+    /* This will cover the container with the image, cropping it if necessary */
+    /* Adjust the position if needed */
+    /* background-color: antiquewhite; */
+    display: block;
+    width: 25vw;
+    place-self: flex-start;
+    transform: translate(7vw, -1vw);
+    justify-self: center;
+}
+
+main .container2 p {
+    position: relative;
+    /* border:1px solid; */
+    grid-row: 1;
+    grid-column: 1/span2;
+    height: fit-content;
+    width: 60vw;
+    place-self: start;
+    font-size: 2.2vw;
+    text-align: center;
+    align-self: start;
+    transform: translate(7vw, 0px);
+}
+
+main .container3 {
+    display: grid;
+    position: relative;
+    /* border: 1px solid; */
+    grid-row: 3;
+    /* background-color: aqua; */
+    grid-column: 1/span 2;
+    grid-template-columns: 50% 50%;
+}
+
+main .container3 img {
+    position: relative;
+    grid-row: 1;
+    place-self: center;
+    transform: translate(-15vw, 3vw);
+    align-self: flex-start;
+}
+
+main .container3 p {
+    position: relative;
+    width: 76vw;
+    /* border: 1px solid; */
+    grid-row: 1;
+    transform: translate(-35vw, 0px);
+    height: min-content;
+    font-size: 2.1vw;
+    text-align: center;
+}
+
+main .container4 {
+    position: relative;
+    /* border: 1px solid; */
+    grid-column: 1/span 2;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 16.9vw 9vw 10.5vw;
+    height: auto;
+    /* background-color: antiquewhite; */
+    /* border: 1px solid; */
+}
+
+main .container4 h1 {
+    /* position: relative; */
+    /* border: 1px solid; */
+    grid-row: 1;
+    grid-column: 1/span 2;
+    height: max-content;
+    width: max-content;
+    font-weight: bold;
+    /* align-self: center; */
+    transform: translate(0vw, 0vw);
+    font-size: 3vw;
+    justify-self: center;
+}
+
+main .container4 img {
+    position: relative;
+    /* border:1px solid; */
+    grid-row: 1;
+    grid-column: 1;
+    /* This will cover the container with the image, cropping it if necessary */
+    /* Adjust the position if needed */
+    /* background-color: antiquewhite; */
+    display: block;
+    width: 4vw;
+    place-self: baseline;
+    transform: translate(4.3vw, 9vw);
+}
+
+main .container4 p {
+    position: relative;
+    /* border:1px solid; */
+    grid-row: 1;
+    grid-column: 1;
+    height: fit-content;
+    width: 39vw;
+    font-size: 2vw;
+    place-self: self-end;
+    transform: translate(-1vw, -0.9vw);
+}
+
+main .container4 .Facebook {
+    position: relative;
+    /* background-color: antiquewhite; */
+    width: 40vw;
+    height: 7vw;
+    grid-row: 2;
+    display: flex;
+    flex-direction: row;
+    align-content: flex-start;
+    align-items: flex-start;
+    width: 27vw;
+    justify-content: end;
+    font-size: 1.8vw;
+    transform: translate(2vw, -2vw);
+    align-items: center;
+}
+
+main .container4 .Facebook img {
+    position: relative;
+    transform: translate(-1.9vw, 1.5vw);
+}
+
+main .container4 .gmail {
+    position: relative;
+    grid-row: 3;
+    position: relative;
+    /* background-color: antiquewhite; */
+    width: 40vw;
+    height: 7vw;
+    display: flex;
+    display: flex;
+    flex-direction: row;
+    align-content: flex-start;
+    align-items: flex-start;
+    width: 27vw;
+    justify-content: end;
+    font-size: 1.8vw;
+    transform: translate(-1.1vw, -5vw);
+    align-items: center;
+}
+
+main .container4 .gmail img {
+    position: relative;
+    transform: translate(-1.7vw, 1vw);
+}
+a:hover {
+    color: black;
+    text-decoration: underline;
+}
+.close:not(:disabled):not(.disabled):focus, .close:not(:disabled):not(.disabled):hover {
+    opacity: 100;
+}
+
+@media (max-width: 700px) {
+
+
+
+
+    main .container4 {
+        position:relative
+    }
+
+    main .container4 h1 {
+        position: relative
+    }
+
+    main .container4 img {
+        position: relative;
+        transform: translate(4.3vw, 8.4vw);
+        align-self: baseline;
+    }
+
+    main .container4 p {
+        position: relative;
+        transform: translate(-1.1vw, 5vw);
+        align-self: baseline;
+        font-size: 2.1vw;
+    }
+
+    main .container4 .Facebook {
+        position: relative;
+    }
+
+    main .container4 .gmail {
+        position: relative;
+    }
+
+    main .container4 .Facebook img {
+        position: relative;
+    }
+
+    main .container4 .gmail img {
+        position: relative;
+    }
+
+    main .container3 {
+        position: relative;
+        /* border: 1px solid; */
+        grid-row: 3;
+    }
+
+    main .container3 img {
+        position: relative;
+        width: 7vw;
+    }
+
+    main .container3 p {
+        position: relative;
+    }
+
+    main .container1 h1 {
+        position: relative;
+        align-self: center;
+        font-size: 9vw;
+    }
+
+    main .container1 img {
+        transform: translate(1vw, -5vw);
+        position: relative;
+        width: 65vw;
+        align-self: center;
+    }
+
+    main .container1 p {
+        position: relative;
+        font-size: 3vw;
+        width: 75vw;
+        inset-block-start: auto;
+        transform: translate(0px, -8vw);
+    }
+
+    main .container2 img {
+        transform: translate(1vw, -8vw);
+        position: relative;
+        width: 30vw;
+        align-self: center;
+    }
+
+    main .container2 p {
+        position: relative;
+        font-size: 3vw;
+        width: 90vw;
+        inset-block-start: auto;
+        transform: translate(0px, -5vw);
+        align-self: center;
+    }
+
+    main .container1 {
+        /* position:relative; */
+        /* border: 1px solid; */
+        display: flex;
+        flex-wrap: wrap;
+        align-content: center;
+        /* justify-content: center; */
+        flex-direction: column;
+        /* align-items: center; */
+    }
+
+    main .container2 {
+        position: relative;
+        /* border: 1px solid; */
+        display: flex;
+        flex-direction: column;
+    }
+
+    main {
+        grid-template-columns: repeat(1, 100%);
+        display: grid;
+        grid-template-rows: 105vw 70vw 20vw;
+    }
+
+    /* _____________________________________________________________ */
+    .footer {
+        font-size: 2.5vw;
+    }
+
+    .boxes-container {
+        overflow: hidden;
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        padding: 7px;
+        right: 1.45rem;
+        top: 70px;
+        gap: 20px;
+        z-index: 1;
+    }
+
+    .box {
+        text-indent: -9999px;
+        background-color: white;
+        border-radius: 45%;
+    }
+
+    .menu-icon {
+        display: block;
+    }
+
+    @keyframes menu-open {
+        0% {
+            height: 0;
+            opacity: 0;
+        }
+
+        100% {
+            height: 300px;
+            opacity: 1;
+        }
+    }
+
+    @keyframes menu-close {
+        0% {
+            height: 300px;
+            opacity: 1;
+        }
+
+        100% {
+            height: 0;
+            opacity: 0;
+        }
+    }
+
+    .boxes-container.open {
+        display: flex;
+        animation: menu-open 0.3s ease-in-out forwards;
+        z-index: 1;
+    }
+
+    .boxes-container.close {
+        display: flex;
+        animation: menu-close 0.3s ease-in-out forwards;
+    }
+}
+
+
+
+.google {
+    width: 35vw; /* 80% of the viewport width */
+    height: 39vh; /* 60% of the viewport height */
+    /* max-width: 100%; */ /* Ensure it doesn't exceed the container's width */
+    /* max-height: 200%; */ /* Ensure it doesn't exceed the container's height */
+    transform: translate(1vw, -9vw);
+  }
+  
+  @media (max-width: 768px) {
+    .google {
+      width: 35vw; /* Slightly larger width for smaller screens */
+      height: 31vh; /* Adjust height for tablets and smaller devices */
+      transform: translate(1vw, -9vw);
+      grid-column:2;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .google {
+      width: 36vw; /* Full width for mobile devices */
+      height: 17vh; /* Smaller height for mobile devices */
+      transform: translate(1vw, -9vw);
+      grid-column:2;
+    }
+  }
+  @media (max-width: 480px) {
+    .google {
+      width: 35vw; /* Full width for mobile devices */
+      height: 16vh; /* Smaller height for mobile devices */
+      transform: translate(1vw, -9vw);
+      grid-column:2;
+    }
+  }
+  @media (max-width: 425px) {
+    .google {
+      width: 35vw; /* Full width for mobile devices */
+      height: 13vh; /* Smaller height for mobile devices */
+      transform: translate(1vw, -9vw);
+      grid-column:2;
+    }
+  }
+  @media (max-width: 350px) {
+    .google {
+      width: 35vw; /* Full width for mobile devices */
+      height: 13vh; /* Smaller height for mobile devices */
+      transform: translate(1vw, -9vw);
+      grid-column:2;
+    }
+  }
