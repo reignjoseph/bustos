@@ -1,0 +1,126 @@
+
+    <!-- Profile Modal Background -->
+    <div id="modal-profile" class="modal-profile fixed inset-0 bg-gray-800 bg-opacity-50 justify-center items-center">
+        <!-- Profile Modal Container -->
+        
+        <div class="profile-frame1 bg-white p-8 rounded-lg shadow-lg w-full max-w-md mx-auto relative grid grid-cols-2 grid-rows-auto gap-4">
+            <!-- Close Button -->
+            <button id="close-profile-btn" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" style="transform: translate(-5px, 5px);">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+
+<!-- Toggle Buttons -->
+<div class="button_bar flex justify-center mb-4">
+    <button type="button" onclick="showPersonalInfo()" class=" button1_profile bg-gray-300 px-4 py-2 rounded rounded ml-2">Personal Information</button>
+    <button type="button" onclick="showPassword()" class="button2_profile bg-gray-300 px-4 py-2 rounded ml-2">Change Password</button>
+</div>
+
+<!-- Container for Profile Picture and Forms -->
+<div >
+    <form id="personal-info-form" action="/update_profile" method="post" enctype="multipart/form-data" class="formcontainer">
+        <div class="profile-picture-container ">
+            <!-- Profile Picture Circle -->
+            <img id="profile-picture" class="w-24 h-24 rounded-full object-cover"
+                 src="{{ url_for('static', filename=user_data[6]) }}"
+                        alt="Profile Picture">
+
+            <!-- Camera Icon -->
+            <label for="profile-picture-input" class="camera-icon absolute">
+                <img src="/static/images/camera.png" alt="Camera Icon" class="w-6 h-6 text-gray-600">
+                <input type="file" id="profile-picture-input" name="profile_picture" class="hidden">
+            </label>
+        </div>
+
+        <!-- Profile Information -->
+                <textarea id="bio" name="bio" class="profile_bio w-full h-24 p-2 border border-gray-300 rounded resize-none"
+                          placeholder="Write your bio here (up to 30 words)" maxlength="50" spellcheck="false">{{user_data[10]}}</textarea>
+
+                 <div class="PIcontainer mt-4">
+                    <h6 class="email">Email:</h6>
+                    <input type="email" id="email" name="email" class="profile_email w-full p-2 border border-gray-300 rounded" spellcheck="false"
+                           placeholder="Email" value="{{user_data[1]}}" disabled>
+                    <h1 class="phone">Phone:</h1>
+                    <input type="text" id="phone" name="phone" class="profile_phone w-full p-2 border border-gray-300 rounded"
+                           placeholder="Phone" value="{{ user_data[5] }}" maxlength="11" minlength="11"
+                           pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+                    <textarea class="address resize-none mt-4" type="text" id="address" name="address"
+                              placeholder="Address" spellcheck="false" maxlength="80">{{user_data[11]}}</textarea>
+                </div>
+
+                <button type="submit" class="button-profile bg-blue-500 text-white px-4 py-2 rounded mt-4">Update Profile</button>
+
+ 
+    </form>
+
+    <!-- Form for Changing Password -->
+    <form id="password-form" action="/change_password" method="post" class="password_container"style="display: none;">
+        <div class="col-span-2 flex flex-col items-center justify-center">
+            <div class="password-update mt-4">
+                <h3 class="text-xl font-bold mb-4">Change Password</h3>
+
+                <label for="old_password" class="block mb-2">Old Password:</label>
+                <input type="password" id="old_password" name="old_password" class="w-full p-2 border border-gray-300 rounded mb-4"
+                       placeholder="Old Password" required autocomplete="current-password">
+
+                <label for="new_password" class="block mb-2">New Password:</label>
+                <input type="password" id="new_password" name="new_password" class="w-full p-2 border border-gray-300 rounded mb-4"
+                       placeholder="New Password" required autocomplete="new-password">
+
+                <label for="confirm_password" class="block mb-2">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="w-full p-2 border border-gray-300 rounded mb-4"
+                       placeholder="Confirm New Password" required autocomplete="new-password">
+
+                <button type="submit" class="button-profile bg-blue-500 text-white px-4 py-2 rounded">Change Password</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+
+
+
+
+
+
+        </div>
+    </div>
+
+<script>
+    function openProfile() {
+        document.getElementById('modal-profile').classList.add('active');
+        document.body.classList.add('hidden-scroll');
+    }
+
+    document.getElementById('close-profile-btn').addEventListener('click', () => {
+        document.getElementById('modal-profile').classList.remove('active');
+        document.body.classList.remove('hidden-scroll');
+    });
+
+    document.getElementById('profile-picture-input').addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('profile-picture').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+
+
+    function showPersonalInfo() {
+    document.getElementById('personal-info-form').style.display = 'grid';
+    document.getElementById('password-form').style.display = 'none';
+}
+
+function showPassword() {
+    document.getElementById('personal-info-form').style.display = 'none';
+    document.getElementById('password-form').style.display = 'grid';
+}
+</script>

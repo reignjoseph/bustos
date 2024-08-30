@@ -13,7 +13,7 @@
     max-width: none;
 }
 
-.location-image{position: relative; width: 20px; transform: translate(-3px, -3px);}
+.location-image{cursor: pointer; display:inline;position: relative; width: 20px; transform: translate(-3px, -3px);}
 /* IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII */
 .image-container {
     position: relative;
@@ -54,9 +54,11 @@
 }
 .modal .close {
     color: #aaa;
-    float: right;
-    font-size: 28px;
+    /* float: left; */
+    font-size: 45px;
     font-weight: bold;
+    border: none;
+    outline: none;
 }
 .modal .close:hover,
 .modal .close:focus {
@@ -65,6 +67,25 @@
     cursor: pointer;
 }
 .modal-dialog{max-width: min-content;}
-.modal-header{width: -webkit-fill-available;}
+.modal-header{width: -webkit-fill-available;border: none;padding: 0px;}
 .modal-body{width: -webkit-fill-available;}
 .modal-backdrop{height: auto}
+
+
+.modal-fulldetail .modal-dialog {
+    max-width: 80%;
+    margin: 30px auto;
+}
+.modal-fulldetail .frame-detail-fulldetail {
+    background-color: #ffecec;
+    /* padding: 20px; */
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+.close_fulldetail{
+    align-self: self-end;
+}
+
+.uploadResume{display:flex;flex-direction: column;}
+.uploadResume button{align-self: center;margin-top: 30px;}

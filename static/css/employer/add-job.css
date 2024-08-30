@@ -10,7 +10,7 @@
     grid-template-columns: repeat(2, 50%);
     grid-template-rows: repeat(5,min-content)  80px;
 }
-.view-image {position: relative;/* border: 1px solid; */width: 200px;grid-column: 2;height: min-content;}
+.view-image {/* position: relative; */width: 150px;grid-column: 2;height: min-content;}
 
 .btn-postjob {position: relative;grid-column: 1/span 2;width: 130px;place-self: center;}
 .container1{position: relative;max-width: 500px;margin-right: 30px;}
@@ -22,12 +22,12 @@
 "image-preview";position: relative;max-width: 500px;margin-right: 30px;display: grid;}
 .container4 label{position: relative;grid-area: label;}
 .container4 input{grid-column: 1;position: relative;}
-.container4 div{position: relative;}
+.container4 div{position: absolute;}
 
 
 
 .container5{position: relative;max-width: 500px;margin-right: 30px;}
-.container6{position: relative;max-width: 500px;margin-right: 30px;}
+.container6{position: relative;max-width: 500px;margin-right: 30px;transform: translate(0px, 60px);}
 .container7{position: relative;max-width: 500px;margin-right: 30px;}
 .container8{position: relative;max-width: 500px;margin-right: 30px;}
 .container9{position: relative;max-width: 500px;margin-right: 30px;}

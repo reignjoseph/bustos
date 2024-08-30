@@ -6,6 +6,7 @@
     <title>Employer</title>
     <link rel="stylesheet" href="/static/css/employer/header.css">
     <link rel="stylesheet" href="/static/css/employer/add-job.css">
+    <link rel="stylesheet" href="/static/css/employer/employer_profile.css">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- DateTimePicker CSS -->
@@ -20,12 +21,16 @@
     <div class="container_class">
         <div class="sidebar">
             <div>
-                <img src="/static/images/peso_logo.png" style="max-width: 200px;" alt="Logo">
+                <img  src="/static/images/peso_logo.png" style="max-width: 100px;" alt="Logo">
             </div>
-            <div class="profile">
-                <img src="/static/images/employer-images/avatar.png" style="max-width: 40px;" alt="Logo">
-                <p>Your Name</p>
+            <div onclick="openEmployerProfile()" class="profile">
+                <img src="{{ url_for('static', filename='images/employer-images/' ~ (session['user_profile'] if session['user_profile'] else 'avatar.png')) }}" >
+                <p>{{ session['user_fname'] }}</p style="margin: 0px;">
             </div>
+
+
+
+
             <div class="menu-item">
                <img src="/static/images/home.png" style="max-width: 40px;" alt="Logo">
                 <span>Home</span>
@@ -42,10 +47,10 @@
                <img src="/static/images/user.png" style="max-width: 40px;" alt="Logo">
                 <span>Applicant</span>
             </div>
-            <div class="menu-item">
+            <a href="/logout" class="menu-item">
                 <img src="/static/images/signin.png" style="max-width: 40px;" alt="Logo">
                 <span>Logout</span>
-            </div>
+            </a>
         </div>
     
     </div>
@@ -60,5 +65,6 @@
             addJobContainer.style.display = 'block';
         }
     </script>
+
 </body>
 </html>

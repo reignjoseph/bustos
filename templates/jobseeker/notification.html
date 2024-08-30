@@ -1,7 +1,42 @@
 {% extends 'jobseeker/header.html' %}
-
 {% block title %}Jobseeker Page{% endblock %}
-
 {% block content %}
+{% include 'jobseeker/rating.html' %}
+{% include 'jobseeker/profile.html' %}
+<div class="notifications-container">
+    {% for notif in notifications %}
+        <div class="notification_notification">
+            <div class="profile_notification"></div>
+            <div class="notification-content_notification">
+                <div class="fname_notification">{{ notif['employer_fname'] }}</div>
+                <div class="text_notification">
+                    {{ notif['text'] }}
+                </div>
+                <!-- Display the created date with an ID -->
+                <div class="time_notification" data-time="{{ notif['date_created'] }}"></div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const elements = document.querySelectorAll('.time_notification');
+        elements.forEach(element => {
+            const time = element.getAttribute('data-time');
+            element.textContent = moment(time).fromNow();
+        });
+
+        // Optionally, update every minute
+        setInterval(() => {
+            elements.forEach(element => {
+                const time = element.getAttribute('data-time');
+                element.textContent = moment(time).fromNow();
+            });
+        }, 60000);
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
 
 {% endblock %}

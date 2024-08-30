@@ -1,0 +1,189 @@
+<!-- Employer Profile Container -->
+<div id="employer_profile_container" class="employer_profile_container flex center" style="display: none;">
+    <!-- Profile Picture Section -->
+    <div class="profile-picture-container">
+        <img id="profile-picture" src="{{ url_for('static', filename='images/employer-images/' ~ (session['user_profile'] if session['user_profile'] else 'avatar.png')) }}" class="profile-picture">
+        <img src="{{ url_for('static', filename='images/camera.png') }}" class="camera-icon" onclick="triggerFileInput()">
+        <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="updateProfilePicture(event)">
+    </div>
+
+    <!-- Employer Name and Bio -->
+    <p class="employer-name">{{ session['user_fname'] }}</p>
+    <p class="employer-bio">{{ session['user_bio'] }}</p>
+
+    <!-- Buttons for toggling between sections -->
+    <div class="profile-buttons">
+        <button onclick="showPersonalInformation()">Personal Information</button>
+        <button onclick="showPasswordSection()">Password</button>
+    </div>
+
+    <!-- Personal Information Section (default visible) -->
+    <form id="personal-information-section" action="/profile_employer" method="POST" class="flex center">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="{{ session['user_email'] }}" class="input-field baseline" readonly disabled>
+
+        <label for="contact">Contact:</label>
+        <input type="text" id="contact" name="contact" value="{{ session['user_contact'] }}" class="input-field baseline">
+
+        <label for="bio">Bio:</label>
+        <textarea id="bio" name="bio" class="input-field baseline" maxlength="30">{{ session['user_bio'] }}</textarea>
+
+        <button type="submit" class="update-button flex-end">Update</button>
+    </form>
+
+<!-- Password Section (hidden by default) -->
+<form id="password-section" action="/change_password" method="POST" class="flex center" style="display:none;">
+    <div id="password-error-message" class="error-message" style="display: none;">
+        <span id="error-text"></span>
+        <button type="button" id="close-error-message" class="close-button">&times;</button>
+    </div>
+    
+    <label for="oldpassword">Old Password:</label>
+    <input type="password" id="oldpassword" name="oldpassword" class="input-field baseline">
+    
+    <label for="newpassword">New Password:</label>
+    <input type="password" id="newpassword" name="newpassword" class="input-field baseline">
+    
+    <label for="confirmpassword">Confirm Password:</label>
+    <input type="password" id="confirmpassword" name="confirmpassword" class="input-field baseline">
+    
+    <button type="submit" class="change-password-button flex-end">Change Password</button>
+</form>
+
+</div>
+
+
+<script>
+function openEmployerProfile() {
+    // Toggle the visibility of the employer profile container
+    const profileContainer = document.getElementById('employer_profile_container');
+    profileContainer.style.display = (profileContainer.style.display === 'none' || profileContainer.style.display === '') ? 'flex' : 'none';
+}
+
+function showPersonalInformation() {
+    document.getElementById('personal-information-section').style.display = 'flex';
+    document.getElementById('password-section').style.display = 'none';
+}
+
+function showPasswordSection() {
+    document.getElementById('personal-information-section').style.display = 'none';
+    document.getElementById('password-section').style.display = 'flex';
+}
+</script>
+<script>
+document.getElementById('password-section').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent form submission
+
+    const oldPassword = document.getElementById('oldpassword').value;
+    const newPassword = document.getElementById('newpassword').value;
+    const confirmPassword = document.getElementById('confirmpassword').value;
+    const errorMessageDiv = document.getElementById('password-error-message');
+    const errorTextSpan = document.getElementById('error-text');
+    
+    errorMessageDiv.style.display = 'none'; // Hide error message by default
+    errorTextSpan.innerHTML = ''; // Clear previous error message
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        errorTextSpan.innerHTML = "All fields are required";
+        errorMessageDiv.style.display = 'block'; // Show error message
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        errorTextSpan.innerHTML = "New password and confirm password do not match";
+        errorMessageDiv.style.display = 'block'; // Show error message
+        return;
+    }
+
+    // Create a FormData object to send form data via AJAX
+    const formData = new FormData(this);
+
+    fetch('/change_password', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Password change was successful, handle accordingly
+            errorTextSpan.innerHTML = "Password successfully updated";
+            errorMessageDiv.style.color = 'green'; // Change text color to green
+            errorMessageDiv.style.backgroundColor = '#dff0d8'; // Light green background
+            errorMessageDiv.style.display = 'block'; // Show success message
+            setTimeout(() => window.location.href = data.redirect, 2000); // Redirect after 2 seconds
+        } else {
+            // Display server-side error message
+            errorTextSpan.innerHTML = data.error_message;
+            errorMessageDiv.style.color = 'red'; // Keep text color red for errors
+            errorMessageDiv.style.backgroundColor = '#fdd'; // Light red background
+            errorMessageDiv.style.display = 'block'; // Show error message
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+
+// Close error message when close button is clicked
+document.getElementById('close-error-message').addEventListener('click', function() {
+    document.getElementById('password-error-message').style.display = 'none';
+});
+
+</script>
+<script>
+// Function to trigger the file input click
+function triggerFileInput() {
+    document.getElementById('file-input').click();
+}
+
+// Function to handle the profile picture update
+function updateProfilePicture(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('profile_picture', file);
+
+        fetch('/employer_profile_update', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Refresh the page to update the content
+                window.location.reload();
+            } else {
+                alert('Failed to update profile picture: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update profile picture. Please try again.');
+        });
+    }
+}
+    const file = event.target.files[0];
+    if (file) {
+        const formData = new FormData();
+        formData.append('profile_picture', file);
+
+        // Send the file to the server using fetch
+        fetch('/employer_profile_update', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the profile picture src with the new image URL
+                document.getElementById('profile-picture').src = data.image_url;
+            } else {
+                alert('Failed to update profile picture: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update profile picture. Please try again.');
+        });
+    }
+</script>

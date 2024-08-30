@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
     <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/jobseeker/header.css">
-    <link rel="stylesheet" href="/static/css/jobseeker/jobseeker.css">
+    <link rel="stylesheet" href="/static/css/jobseeker/home.css">
+    <link rel="stylesheet" href="/static/css/jobseeker/rating.css">
+    <link rel="stylesheet" href="/static/css/jobseeker/profile.css">
+    <link rel="stylesheet" href="/static/css/jobseeker/notification.css">
     <!-- <link rel="stylesheet" href="/static/css/jobseeker/notification.css"> -->
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -15,7 +20,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/static/js/script.js" defer=""></script>
     <title>{% block title %}Home{% endblock %}</title>
-    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    
 </head>
 <body>
     <header style="padding: 10px;">
@@ -29,16 +34,16 @@
                     <a href="/jobseeker" class="box">
                         <img class="image" src="/static/images/home.png" alt="Logo">
                     Home</a>
-                    <a href="../notification" class="box">
+                    <a href="/jobseeker/notification" class="box">
                         <img class="image" src="/static/images/notification.png" alt="Logo">
                     Notification</a>
                     <a href="/status" class="box">
                         <img class="image" src="/static/images/status.png" alt="Logo">
                     Status</a>
-                    <a href="/rate" class="box">
+                    <a class="box" onclick="openRate()">
                         <img class="image" src="/static/images/rating.png" alt="Logo">
                     Rate</a>
-                    <a href="/jobseeker/profile" class="box">
+                    <a class="box" onclick="openProfile()">
                         <img class="image" src="/static/images/profile.png" alt="Logo">
                     Profile</a>
                     <a href="/logout" class="box">
@@ -48,7 +53,6 @@
             </div>
         </div>
     </header>
-
     <main>
         {% block content %}
         <!-- Page specific content will go here -->

@@ -2,66 +2,12 @@
 
 {% block title %}Jobseeker Page{% endblock %}
 
+
+
 {% block content %}
-<div class="container mt-4 container-announcement">
-    <h2 class="container-title">SUGGESTED JOB VACANCY</h2>
-    <div class="row">
-        {% for job in jobs %}
-        <div class="col-md-4">
-            <div class="card mb-4 container-vacancy">
-                <div class="image-container">
-                    <img src="{{ url_for('static', filename=job.image) }}" alt="Job Image" class="card-img-top">
-                </div>
-                
-                <div class="card-body">
-                    <h5 class="card-title">{{ job.title }}</h5>
-                    <p class="card-text">{{ job.description }}</p>
-                    
-                    <p class="card-text">
-                        <img src="{{ url_for('static', filename='images/jobseeker-images/pin.png') }}" alt="Location Image" class="location-image" onclick="showLocation('{{ job.location }}')">
-                        <strong>Location:</strong> {{ job.location }}
-                    </p>
+{% include 'jobseeker/home.html' %}
+{% include 'jobseeker/rating.html' %}
+{% include 'jobseeker/profile.html'%}
 
-                    <p class="card-text"><strong>Company:</strong> {{ job.Company }}</p>
-                    <p class="card-text"><strong>Salary:</strong> {{ job.salary }}</p>
-                    <p class="card-text"><strong>Nature of Work:</strong> {{ job.natureOfWork }}</p>
-                    <p class="card-text"><strong>Position:</strong> {{ job.position }}</p>
-                    <p class="card-text"><strong>Job Status:</strong> {{ job.jobStatus }}</p>
-                    <p class="card-text"><strong>Closing Date:</strong> {{ job.closingDate }}</p>
-                    <a href="#" class="btn btn-primary">Apply Now</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
-<!-- Google Maps iframe modal -->
-<div id="mapModal" class="modal fade googleframe" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Location</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <iframe id="mapIframe" width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    function showLocation(address) {
-        const iframe = document.getElementById('mapIframe');
-        const encodedAddress = encodeURIComponent(address);
-        iframe.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAzO-uYOWLMPV2l3V7dozLaXjkLhOzYlCk&q=${encodedAddress}`;
-        $('#mapModal').modal('show');
-    }
-</script>
 
 {% endblock %}

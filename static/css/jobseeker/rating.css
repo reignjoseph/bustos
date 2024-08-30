@@ -1,0 +1,33 @@
+.modal-rate {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Ensure modal is above other content */
+    overflow: auto; /* Allow scrolling if necessary */
+}
+.modal-rate-content {
+    background: white;
+    border-radius: 0.5rem; /* Rounded corners */
+    padding: 1.5rem;
+    max-width: 90%; /* Responsive width */
+    margin: auto;
+    overflow: hidden; /* Hide content overflow */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.modal-rate-star {
+    font-size: 50px; /* Size of the stars */
+    color: lightgray; /* Default color */
+    transition: color 0.3s ease; /* Smooth color transition */
+}
+.modal-rate-star.hover,
+.modal-rate-star.selected {
+    color: gold; /* Color when hovered or selected */
+}
+/* Hide scrollbars on the body */
+.no-scroll {
+    overflow: hidden;
+}

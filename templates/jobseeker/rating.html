@@ -1,0 +1,73 @@
+<!-- Rating Modal -->
+<div id="ratingModal" class="modal-rate">
+    <div class="modal-rate-content">
+        <div class="container-rate grid gap-4" style="grid-template-rows: auto 1fr auto auto;">
+            <!-- Row 1: Title and Close Button -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Rate</h2>
+                <button onclick="closeRate()" class="text-red-500">Close</button>
+            </div>
+            <!-- Row 2: Rating Stars -->
+            <div class="flex justify-center space-x-2 mb-4">
+                <span class="modal-rate-star cursor-pointer" data-value="1">★</span>
+                <span class="modal-rate-star cursor-pointer" data-value="2">★</span>
+                <span class="modal-rate-star cursor-pointer" data-value="3">★</span>
+                <span class="modal-rate-star cursor-pointer" data-value="4">★</span>
+                <span class="modal-rate-star cursor-pointer" data-value="5">★</span>
+            </div>
+            <!-- Row 3: Feedback -->
+            <!-- Row 4: Submit Button -->
+            <form id="ratingForm" action="{{ url_for('submit_rating') }}" method="POST">
+                <input type="hidden" id="ratingValue" name="star" value="1">
+                <input type="hidden" name="user_id" value="{{ session.get('user_id') }}">
+                <textarea class="w-full p-2 border border-gray-300 rounded" rows="4" name="comments" id="feedbackInput" placeholder="Leave your feedback"></textarea>
+                <button type="submit" class="mt-4 w-full bg-blue-500 text-white py-2 rounded">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    let selectedRating = 1; // Default to 1 star
+
+    function openRate() {
+        document.getElementById('ratingModal').style.display = 'flex';
+        document.body.classList.add('no-scroll'); // Disable scrolling on body
+        updateStars(selectedRating); // Ensure default star is highlighted
+    }
+
+    function closeRate() {
+        document.getElementById('ratingModal').style.display = 'none';
+        document.body.classList.remove('no-scroll'); // Re-enable scrolling on body
+        resetStars(); // Reset the stars when the modal is closed
+    }
+
+    function updateStars(value) {
+        document.querySelectorAll('.modal-rate-star').forEach(star => {
+            star.classList.toggle('selected', star.dataset.value <= value);
+            star.classList.toggle('hover', star.dataset.value <= value);
+        });
+        document.getElementById('ratingValue').value = value; // Update hidden input
+    }
+
+    function resetStars() {
+        selectedRating = 1; // Reset to default 1 star
+        updateStars(selectedRating);
+    }
+
+    document.querySelectorAll('.modal-rate-star').forEach(star => {
+        star.addEventListener('mouseover', function() {
+            updateStars(this.dataset.value);
+        });
+
+        star.addEventListener('mouseout', function() {
+            updateStars(selectedRating);
+        });
+
+        star.addEventListener('click', function() {
+            selectedRating = this.dataset.value;
+            updateStars(selectedRating);
+        });
+    });
+</script>

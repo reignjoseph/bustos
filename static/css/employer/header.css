@@ -14,8 +14,8 @@ body {
     background-color: #c8ecff;
     color: #000;
     display: grid;
-    grid-template-rows: min-content;
-    padding: 20px;
+    grid-template-rows: 130px 125px 60px;
+    padding: 10px 20px 10px 20px;
     align-items: center;
     justify-items: center;
     height: -webkit-fill-available;
@@ -24,11 +24,13 @@ body {
 
 .sidebar img {
     width: 100px; /* Adjust based on your logo size */
-    margin-bottom: 10px;
+    /* margin-bottom: 10px; */
 }
 
 .sidebar .profile {
     text-align: center;
+    align-self: self-end;
+    cursor: pointer;
 }
 
 .sidebar .profile img {
@@ -45,6 +47,8 @@ body {
     width: 100%;
     padding: 10px;
     transition: background-color 0.3s;
+    text-decoration: none;
+    align-self: self-end;
 }
 
 .sidebar .menu-item:hover {
@@ -58,6 +62,7 @@ body {
 
 .sidebar .menu-item span {
     font-size: 18px;
+    color: #000;
 }
 
 .content {

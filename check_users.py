@@ -1,21 +1,31 @@
 import sqlite3
 
-# Connect to the SQLite database
-conn = sqlite3.connect('trabahanap.db')
+# Path to your SQLite database
+DATABASE = 'trabahanap.db'
 
-# Create a cursor object
-cursor = conn.cursor()
+def print_jobseeker_notifications():
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
 
-# Execute the query to select all records from the users table
-cursor.execute('SELECT * FROM users')
+        # Execute a query to select all data from jobseeker_notifications
+        cursor.execute('SELECT * FROM users')
 
-# Fetch all rows from the executed query
-rows = cursor.fetchall()
+        # Fetch all rows
+        rows = cursor.fetchall()
 
-# Print each row
-for row in rows:
-    print(row)
+        # Print each row
+        for row in rows:
+            print(row)
 
-# Close the cursor and connection
-cursor.close()
-conn.close()
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+
+    finally:
+        # Close the database connection
+        if conn:
+            conn.close()
+
+if __name__ == '__main__':
+    print_jobseeker_notifications()

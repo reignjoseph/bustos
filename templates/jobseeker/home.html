@@ -1,0 +1,190 @@
+<div class="container mt-4 container-announcement">
+    <h2 class="container-title">SUGGESTED JOB VACANCY</h2>
+    <div class="row">
+        {% for job in jobs %}
+        <div class="col-md-4">
+            <div class="card mb-4 container-vacancy">
+                <div class="image-container">
+                    <img src="{{ url_for('static', filename=job.image) }}" alt="Job Image" class="card-img-top">
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-text"><strong>Company:</strong> {{ job.Company }}</h5>
+                    
+                    <p class="card-title"><strong>Job: </strong>{{ job.title }}</p>
+                    <!-- <p class="card-text">{{ job.description }}</p> -->
+                    <p class="card-text">
+                        <strong>Location:</strong> <img src="{{ url_for('static', filename='images/jobseeker-images/pin.png') }}" alt="Location Image" class="location-image" onclick="showLocation('{{ job.location }}')">{{ job.location }}
+                        
+                    </p>
+
+                    
+                    <!-- <p class="card-text"><strong>Salary:</strong> {{ job.salary }}</p> -->
+                    <p class="card-text"><strong>Nature of Work:</strong> {{ job.natureOfWork }}</p>
+                    <!-- <p class="card-text"><strong>Position:</strong> {{ job.position }}</p> -->
+                    <p class="card-text"><strong>Job Status:</strong> {{ job.jobStatus }}</p>
+                    <p class="card-text"><strong>Closing Date:</strong> {{ job.closingDate }}</p>
+                    <a class="btn btn-primary"
+                    data-image="{{ url_for('static', filename=job.image) }}"
+                    data-company="{{ job.company }}"
+                    data-title="{{ job.title }}"
+                    data-description="{{ job.description }}"
+                    data-location="{{ job.location }}"
+                    data-salary="{{ job.salary }}"
+                    data-natureofwork="{{ job.natureOfWork }}"
+                    data-position="{{ job.position }}"
+                    onclick="seeFullDetail(this)">See Full Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- Full Details Modal -->
+<div id="detailsModal" class="modal fade modal-fulldetail" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content modal-content-fulldetail">
+                <button type="button" class="close_fulldetail close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+            <div class="modal-body">
+                <div id="frameDetail" class="frame-detail-fulldetail">
+                    <!-- Job details will be dynamically inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Maps iframe modal -->
+<div id="mapModal" class="modal fade googleframe" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Location</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <iframe id="mapIframe" width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function showLocation(address) {
+        const iframe = document.getElementById('mapIframe');
+        const encodedAddress = encodeURIComponent(address);
+        iframe.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAzO-uYOWLMPV2l3V7dozLaXjkLhOzYlCk&q=${encodedAddress}`;
+        $('#mapModal').modal('show');
+    }
+
+    function seeFullDetail(element) {
+        const detailsModal = $('#detailsModal');
+        const frameDetail = detailsModal.find('#frameDetail');
+
+        // Extract job details from data attributes
+        const job = {
+            image: element.getAttribute('data-image'),
+            title: element.getAttribute('data-title'),
+            company: element.getAttribute('data-company'),
+            description: element.getAttribute('data-description'),
+            location: element.getAttribute('data-location'),
+            salary: element.getAttribute('data-salary'),
+            natureOfWork: element.getAttribute('data-natureofwork'),
+            position: element.getAttribute('data-position')
+        };
+
+        // Create the HTML for the job details
+        const jobDetailsHtml = `
+            <div class="image-container">
+                <img src="${job.image}" alt="Job Image" class="card-img-top">
+            </div>
+            <div class="card-body">
+                <h5 class="card-title"><strong>Company: </strong>${job.company}</h5>
+                <p class="card-title"><strong>Job: </strong>${job.title}</p>
+                <p class="card-text"><strong>Desc: </strong>${job.description}</p>
+                <p class="card-text">
+                    <strong>Location: </strong><img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image" onclick="showLocation('${job.location}')"> ${job.location}
+                    
+                </p>
+                <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
+                <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
+                <p class="card-text"><strong>Position:</strong> ${job.position}</p>
+                <form id="uploadForm" class="uploadResume" enctype="multipart/form-data">
+                <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
+                <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
+                <button type="submit" class="btn btn-primary">Apply Now</button>
+                </form>
+            </div>
+        `;
+
+        // Insert the job details HTML into the modal
+        frameDetail.html(jobDetailsHtml);
+
+        // Show the modal
+        detailsModal.modal('show');
+    }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a file.');
+            return;
+        }
+
+        if (file.type === 'application/pdf') {
+            // If the file is already a PDF, you can directly upload it
+            uploadFile(file);
+        } else if (file.type.startsWith('image/')) {
+            // If the file is an image, convert it to PDF
+            await convertImageToPDF(file);
+        } else {
+            alert('Only PDF or image files are allowed.');
+        }
+    });
+
+    async function convertImageToPDF(imageFile) {
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage();
+
+        const imageBytes = await imageFile.arrayBuffer();
+        const image = await pdfDoc.embedPng(imageBytes);
+        const { width, height } = image;
+
+        page.drawImage(image, {
+            x: 0,
+            y: 0,
+            width: page.getWidth(),
+            height: page.getHeight(),
+        });
+
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+        // Create a link to download the PDF
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(pdfBlob);
+        link.download = imageFile.name.replace(/\.[^/.]+$/, '.pdf');
+        link.click();
+    }
+
+    function uploadFile(file) {
+        // Implement file upload logic here, such as sending the file to a server
+        alert('File uploaded successfully!');
+    }
+</script>
