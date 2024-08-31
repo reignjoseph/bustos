@@ -33,6 +33,8 @@
                     data-salary="{{ job.salary }}"
                     data-natureofwork="{{ job.natureOfWork }}"
                     data-position="{{ job.position }}"
+                    data-JOB_ID="{{ job.JOB_ID }}"
+                    data-employer_id="{{job.employer_id}}"
                     onclick="seeFullDetail(this)">See Full Details</a>
                 </div>
             </div>
@@ -99,7 +101,9 @@
             location: element.getAttribute('data-location'),
             salary: element.getAttribute('data-salary'),
             natureOfWork: element.getAttribute('data-natureofwork'),
-            position: element.getAttribute('data-position')
+            position: element.getAttribute('data-position'),
+            jobId: element.getAttribute('data-JOB_ID'),
+            employerId: element.getAttribute('data-employer_id')
         };
 
         // Create the HTML for the job details
@@ -110,18 +114,20 @@
             <div class="card-body">
                 <h5 class="card-title"><strong>Company: </strong>${job.company}</h5>
                 <p class="card-title"><strong>Job: </strong>${job.title}</p>
-                <p class="card-text"><strong>Desc: </strong>${job.description}</p>
+                <p class="card-text"><strong>Description: </strong>${job.description}</p>
                 <p class="card-text">
                     <strong>Location: </strong><img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image" onclick="showLocation('${job.location}')"> ${job.location}
-                    
                 </p>
                 <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
                 <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
                 <p class="card-text"><strong>Position:</strong> ${job.position}</p>
-                <form id="uploadForm" class="uploadResume" enctype="multipart/form-data">
-                <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
-                <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
-                <button type="submit" class="btn btn-primary">Apply Now</button>
+                <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" action="/applicant" method="post">
+                    <input type="hidden" name="job_id" value="${job.jobId}" />
+                    <input type="hidden" name="employer_id" value="${job.employerId}" />
+                    <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
+                    <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
+                    <div id="error-message" style="color: red;"></div>
+                    <button type="submit" class="btn btn-primary">Apply Now</button>
                 </form>
             </div>
         `;
@@ -133,58 +139,80 @@
         detailsModal.modal('show');
     }
 </script>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
-    document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Prevent the default form submission
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('submit', async function(event) {
+        if (event.target && event.target.id === 'uploadForm') {
+            event.preventDefault(); // Prevent the default form submission
 
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+            const form = event.target;
+            const fileInput = form.querySelector('input[type="file"]');
+            const file = fileInput.files[0];
+            const errorMessageDiv = form.querySelector('#error-message');
+            const formData = new FormData(form);
 
-        if (!file) {
-            alert('Please select a file.');
-            return;
-        }
+            // Clear any previous error messages
+            errorMessageDiv.textContent = '';
 
-        if (file.type === 'application/pdf') {
-            // If the file is already a PDF, you can directly upload it
-            uploadFile(file);
-        } else if (file.type.startsWith('image/')) {
-            // If the file is an image, convert it to PDF
-            await convertImageToPDF(file);
-        } else {
-            alert('Only PDF or image files are allowed.');
+            if (!file) {
+                errorMessageDiv.textContent = 'Please select a file.';
+                return;
+            }
+
+            if (file.type === 'application/pdf') {
+                // If the file is already a PDF, you can directly upload it
+                formData.append('file', file);
+                uploadFile(formData);
+            } else if (file.type.startsWith('image/')) {
+                // If the file is an image, convert it to PDF
+                await convertImageToPDF(file, formData);
+            } else {
+                errorMessageDiv.textContent = 'Only PDF or image files are allowed.';
+            }
         }
     });
+});
 
-    async function convertImageToPDF(imageFile) {
-        const { PDFDocument } = PDFLib;
-        const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage();
+async function convertImageToPDF(imageFile, formData) {
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage();
 
-        const imageBytes = await imageFile.arrayBuffer();
-        const image = await pdfDoc.embedPng(imageBytes);
-        const { width, height } = image;
+    const imageBytes = await imageFile.arrayBuffer();
+    const image = await pdfDoc.embedPng(imageBytes);
+    const { width, height } = image;
 
-        page.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: page.getWidth(),
-            height: page.getHeight(),
-        });
+    page.drawImage(image, {
+        x: 0,
+        y: 0,
+        width: page.getWidth(),
+        height: page.getHeight(),
+    });
 
-        const pdfBytes = await pdfDoc.save();
-        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const pdfBytes = await pdfDoc.save();
+    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
-        // Create a link to download the PDF
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(pdfBlob);
-        link.download = imageFile.name.replace(/\.[^/.]+$/, '.pdf');
-        link.click();
-    }
+    // Append the PDF blob to the FormData object
+    formData.append('file', pdfBlob, imageFile.name.replace(/\.[^/.]+$/, '.pdf'));
+    uploadFile(formData);
+}
 
-    function uploadFile(file) {
-        // Implement file upload logic here, such as sending the file to a server
-        alert('File uploaded successfully!');
-    }
+function uploadFile(formData) {
+    fetch('/applicant', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(result => {
+        // alert('File uploaded successfully!');
+        location.reload(); // Reload the page or redirect as needed
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.querySelector('#error-message').textContent = 'Error uploading file.';
+    });
+}    
 </script>

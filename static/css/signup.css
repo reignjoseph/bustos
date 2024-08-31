@@ -165,9 +165,9 @@ h2 {
     width: 20px; /* Adjust size as needed */
 }
 
-input[type="text"],
-input[type="email"],
-input[type="password"] {
+.abc input[type="text"],
+.abc input[type="email"],
+.abc input[type="password"] {
     width: 100%;
     padding: 8px;
     border: 1px solid #ccc;

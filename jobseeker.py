@@ -43,6 +43,77 @@ def get_db_connection():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/applicant', methods=['POST'])
+def applicant():
+    if request.method == 'POST':
+        # Get data from the form
+        job_id = request.form['job_id']
+        employer_id = request.form['employer_id']
+        file = request.files['file']
+        
+        # Check if the file is provided
+        if not file:
+            return "No file selected", 400
+        
+        # Save the file
+        filename = secure_filename(file.filename)  # Ensure a safe filename
+        file_path = f'static/images/jobseeker-uploads/{filename}'
+        file.save(file_path)
+        
+        # Get user details from session
+        jobseeker_name = session.get('user_fname')
+        email = session.get('user_email')
+        contact_no = session.get('user_contact')
+        
+        # Connect to the database
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+        
+        # Insert the application into the database
+        cursor.execute('''
+            INSERT INTO applicant (job_id, employer_id, jobseeker_name, email, contact_no, form, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (job_id, employer_id, jobseeker_name, email, contact_no, file_path, 'Pending'))
+        
+        # Commit and close the connection
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return "Application submitted successfully!", 200
+
+
+
+
+
 @app.route('/jobseeker/notification')
 def jobseeker_notification():
     if 'user_id' in session and session['user_type'] == 'Jobseeker':
@@ -61,17 +132,27 @@ def jobseeker_notification():
         # Generate notification texts
         notifications_with_text = []
         for notification in notifications:
+            employer_id = notification['employer_id']
+            
+            # Fetch the employer's profile picture
+            cursor.execute('SELECT profile FROM users WHERE User_ID = ?', (employer_id,))
+            employer_data = cursor.fetchone()
+            if employer_data and employer_data['profile']:
+                profile_picture = f'/static/images/employer-images/{employer_data["profile"]}'
+            else:
+                profile_picture = '/static/images/employer-images/avatar.png'
+            
             company = notification['company']
             job_title = notification['job_title']
             text = notification['text']
-            date_created= notification['date_created']
+            date_created = notification['date_created']
             notifications_with_text.append({
                 'employer_fname': notification['employer_fname'],
                 'text': text,
                 'company': company,
                 'job_title': job_title,
-                'date_created': date_created
-                
+                'date_created': date_created,
+                'profile_picture': profile_picture
             })
 
         # Close the cursor and connection
@@ -82,15 +163,6 @@ def jobseeker_notification():
         return render_template('jobseeker/notification.html', user_data=user_data, notifications=notifications_with_text)
     
     return redirect(url_for('signin'))
-
-
-
-
-
-
-
-
-
 
 
 

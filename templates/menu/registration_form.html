@@ -1,0 +1,152 @@
+<div class="form-container_registration">
+    <div class="form-header_registration">
+    </div>
+    <form id="registrationForm" action="/submit_registration" method="post">
+
+
+        <div id="page1" class="page active">
+            <h2 class="headera">NSRP Form 1<br>September<br>2020</h2><p class="headerb">Republic of the Philippines<br>Department of Labor and Employment<span style="font-weight: bold;"><br>NATIONAL SKILLS REGISTRATION PROGRAM<br>JOBSEEKER REGISTRATION FORM</span></p>
+            <p class="headerc"><span style="font-weight:bold;">INSTRUCTIONS:</span> Please fill out the form legibly in block letters using a ballpoint pen. Check appropriate boxes. Please
+                do not leave any items unanswered. Indicate “NA” if not applicable. You may use extra sheet if needed. Submit
+                Accomplished form to the Public Employment Service Office (PESO) Manager or Officer in your city/municipality.
+                </p>
+            <div class="form-group_registration">
+                <h3 class="row1a">I.PERSONAL INFORMATION</h3>
+                <input class="row2a" type="text" id="surname" name="surname" required><input class="row2a" type="text" id="firstname" name="firstname" required><input class="row2a" type="text" id="middle" name="middlename"><input class="row2a" type="text" id="suffix" name="suffix">
+                <label class="row3a" for="surname">Surname</label><label class="row3a" for="firstname">First Name</label><label class="row3a" for="middlename">Middle Name</label><label class="row3a"for="suffix">Suffix (Ex: Sr., Jr., III, etc.)</label>
+                <label class="row4a" for="birthdate">DATE OF BIRTH (mm/dd/yyyy)</label><input class="row4b" type="text" id="birthdate" name="birthdate" required>
+                <label class="row5a" for="sex">SEX <span style="display: grid;grid-template-columns: repeat(4, auto);transform: translate(20px, 0px);font-size: 12px;height: min-content;"><input type="radio" class="gender" name="sex" value="Male" required=""> Male<input type="radio" class="gender" name="sex" value="Female" required="" style=" margin-left: 20px; "> Female</span></label>
+                <label class="row6a"><span style="padding: 3px; padding-left: 10px; border: 1px solid; grid-column: 1 / span 2;">PRESENT ADDRESS</span>
+                    <label class="row6b" for="address">House No./ Street Village</label><input class="row6b" type="text" id="address" name="address">
+                    <label class="row6c" for="barangay">Barangay</label><input class="row6c" type="text" id="barangay" name="barangay">
+                    <label class="row6d" for="city">City/Municipality</label><input class="row6d" type="text" id="municipality" name="municipality">
+                    <label class="row6e" for="province">Province</label><input class="row6e" type="text" id="province" name="province">
+                </label>
+                <label class="row7a" for="relgion">RELIGION <input class="row7b" type="text" id="relgion" name="relgion" required></label>
+                <label class="row8a" for="civilstatus">CIVIL STATUS <span style=""><input type="radio" name="civilstatus" value="Single" required> Single <input type="radio" name="civilstatus" value="Married" required> Married <input type="radio" name="civilstatus" value="Widow" required> Widow</span></label>
+            </div>
+            <button type="button" class="btn btn-primary" style="grid-column: 1 / span 4;" onclick="nextPage()">Next</button>
+        </div>
+
+
+
+
+
+        <div id="page2" class="page">
+            <h3>Page 2</h3>
+            <div class="form-group_registration">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <div class="invalid-feedback">Please enter your email.</div>
+            </div>
+            <div class="button-container">
+            <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
+            <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
+            </div>
+        </div>
+        <div id="page3" class="page">
+            <h3>Page 3</h3>
+            <div class="form-group_registration">
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" name="phone" required>
+                <div class="invalid-feedback">Please enter your phone number.</div>
+            </div>
+            <div class="button-container">
+                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
+                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
+            </div>
+        </div>
+        <div id="page4" class="page">
+            <h3>Page 4</h3>
+            <div class="form-group_registration">
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" required>
+                <div class="invalid-feedback">Please enter your address.</div>
+            </div>
+            <div class="button-container">
+                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
+                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
+                </div>
+        </div>
+        <div id="page5" class="page">
+            <h3>Page 5</h3>
+            <div class="form-group_registration">
+                <label for="dob">Date of Birth:</label>
+                <input type="date" id="dob" name="dob" required>
+                <div class="invalid-feedback">Please enter your date of birth.</div>
+            </div>
+            <div class="button-container">
+                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
+                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
+                </div>
+        </div>
+        <div id="page6" class="page">
+            <h3>Page 6</h3>
+            <div class="form-group_registration">
+                <label>Gender:</label><br>
+                <label>
+                    <input type="radio" name="gender" value="Male" required> Male
+                </label>
+                <label>
+                    <input type="radio" name="gender" value="Female" required> Female
+                </label>
+                <div class="invalid-feedback">Please select your gender.</div>
+            </div>
+            <div class="button-container">
+                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
+                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
+                </div>
+        </div>
+        <div id="page7" class="page">
+            <h3>Page 7</h3>
+            <div class="form-group_registration">
+                <label for="additional">Additional Information:</label>
+                <textarea id="additional" name="additional"></textarea>
+            </div>
+            <div class="button-container">
+                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    let currentPage = 1;
+
+    function showPage(pageNumber) {
+        document.querySelectorAll('.page').forEach((page) => {
+            page.classList.remove('active');
+        });
+        document.getElementById(`page${pageNumber}`).classList.add('active');
+    }
+
+    function nextPage() {
+        let currentPageElement = document.querySelector(`#page${currentPage}`);
+        let inputs = currentPageElement.querySelectorAll('input, select, textarea');
+        let allValid = true;
+
+        inputs.forEach(input => {
+            if (input.required && !input.checkValidity()) {
+                input.reportValidity();
+                allValid = false;
+            }
+        });
+
+        if (allValid) {
+            currentPage++;
+            if (currentPage > 7) currentPage = 7; // Prevent exceeding last page
+            showPage(currentPage);
+        }
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+        }
+    }
+
+    // Initialize the form by showing the first page
+    showPage(currentPage);
+</script>

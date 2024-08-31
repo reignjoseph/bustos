@@ -6,7 +6,7 @@
             "type": "debugpy",
             "request": "launch",
             "module": "gunicorn",
-            "args": ["--bind", "0.0.0.0:8080", "main:app"],
+            "args": ["--bind", "0.0.0.0:8000", "main:app"],
             "console": "internalConsole",
             "justMyCode": true
         }

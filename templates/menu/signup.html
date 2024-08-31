@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/signup.css">
+    <link rel="stylesheet" href="/static/css/registration_form.css">
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
@@ -13,79 +15,100 @@
     <script src="/static/js/script.js" defer=""></script>
     <title>Home</title>
     <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
+    <style>
+
+    </style>
 </head>
-<style>
-    
-</style>
 <body>
     <header style="padding: 10px;">
         <div class="container" style="max-width: -webkit-fill-available;">
             <div class="d-flex justify-content-between align-items-center py-2">
-                    <a href="/" class="logo-box">
-                        <img src="/static/images/jobahanap.png" style="max-width: 200px;" alt="Logo">
-                    </a>
+                <a href="/" class="logo-box">
+                    <img src="/static/images/jobahanap.png" style="max-width: 200px;" alt="Logo">
+                </a>
                 <button class="menu-icon btn btn-primary d-md-none" onclick="toggleMenu()">☰</button>
                 <div class="boxes-container close" id="boxes-container">
                     <a href="/" class="box">
                         <img class="image" src="/static/images/home.png" alt="Logo">
-                    Home</a>
+                        Home</a>
                     <a href="/announcement" class="box">
                         <img class="image" src="/static/images/announcement.png" alt="Logo">
-                    Announcement</a>
+                        Announcement</a>
                     <a href="/about#" class="box">
                         <img class="image" src="/static/images/aboutus.png" alt="Logo">
-                    About Us</a>
+                        About Us</a>
                     <a href="/about#contact" class="box">
                         <img class="image" src="/static/images/contactus.png" alt="Logo">
-                    Contact Us</a>
+                        Contact Us</a>
                     <a href="/signin" class="box">
                         <img class="image" src="/static/images/signin.png" alt="Logo">
-                    Sign In</a>
-
+                        Sign In</a>
                 </div>
             </div>
         </div>
     </header>
-<main>
-    <div class="signup-container">
-        <h2>Sign Up As</h2>
-        <form action="/signup" method="post" class="signup-form">
-            <div class="form-group-1 form-group-radio">
-                <label>
-                    <input type="radio" name="role" value="jobseeker" checked> Jobseeker
-                </label>
-                <label>
-                    <input type="radio" name="role" value="employer"> Employer
-                </label>
+
+    <main>
+        <div class="signup-container">
+            <h2>Sign Up As</h2>
+            <form id="signupForm" class="signup-form" >
+                <div class="form-group-1 form-group-radio">
+                    <label>
+                        <input type="radio" name="role" value="jobseeker" checked> Jobseeker
+                    </label>
+                    <label>
+                        <input type="radio" name="role" value="employer"> Employer
+                    </label>
+                </div>
+                <div class="form-group-2 abc">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group-3 abc">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group-4 abc password-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" onclick="togglePasswordVisibility()">
+                        <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password">
+                    </span>
+                </div>
+                <div class="form-group-5">
+                    <label>
+                        <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a>
+                    </label>
+                </div>
+                <div class="form-group-6">
+                    <button type="submit" class="btn-signup">Sign Up</button>
+                </div>
+            </form>
+            <div class="signin-link">
+                Have an already Account? <a href="/signin">Click Sign In</a>
             </div>
-            <div class="form-group-2">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
+        </div>
+    </main>
+
+<!-- Modal for additional registration details -->
+<div class="modal fade" id="registrationModal" tabindex="-1" role="dialog" aria-labelledby="registrationModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registrationModalLabel">Additional Registration Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="form-group-3">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+            <div class="modal-body">
+                {% include 'menu/registration_form.html' %}
             </div>
-            <div class="form-group-4 password-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-                <span class="toggle-password" onclick="togglePasswordVisibility()">
-                    <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password">
-                </span>
+            <div class="modal-footer">
+                <!-- No need for a separate submit button here since the form inside the modal already has one -->
             </div>
-            <div class="form-group-5">
-                <label>
-                    <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a>
-                </label>
-            </div>
-            <div class="form-group-6">
-                <button type="submit" class="btn-signup">Sign Up</button>
-            </div>
-        </form>
-        <div class="signin-link">
-            Have an already Account? <a href="/signin">Click Sign In</a>
         </div>
     </div>
+</div>
 
     <script>
         function togglePasswordVisibility() {
@@ -100,6 +123,19 @@
                 eyeIcon.src = "/static/images/eye-open.png";
             }
         }
+
+        // Handle form submission and modal display
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            if (!this.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                // If form is valid, prevent the default form submission and show the modal
+                event.preventDefault();
+                $('#registrationModal').modal('show');
+            }
+            this.classList.add('was-validated');
+        });
     </script>
 </body>
 </html>

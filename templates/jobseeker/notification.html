@@ -6,7 +6,9 @@
 <div class="notifications-container">
     {% for notif in notifications %}
         <div class="notification_notification">
-            <div class="profile_notification"></div>
+            <div class="profile_notification">
+                <img src="{{ notif['profile_picture'] }}" class="profile-picture-small" alt="Employer Profile Picture">
+            </div>
             <div class="notification-content_notification">
                 <div class="fname_notification">{{ notif['employer_fname'] }}</div>
                 <div class="text_notification">

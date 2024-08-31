@@ -229,18 +229,21 @@ def post_job():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Fetch the employer's name
-        cursor.execute('SELECT fname FROM users WHERE User_ID = ?', (session['user_id'],))
+        # Fetch the employer's name and profile picture
+        cursor.execute('SELECT fname, profile FROM users WHERE User_ID = ?', (session['user_id'],))
         employer_data = cursor.fetchone()
         if employer_data:
             employer_fname = employer_data[0]
+            # Use default profile image if profile field is empty
+            employer_profile = employer_data[1] if employer_data[1] else 'static/images/employer-images/avatar.png'
         else:
             employer_fname = 'Unknown'
+            employer_profile = 'static/images/employer-images/avatar.png'
 
-        # Insert job details into jobs table
+        # Insert job details into jobs table including employer_ID
         conn.execute(
-            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus)
+            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'])
         )
 
         # Fetch jobseekers' details
@@ -258,8 +261,8 @@ def post_job():
         for jobseeker in jobseekers:
             user_id = jobseeker[0]
             conn.execute(
-                'INSERT INTO jobseeker_notifications (employer_id, text, company, job_title, employer_fname, date_created) VALUES (?, ?, ?, ?, ?, ?)',
-                (session['user_id'], notification_text, company, title, employer_fname, current_time_pht)
+                'INSERT INTO jobseeker_notifications (employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (session['user_id'], notification_text, company, title, employer_fname, employer_profile, current_time_pht)
             )
 
         conn.commit()
@@ -276,26 +279,40 @@ def post_job():
 
 
 
-
 def generate_notification_text(company, job_title):
+    # Define consistent and varied structures
     structures = [
         f"Amazing Opportunity for {company} at {job_title}",
         f"{company} is offering an exciting opportunity for a {job_title}",
         f"{company} offers exciting opportunities at {job_title}",
-        f"Exciting opportunity for {job_title} at {company}"
+        f"Exciting opportunity for {job_title} at {company}",
+        f"New {job_title} position available at {company}",
+        f"Don't miss out on the {job_title} role at {company}",
+        f"Join {company} as a {job_title} and be part of something big",
+        f"{company} is looking for a talented {job_title}",
+        f"Great opening for a {job_title} at {company}",
+        f"Explore the {job_title} position at {company} today"
     ]
 
-    # Make sure these are also consistent and do not change
+    # Ensure adjectives and opportunities are correctly used
     adjectives = ["amazing", "exciting", "great", "unique"]
     opportunities = ["opportunity", "vacancy", "position", "opening"]
 
+    # Templates with corrected adjective usage
     template1 = f"{random.choice(adjectives).capitalize()} {random.choice(opportunities)} at {company} as a {job_title}"
-    template2 = f"{company} has an {random.choice(adjectives)} {random.choice(opportunities)} for a {job_title}"
+    template2 = f"{company} has a {random.choice(adjectives)} {random.choice(opportunities)} for a {job_title}"
     template3 = f"Apply now for a {job_title} role at {company} – an {random.choice(adjectives)} {random.choice(opportunities)}"
-    
-    templates = structures + [template1, template2, template3]
-    
+    template4 = f"{company} is offering a {random.choice(adjectives)} {random.choice(opportunities)} for the role of {job_title}"
+    template5 = f"Looking for a {job_title}? Check out the {random.choice(adjectives)} {random.choice(opportunities)} at {company}"
+    template6 = f"Exciting {job_title} role available at {company} – {random.choice(adjectives).capitalize()} {random.choice(opportunities)}"
+    template7 = f"{company} has a fantastic {random.choice(adjectives)} {random.choice(opportunities)} for {job_title}"
+    template8 = f"Apply for the {job_title} position at {company} – an {random.choice(adjectives)} {random.choice(opportunities)} awaits"
+    template9 = f"{company} is looking for a {job_title} – discover the {random.choice(adjectives)} {random.choice(opportunities)} available"
+    template10 = f"Join {company} as a {job_title} and seize this {random.choice(adjectives)} {random.choice(opportunities)}"
+
+    templates = structures + [template1, template2, template3, template4, template5, template6, template7, template8, template9, template10]
+
     # Randomly select a template but keep it consistent for this combination
     notification_text = random.choice(templates)
-    
-    return notification_text  
+
+    return notification_text

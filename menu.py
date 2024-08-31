@@ -26,7 +26,7 @@ def signin():
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT User_ID, email, password, fname, userType, contactnum, bio, profile 
+            SELECT * 
             FROM users WHERE email = ? AND password = ?
         ''', (email, password))
         user = cursor.fetchone()
@@ -40,18 +40,28 @@ def signin():
             session['user_email'] = user[1]       # User Email
             session['user_password'] = user[2]    # User Password (added this line)
             session['user_fname'] = user[3]       # User First Name (fname)
-            session['user_contact'] = user[5]     # User Contact Number
-            session['user_bio'] = user[6]         # User Bio
-            session['user_profile'] = user[7]     # User Profile Image
             session['user_type'] = user[4]        # User Type
+            session['user_contact'] = user[5]     # User Contact Number
+            session['user_profile'] = user[6]     # User Profile Image
+            session['user_status'] = user[7]     # User Address
+            session['user_dateRegister'] = user[8]     # User Address
+            session['user_AccountStatus'] = user[9]      # User Image
+            session['user_bio'] = user[10]         # User Bio
+            session['user_address'] = user[11]     # User Address
             
-            # Debug prints
-            print(f"Signed in user ID: {session['user_id']}")
-            print(f"Signed in user type: {session['user_type']}")
-            print(f"Signed in user first name: {session.get('user_fname')}")
-            print(f"Signed in user contact: {session.get('user_contact')}")
-            print(f"Signed in user bio: {session.get('user_bio')}")
-            print(f"Signed in user password: {session.get('user_password')}")  # Debug print
+                        # Debug prints
+            print(user[0])  # User ID
+            print(user[1])  # User Email
+            print(user[2])  # User Password
+            print(user[3])  # User First Name (fname)
+            print(user[4])  # User Type
+            print(user[5])  # User Contact Number
+            print(user[6])  # User Profile Image
+            print(user[7])  # User Status
+            print(user[8])  # User Registration Date
+            print(user[9])  # User Account Status
+            print(user[10]) # User Bio
+            print(user[11]) # User Address
 
             cursor.close()
             conn.close()
@@ -76,10 +86,33 @@ def logout():
     session.pop('user_type', None)  # Remove user_type from the session
     return redirect(url_for('signin'))
     
-@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    return render_template('/menu/signup.html')
+    if request.method == 'POST':
+        # Get data from the form
+        role = request.form['role']
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        
+        # Connect to the database
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+        
+        # Insert the user into the database
+        cursor.execute('''
+            INSERT INTO users (email, password, fname, userType, contactnum, dateRegister, AccountStatus)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (email, password, name, role, None, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Active'))
+        
+        # Commit and close the connection
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return render_template('/menu/signup.html', show_modal=True)
 
+    return render_template('/menu/signup.html', show_modal=False)
 
 
 
