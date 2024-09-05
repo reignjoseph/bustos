@@ -1,4 +1,5 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session
+import re
+from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
@@ -8,6 +9,7 @@ import random
 import logging
 from logging import FileHandler
 from main import app
+import pdfkit   # Import the pdfkit library
 
 
 # Configure logging
@@ -41,22 +43,316 @@ def get_db_connection():
 
 
 
+@app.route('/create_account', methods=['POST'])
+def create_account():
+    # For creating account
+    role = request.form.get('role')
+    name = request.form.get('name')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+
+    # Establish database connection
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Insert data into the users table
+    cursor.execute('''
+        INSERT INTO users (email, password, fname, userType, status, dateRegister)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (email, password, name, role, 'Pending', datetime.now().strftime('%Y-%m-%d')))
+
+    # Get the newly created User_ID
+    user_id = cursor.lastrowid
+    #I. Personal Information
+    surname = request.form.get('surname')
+    firstname = request.form.get('firstname')
+    middlename = request.form.get('middlename')
+    suffix = request.form.get('suffix')
+    birthdate = request.form.get('birthdate')
+    sex = request.form.get('sex')
+
+    # Address Information
+    address = request.form.get('address')
+    barangay = request.form.get('barangay')
+    municipality = request.form.get('municipality')
+    province = request.form.get('province')
+
+    # Additional Information
+    religion = request.form.get('religion')
+    civilstatus = request.form.get('civilstatus')
+    tin = request.form.get('tin')
+    height = request.form.get('height')
+
+    disability = request.form.getlist('disability')
+    disability_str = ', '.join(disability) 
+
+    contact_no = request.form.get('contact_no')
+    emailaddress = request.form.get('emailaddress')
+
+    # Employment Status
+    employment_status = request.form.getlist('employment_status')
+    employment_status_str = ', '.join(employment_status)
+
+    ofw =  request.form.getlist('ofw')
+    ofw_str = ', '.join(ofw)
+    
+    former_ofw =  request.form.getlist('former-ofw')
+    former_ofw_str = ', '.join(former_ofw)
+    # 4Ps Beneficiary
+    four_ps =  request.form.getlist('4ps')
+    four_ps_str = ', '.join(four_ps)
+    
+
+    #II. Preferred Work Location
+    work_location_type = request.form.get('preferred_work_location')
+    if work_location_type == 'local':
+        work_locations = request.form.getlist('local_city[]')
+        work_locations_str = f"Local, " + ", ".join(work_locations)
+    elif work_location_type == 'overseas':
+        work_locations = request.form.getlist('overseas_country[]')
+        work_locations_str = f"Overseas, " + ", ".join(work_locations)
+    else:
+        work_locations_str = None
+
+
+    #III. Languages
+    read_languages = request.form.getlist('read_language[]')
+    write_languages = request.form.getlist('write_language[]')
+    speak_languages = request.form.getlist('speak_language[]')
+    understand_languages = request.form.getlist('understand_language[]')
+    
+    # Retrieve the 'Others' language input if it's been filled
+    other_language = request.form.get('other_language', '').strip()
+    
+    if 'Other' in read_languages:
+        read_languages.remove('Other')
+        if other_language:
+            read_languages.append(other_language)
+    
+    if 'Other' in write_languages:
+        write_languages.remove('Other')
+        if other_language:
+            write_languages.append(other_language)
+    
+    if 'Other' in speak_languages:
+        speak_languages.remove('Other')
+        if other_language:
+            speak_languages.append(other_language)
+    
+    if 'Other' in understand_languages:
+        understand_languages.remove('Other')
+        if other_language:
+            understand_languages.append(other_language)
+
+    # Convert lists to comma-separated strings
+    read_languages_str = f"Read: [{', '.join(read_languages)}]"
+    write_languages_str = f"Write: [{', '.join(write_languages)}]"
+    speak_languages_str = f"Speak: [{', '.join(speak_languages)}]"
+    understand_languages_str = f"Understand: [{', '.join(understand_languages)}]"
+
+    language_proficiency_str = f"{read_languages_str}, {write_languages_str}, {speak_languages_str}, {understand_languages_str}"
+
+    #IV. Educational Background
+    currently_in_school = request.form.get('educational')
+    course = request.form['course']
+
+    elementary_school = request.form.get('elementary_school', None)
+    elementary_graduated = request.form.get('elementary_graduated', None)
+    elementary_reached = request.form.get('elementary_reached', None)
+    elementary_last_attended = request.form.get('elementary_last_attended', None)
+    elementary_values = [
+        value for value in [
+        elementary_school,
+        elementary_graduated,
+        elementary_reached,
+        elementary_last_attended
+        ] if value
+    ]
+    elementary_str = f"{', '.join(elementary_values)}"
+
+    secondary_type = request.form.get('secondary')
+    senior_strand = request.form.get('senior_strand')
+    senior_graduated = request.form.get('senior_graduated')
+    senior_reached = request.form.get('senior_reached')
+    senior_last_attended = request.form.get('senior_last_attended')
+    senior_high_values = [
+        value for value in [
+        secondary_type,
+        senior_strand,
+        senior_graduated,
+        senior_reached,
+        senior_last_attended
+        ] if value
+    ]
+    senior_high_info = f"{', '.join(senior_high_values)}"
+
+
+
+    tertiary_school = request.form.get('tertiary_school', None)
+    tertiary_graduated = request.form.get('tertiary_graduated', None)
+    tertiary_reached = request.form.get('tertiary_reached', None)
+    tertiary_last_attended = request.form.get('tertiary_last_attended', None)
+    tertiary_values = [
+        value for value in [
+        tertiary_school,
+        tertiary_graduated,
+        tertiary_reached,
+        tertiary_last_attended
+        ] if value
+    ]
+    tertiary_str = f"{', '.join(tertiary_values)}"
+
+
+
+    graduate_studies_school = request.form.get('graduate_studies_school', None)
+    graduate_studies_graduated = request.form.get('graduate_studies_graduated', None)
+    graduate_studies_reached = request.form.get('graduate_studies_reached', None)
+    graduate_studies_last_attended = request.form.get('graduate_studies_last_attended', None)
+    graduate_studies_values = [
+        value for value in [
+        graduate_studies_school,
+        graduate_studies_graduated,
+        graduate_studies_reached,
+        graduate_studies_last_attended
+        ] if value
+    ]
+    graduate_studies_str = f"{', '.join(graduate_studies_values)}"
+
+    #V. Technical
+    vocational_course_1 = request.form.get('vocational_course_1', None)
+    hours_of_training_1 = request.form.get('hours_of_training_1', None)
+    training_institution_1 = request.form.get('training_institution_1', None)
+    skills_aquired_1 = request.form.get('skills_aquired_1', None)
+    certificate_received_1 = request.form.get('certificate_received_1', None)
+
+    vocational_course_2 = request.form.get('vocational_course_2', None)
+    hours_of_training_2 = request.form.get('hours_of_training_2', None)
+    training_institution_2 = request.form.get('training_institution_2', None)
+    skills_aquired_2 = request.form.get('skills_aquired_2', None)
+    certificate_received_2 = request.form.get('certificate_received_2', None)
+
+    vocational_course_3 = request.form.get('vocational_course_3', None)
+    hours_of_training_3 = request.form.get('hours_of_training_3', None)
+    training_institution_3 = request.form.get('training_institution_3', None)
+    skills_aquired_3 = request.form.get('skills_aquired_3', None)
+    certificate_received_3 = request.form.get('certificate_received_3', None)
+
+    # Create a list of the non-empty vocational training entries
+    vocational_training_entries = []
+
+    # Append each training entry if it has at least one non-empty field
+    for i in range(1, 4):
+        # Directly retrieve values for each field
+        course = request.form.get(f'vocational_course_{i}', None)
+        hours = request.form.get(f'hours_of_training_{i}', None)
+        institution = request.form.get(f'training_institution_{i}', None)
+        skills = request.form.get(f'skills_aquired_{i}', None)
+        certificate = request.form.get(f'certificate_received_{i}', None)
+
+        entry = [course, hours, institution, skills, certificate]
+        
+        # Filter out empty values and join with commas
+        entry_str = ', '.join([value for value in entry if value])
+        
+        if entry_str:
+            vocational_training_entries.append(entry_str)
+
+    # Join all non-empty entries with a separator (e.g., " | ") to store them in the 'vocational_training' field
+    vocational_training_str = ' | '.join(vocational_training_entries)
+
+
+    # VI. Professional License
+    eligibility_1 = request.form.get('eligibility_1')
+    eligibility_date_taken_1 = request.form.get('eligibility_date_taken_1')
+    eligibility_prc_1 = request.form.get('eligibility_prc_1')
+    eligibility_valid_until_1 = request.form.get('eligibility_valid_until_1')
+
+    eligibility_2 = request.form.get('eligibility_2')
+    eligibility_date_taken_2 = request.form.get('eligibility_date_taken_2')
+    eligibility_prc_2 = request.form.get('eligibility_prc_2')
+    eligibility_valid_until_2 = request.form.get('eligibility_valid_until_2')
+
+    eligibility_professional_license = []
+
+    # Create entries for eligibility 1 and eligibility 2 if they have any non-empty fields
+    if eligibility_1 or eligibility_date_taken_1 or eligibility_prc_1 or eligibility_valid_until_1:
+        entry_1 = f"[1] " + ', '.join([value for value in [eligibility_1, eligibility_date_taken_1, eligibility_prc_1, eligibility_valid_until_1] if value])
+        eligibility_professional_license.append(entry_1)
+
+    if eligibility_2 or eligibility_date_taken_2 or eligibility_prc_2 or eligibility_valid_until_2:
+        entry_2 = f"[2] " + ', '.join([value for value in [eligibility_2, eligibility_date_taken_2, eligibility_prc_2, eligibility_valid_until_2] if value])
+        eligibility_professional_license.append(entry_2)
+
+    # Join all entries into a single string with ' | ' as the separator
+    eligibility_professional_license_str = ' | '.join(eligibility_professional_license)
 
 
 
 
 
+    #VIII. Work Experience
+    work_experience = []
+
+    for i in range(1, 4):  # Assuming you're collecting up to 3 work experiences
+        company = request.form.get(f'work_experience_company_{i}')
+        address = request.form.get(f'work_experience_address_{i}')
+        position = request.form.get(f'work_experience_position_{i}')
+        months = request.form.get(f'work_experience_months_{i}')
+        status = request.form.get(f'work_experience_status_{i}')
+
+        if company or address or position or months or status:
+            entry = f"[{i}] " + ', '.join([value for value in [company, address, position, months, status] if value])
+            work_experience.append(entry)
+
+    work_experience_str = ' | '.join(work_experience)
+        
+    #VIII. Work Experience
+    selected_skills = request.form.getlist('skills_acquired')
+    other_skill = request.form.get('skills_acquired_other', '')
+
+    # Format the skills
+    formatted_skills = ', '.join([f'[{skill}]' for skill in selected_skills])
+    if other_skill:
+        formatted_skills += f', [ {other_skill} ]'
+
+    # Prepend with "Skill: "
+    formatted_skills = f'Skill: {formatted_skills}'
 
 
 
 
+    cursor.execute('''
+    INSERT INTO form101 (jobseeker_id, surname, firstname, middlename, suffix, birthdate, sex, address, barangay, municipality, province, religion, civilstatus, tin, contact_no, emailaddress,disability,employment_status,ofw,former_ofw,four_ps, preferred_work_location,language_proficiency,currently_school,course,elementary,senior_high,tertiary,graduate_studies,vocational_training,eligibility_license,work_experience,skills)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?,?,?)
+    ''', (user_id, surname, firstname, middlename, suffix, birthdate, sex, address, barangay, municipality, province, religion, civilstatus, tin, contact_no, emailaddress, disability_str, employment_status_str, ofw_str, former_ofw_str, four_ps_str, work_locations_str,language_proficiency_str,currently_in_school,course,elementary_str,senior_high_info,tertiary_str,graduate_studies_str,vocational_training_str,eligibility_professional_license_str,work_experience_str,formatted_skills))
+
+    # Commit and close connection
+    conn.commit()
+    conn.close()
+
+    print(f"Received data - Role: {role}, Name: {name}, Email: {email}, Password: {password}, User_ID: {user_id}")
+    print(f"Received data - Skills: {formatted_skills}")
+
+    # print(f"Received data - User_ID: {user_id}, Surname: {surname}, Firstname: {firstname}, Middlename: {middlename}, Suffix: {suffix}, Birthdate: {birthdate}, Sex: {sex}, Address: {address}, Barangay: {barangay}, Municipality: {municipality}, Province: {province}, Religion: {religion}, Civil Status: {civilstatus}, TIN: {tin}, Height: {height}, Disability: {', '.join(disability)}, Contact No: {contact_no}, Email Address: {emailaddress}, Employment Status: {employment_status}, OFW: {ofw}, Specify Country: {specify_country}, Former OFW: {former_ofw}, Latest Country: {latest_country}, Return Date: {return_date}, 4Ps: {four_ps}, Household ID: {household_id}")
+
+    return redirect('/signin')
 
 
+@app.route('/check_email', methods=['POST'])
+def check_email():
+    email = request.form.get('email')
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    # Check if the email is already registered
+    cursor.execute('SELECT COUNT(*) FROM users WHERE email = ?', (email,))
+    email_exists = cursor.fetchone()[0] > 0
 
+    conn.close()
 
-
-
+    # Return a JSON response to the client
+    return jsonify({'email_exists': email_exists})
 
 
 

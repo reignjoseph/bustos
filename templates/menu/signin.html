@@ -47,6 +47,14 @@
   <div class="container-login">
     <div class="form-box-login">
         <h2>Sign in to your account</h2>
+        {% if error_message %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="padding-left: 2rem; padding-right: 2rem;font-size: 0.8rem; text-align: center;">
+                    {{ error_message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="right: 0px; top: -15px; width: 0; height: 0; outline:none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endif %}
         <form action="/signin" method="post">
             <div class="input-box-login">
                 <input type="email" name="email" placeholder="Enter email" required>
@@ -89,6 +97,29 @@ function togglePasswordVisibility() {
             passwordField.style.borderRadius = "5px";
             passwordField.style.fontSize = "1em";
         }
+
+</script>
+<script>
+    $('#signinForm').submit(function(e) {
+    e.preventDefault();  // Prevent the form from submitting traditionally
+
+    $.ajax({
+        url: '/signin',
+        method: 'POST',
+        data: $(this).serialize(),
+        success: function(response) {
+            if (response.redirect) {
+                window.location.href = response.redirect;  // Redirect to the appropriate page
+            } else {
+                // If the response contains an error message, display it
+                $('.container-login').html(response);  // Replace the form with the response content
+            }
+        },
+        error: function() {
+            alert('An error occurred. Please try again.');
+        }
+    });
+});
 
 </script>
 </main>

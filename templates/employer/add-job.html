@@ -8,7 +8,7 @@
             <input type="text" class="form-control" id="company" name="company" required placeholder="Enter Company name">
         </div>
         <div class="container2 form-group">
-            <label for="position">Posaition</label>
+            <label for="position">Position</label>
             <input type="text" class="form-control" id="position" name="position" required placeholder="Type of Position">
         </div>
         <div class="container1 form-group">
@@ -34,11 +34,18 @@
             <label for="salary">Salary</label>
             <input type="text" class="form-control" id="salary" name="salary" required placeholder="Enter salary amount">
         </div>
-        <div class="container8 form-group">
-            <label for="jobStatus">Job Status</label>
-            <input type="text" class="form-control" id="jobStatus" name="jobStatus" value="Available"  readonly>
-        </div>
-        
+        <div class="container8 form-group"> 
+            <div style=" padding: 5px; ">
+                 <label for="jobStatus">Job Status</label>
+                  <input type="text" class="form-control" id="jobStatus" name="jobStatus" value="Available" readonly=""> 
+                </div>
+                 <div> 
+                    <label>Preferred Skills: <button type="button" id="add-skill-btn" style="border: 1px solid;outline: none;margin: 3px;">+</button> </label> 
+                     <div id="skills-container"> </div>
+                     </div> 
+                     
+                     <!--  --> </div>
+
 <!--  -->
         <div class="container5 form-group">
             <label for="location">Location</label>
@@ -64,7 +71,48 @@ flatpickr("#closingDate", {
     dateFormat: "Y-m-d H:i",
 });
 </script>
+<script>
+    const addSkillButton = document.getElementById('add-skill-btn');
+    const skillsContainer = document.getElementById('skills-container');
 
+    // Function to add a new input field for skill
+    addSkillButton.addEventListener('click', function() {
+        const newSkillDiv = document.createElement('div');
+        newSkillDiv.classList.add('skill-input');
+        
+        // Create a new input element
+        const newSkillInput = document.createElement('input');
+        newSkillInput.type = 'text';
+        newSkillInput.name = 'skills[]';
+        newSkillInput.placeholder = 'Enter a skill';
+
+        // Create the remove button
+        const removeSkillButton = document.createElement('button');
+        removeSkillButton.type = 'button';
+        removeSkillButton.innerText = '-';
+        removeSkillButton.classList.add('remove-skill-btn');
+
+        // Append the input and remove button to the new div
+        newSkillDiv.appendChild(newSkillInput);
+        newSkillDiv.appendChild(removeSkillButton);
+        
+        // Append the new div to the container
+        skillsContainer.appendChild(newSkillDiv);
+
+        // Add event listener to remove the skill input
+        removeSkillButton.addEventListener('click', function() {
+            skillsContainer.removeChild(newSkillDiv);
+        });
+    });
+
+    // Add event listener to remove the first skill input if clicked
+    document.querySelectorAll('.remove-skill-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const skillDiv = this.parentElement;
+            skillsContainer.removeChild(skillDiv);
+        });
+    });
+</script>
 <script>
 document.getElementById('image').addEventListener('change', function(event) {
     var file = event.target.files[0]; // Get the selected file

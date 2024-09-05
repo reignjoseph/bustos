@@ -57,20 +57,21 @@ body, html {
 }
 
 .footer {
-    position: absolute;
+    position: relative;
     width: -webkit-fill-available;
-    height: 3vw;
+    height: 4vw;
     bottom: 0px;
     left: 0;
     background-color: #4e69ff;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    font-size: 1.5vw;
+    /* color: #fff; */
+    /* display: flex; */
+    /* justify-content: center; */
+    /* font-size: 1.5vw; */
     align-items: center;
     flex-wrap: nowrap;
-    padding: 15px 10px 0px 0px;
-    border-radius: 15px 15px 0px 0px;
+    /* padding: 15px 10px 0px 0px; */
+    /* border-radius: 15px 15px 0px 0px; */
+    display: block;
 }
 
 .footer a {
@@ -78,7 +79,7 @@ body, html {
     text-decoration: none;
 }
 
-main{position:relative;display: grid;transform: translate(0vw, 15vw);grid-template-rows: 1fr 10vw;place-content: center;}
+main{display: grid;grid-template-rows: auto;place-content: center;}
 a:hover {
     color: black;
     text-decoration: underline;
@@ -92,12 +93,15 @@ a:hover {
     padding: 20px;
     border-radius: 1px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
     display: grid;
     grid-template-columns: 1fr;
     grid-row-gap: 15px;
     place-items: center;
+    /* transform: translate(0px, 4rem); */
+    top: 2rem;
+    position: relative;
+    width: 22rem;
+    margin-bottom: 4rem;
 }
 
 h2 {
@@ -107,9 +111,9 @@ h2 {
 
 .signup-form {
     display: grid;
-    grid-template-columns: 1fr;
-    grid-row-gap: 15px;
-    width: 100%;
+    /* grid-template-columns: 1fr; */
+    /* grid-row-gap: 15px; */
+    width: 0%;
 }
 
 
@@ -117,32 +121,37 @@ h2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     place-items: center;
+    width: -webkit-fill-available;
 }
 .form-group-2 {
     display: grid;
     grid-template-columns: 1fr 3fr;
     align-items: center;
+    width: -webkit-fill-available;
 }
 .form-group-3 {
     display: grid;
     grid-template-columns: 1fr 3fr;
     align-items: center;
+    width: -webkit-fill-available;
 }
 .form-group-4 {
     display: grid;
     grid-template-columns: 1fr 3fr;
     align-items: center;
+    width: -webkit-fill-available;
 }
 .form-group-5 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    align-items: center;
     white-space: nowrap;
+    justify-content: space-around;
+    width: -webkit-fill-available;
 }
 .form-group-6 {
     display: grid;
-    grid-template-columns: 1fr 2fr;
-    align-items: center;
+    grid-template-columns: 1fr 0fr;
+    place-self: center;
 }
 .password-group {
     position: relative;

@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session
+from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
@@ -27,41 +27,36 @@ def signin():
         
         cursor.execute('''
             SELECT * 
-            FROM users WHERE email = ? AND password = ?
-        ''', (email, password))
+            FROM users WHERE email = ?
+        ''', (email,))
         user = cursor.fetchone()
 
         if user:
+            if user[2] != password:  # Check password
+                cursor.close()
+                conn.close()
+                return render_template('/menu/signin.html', error_message='Invalid password.')
+
+            if user[7] == 'Pending':
+                cursor.close()
+                conn.close()
+                return render_template('/menu/signin.html', error_message='Your account is pending approval.')
+            
             # Clear existing session data
             session.clear()
             
             # Set new session data
             session['user_id'] = user[0]          # User ID
             session['user_email'] = user[1]       # User Email
-            session['user_password'] = user[2]    # User Password (added this line)
+            session['user_password'] = user[2]    # User Password
             session['user_fname'] = user[3]       # User First Name (fname)
             session['user_type'] = user[4]        # User Type
             session['user_contact'] = user[5]     # User Contact Number
             session['user_profile'] = user[6]     # User Profile Image
-            session['user_status'] = user[7]     # User Address
-            session['user_dateRegister'] = user[8]     # User Address
-            session['user_AccountStatus'] = user[9]      # User Image
-            session['user_bio'] = user[10]         # User Bio
-            session['user_address'] = user[11]     # User Address
-            
-                        # Debug prints
-            print(user[0])  # User ID
-            print(user[1])  # User Email
-            print(user[2])  # User Password
-            print(user[3])  # User First Name (fname)
-            print(user[4])  # User Type
-            print(user[5])  # User Contact Number
-            print(user[6])  # User Profile Image
-            print(user[7])  # User Status
-            print(user[8])  # User Registration Date
-            print(user[9])  # User Account Status
-            print(user[10]) # User Bio
-            print(user[11]) # User Address
+            session['user_status'] = user[7]      # User Status
+            session['user_dateRegister'] = user[8]# User Registration Date
+            session['user_bio'] = user[9]         # User Bio
+            session['user_address'] = user[10]    # User Address
 
             cursor.close()
             conn.close()
@@ -71,13 +66,14 @@ def signin():
             elif user[4] == 'Employer':
                 return redirect(url_for('employer'))
             else:
-                return "Invalid user type", 401
+                return render_template('/menu/signin.html', error_message='Invalid user type.')
         else:
             cursor.close()
             conn.close()
-            return "Invalid credentials", 401
+            return render_template('/menu/signin.html', error_message='Not registered email.')
 
     return render_template('/menu/signin.html')
+
 
 
 @app.route('/logout')

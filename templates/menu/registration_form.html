@@ -1,152 +1,237 @@
 <div class="form-container_registration">
-    <div class="form-header_registration">
+    <div class="form-header_registration"></div>
+
+    <div id="page1" class="page active">
+        <h2 class="headera">NSRP Form 1<br>September<br>2020</h2><p class="headerb">Republic of the Philippines<br>Department of Labor and Employment<span style="font-weight: bold;"><br>NATIONAL SKILLS REGISTRATION PROGRAM<br>JOBSEEKER REGISTRATION FORM</span></p>
+        <p class="headerc"><span style="font-weight:bold;">INSTRUCTIONS:</span> Please fill out the form legibly in block letters using a ballpoint pen. Check appropriate boxes. Please
+            do not leave any items unanswered. Indicate “NA” if not applicable. You may use extra sheet if needed. Submit
+            Accomplished form to the Public Employment Service Office (PESO) Manager or Officer in your city/municipality.
+            </p>
+        <div class="form-group_registration1">
+            <h3 class="row1a">I.PERSONAL INFORMATION</h3>
+            <input class="row2a" type="text" id="surname" name="surname" required=""><input class="row2a" type="text" id="firstname" name="firstname" required=""><input class="row2a" type="text" id="middlename" name="middlename" required=""><input class="row2a" type="text" id="suffix" name="suffix" required="">
+            <label class="row3a" for="surname">Surname</label><label class="row3a" for="firstname">First Name</label><label class="row3a" for="middlename">Middle Name</label><label class="row3a" for="suffix">Suffix (Ex: Sr., Jr., III, etc.)</label>
+            <label class="row4a" for="birthdate">DATE OF BIRTH (mm/dd/yyyy)</label><input class="row4b" type="text" id="birthdate" name="birthdate" required="">
+            <label class="row5a" for="sex">SEX <span style="display: grid;grid-template-columns: repeat(4, auto);transform: translate(20px, 0px);font-size: 12px;height: min-content; font-size: 1vw;"><input required="" type="radio" class="gender" name="sex" value="Male"> Male<input required="" type="radio" class="gender" name="sex" value="Female" style=" margin-left: 20px;"> Female</span></label>
+            <label class="row6a"><span style="padding: 3px; padding-left: 10px; border: 1px solid; grid-column: 1 / span 2;">PRESENT ADDRESS</span>
+            <label class="row6b" for="address">House No./ Street Village</label><input class="row6b" type="text" id="address" name="address" required="">
+            <label class="row6c" for="barangay">Barangay</label><input class="row6c" type="text" id="barangay" name="barangay" required="">
+            <label class="row6d" for="city">City/Municipality</label><input class="row6d" type="text" id="municipality" name="municipality" required="">
+            <label class="row6e" for="province">Province</label><input class="row6e" type="text" id="province" name="province" required=""></label>
+            <label class="row7a" for="relgion">RELIGION<input class="row7b" type="text" id="religion" name="religion" required=""></label>
+            <label class="row8a" for="civilstatus">CIVIL STATUS <span style=" grid-column: 2;"><input required="" type="radio" name="civilstatus" value="Single"> Single<br><input required="" type="radio" name="civilstatus" value="Married"> Married<br><input required="" type="radio" name="civilstatus" value="Widow"> Widow</span></label>
+            <label class="row9a" for="tin">TIN<input class="row9b" type="text" id="tin" name="tin"></label>
+            <label class="row10a" for="height">HEIGHT (FT.)<input class="row10b" type="text" id="height" name="height"></label>
+            <label class="row11a" for="disability">DISABILITY<span class="disability"><label> <input type="checkbox" name="disability" value="Visual"> Visual </label> <label> <input type="checkbox" name="disability" value="Speech"> Speech </label> <label> <input type="checkbox" name="disability" value="Mental"> Mental </label> <label> <input type="checkbox" name="disability" value="Hearing"> Hearing </label> <label> <input type="checkbox" name="disability" value="Physical"> Physical </label> <label> <input type="checkbox" value="Others"> Others <input type="text" name="disability" placeholder="Please specify" class="other-specify"></label></span> </label>
+            <script>document.querySelector('input[value="Others"]').addEventListener('change', function() { const textInput = document.querySelector('.other-specify'); textInput.style.display = this.checked ? 'inline-block' : 'none'; });</script>
+            <label class="row12a" for="contact_no">CONTACT NUMBER/S <span class="contact_no"><input style="border: none; outline: none;" type="text" name="contact_no" required="">  </span></label>
+            <label class="row13a" for="emailaddress">E-MAIL<span class="emailaddress"><input style="border: none; outline: none; width:-webkit-fill-available;" class="row13b" type="text" id="emailaddress" name="emailaddress" required=""></span></label>
+            <label class="row14a" for="employmentstatus">EMPLOYMENT STATUS / TYPE<span class="form-group_employment"><!-- Employment Checkbox --> <label class="rowa"> <input type="checkbox" id="employment-checkbox"> Employment </label> <!-- Employment Options --> <div id="employment-options" class="hidden"> <!-- Wage Employed --> <label class="rowb"> <input type="checkbox" id="wage-employed" name="employment_status" value="Wage Employed"> Wage Employed </label> <!-- Self-Employed --> <label class="rowb"> <input type="checkbox" id="self-employed-checkbox" name="employment_status" value="Self-Employed"> Self-Employed </label> <!-- Self-Employed Options --> <div id="self-employment-options" class="hidden"> <label class="rowc"> <input type="checkbox" id="fisherman" name="employment_status" value="Fisherman"> Fisherman/Fisherfolk </label> <label class="rowc"> <input type="checkbox" id="vendor" name="employment_status" value="Vendor"> Vendor/Retailer </label> <label class="rowc"> <input type="checkbox" id="home-based" name="employment_status" value="Home-based"> Home-based Worker </label> <label class="rowc"> <input type="checkbox" id="transport" name="employment_status" value="Transport"> Transport </label> <label class="rowc"> <input type="checkbox" id="domestic-worker" name="employment_status" value="Domestic Worker"> Domestic Worker </label> <label class="rowc"> <input type="checkbox" id="freelancer" name="employment_status" value="Freelancer"> Freelancer </label> <label class="rowc"> <input type="checkbox" id="artisan" name="employment_status" value="Artisan"> Artisan/Craft Worker </label> <label class="rowc"> <input type="checkbox" id="other-self-employed"> Others (Please specify): </label> <input type="text" class="rowg hidden" id="other-self-employed-specify" name="employment_status" style="display: none;"> </div></div></span>
+            <div class="form-group_unemployment"><!-- Unemployed Checkbox --> <label class="rowa"> <input type="checkbox" id="unemployed-checkbox"> Unemployed </label> <!-- Unemployed Options --> <div id="unemployment-options" class="hidden"> <label class="rowb"> <input type="checkbox" id="new-entrant" name="employment_status" value="Fresh Graduate"> New Entrant/Fresh Graduate </label> <label class="rowb"> <input type="checkbox" id="terminated-local" name="employment_status" value="Terminated Local"> Terminated/Laid off (local) </label> <label class="rowb"> <input type="checkbox" id="finished-contract" name="employment_status" value="Finished Contract"> Finished Contract </label> <label class="rowb"> <input type="checkbox" id="terminated-abroad" name="employment_status" value="Terminated Abroad"> Terminated/Laid off (abroad) </label> <label class="rowb"> <input type="checkbox" id="specify-country"> Specify Country: </label> <input type="text" class="rowg hidden" id="country-specify" style="display: none;" name="employment_status"> <label class="rowb"> <input type="checkbox" id="resigned" name="employment_status" value="Resigned"> Resigned </label> <label class="rowb"> <input type="checkbox" id="others-unemployed" name="employment_status"> Others, please specify: </label> <input type="text" class="rowg hidden" id="others-unemployed-specify" name="employment_status"> <label class="rowb"> <input type="checkbox" id="retired" name="employment_status" value="Retired"> Retired </label> <label class="rowb"> <input type="checkbox" id="calamity" name="employment_status" value="Terminated due to calamity"> Terminated/Laid off due to calamity </label> </div></div></label>
+            <div class="row15a ofw_container"> <div class="form-groupa"> <label>Are you an OFW?</label> <div style="width: -webkit-fill-available;display: ruby;"> <input type="radio" id="ofw-yes" name="ofw" value="yes"> <label for="ofw-yes">Yes</label> <input type="radio" id="ofw-no" name="ofw" value="no"> <label for="ofw-no">No</label> </div> </div> <div id="ofw-details" class="form-groupa" style="display: none;"> <label for="specify-country">Specify country:</label> <input type="text" id="specify-country" name="ofw"> </div> <div class="form-groupb"> <label>Are you a former OFW?</label> <div style="grid-column: 2;display: ruby;"> <input type="radio" id="former-ofw-yes" name="former-ofw" value="yes"> <label for="former-ofw-yes">Yes</label> <input type="radio" id="former-ofw-no" name="former-ofw" value="no"> <label for="former-ofw-no">No</label> </div> </div> <div id="former-ofw-details" class="apple" style="display: none;"> <div class="form-group"> <label for="latest-country" style="outline:none">Latest country of deployment:</label> <input type="text" id="latest-country" name="former-ofw"> </div> <div class="form-group"> <label style="outline: none;" for="return-date">Month and year of return to Philippines:</label> <input type="text" id="return-date" name="former-ofw" placeholder="MM/YYYY"> </div> </div> </div>
+            <div class="row16a form-group_4ps"> <label>Are you a 4Ps beneficiary?</label> <div style="padding-left: 20px;padding-right: 20px;display: flex;width: 7rem;justify-content: space-around;"> <input type="radio" id="4ps-yes" name="4ps" value="yes"> <label for="4ps-yes">Yes</label> <input type="radio" id="4ps-no" name="4ps" value="no"> <label for="4ps-no">No</label> </div> <div style="display:none;text-wrap: nowrap;" id="household-id-container"> <label for="household-id">Household ID No:</label> <input type="text" id="household-id" name="4ps" style="outline: none; width: -webkit-fill-available; border: none"> </div> </div>
+        </div>
+
+        <div class="form-group_registration2"><h3 class="row1a">II. JOB PREFERENCE</h3><div class="row2a" for="preferred_occupation">PREFERRED OCCUPATION<div class="row2b"><input type="radio" name="preferred_occupation" value="part-time">Part-time<input type="radio" name="preferred_occupation" value="full-time">Full-time</div><div class="row2c"><input style="outline: none; border: 1px solid;" type="text" name="preferred_occupation" placeholder="1."><input style="outline: none; border: 1px solid;" type="text" name="preferred_occupation" placeholder="2."><input style="outline: none; border: 1px solid;" type="text" name="preferred_occupation" placeholder="3."></div></div><div class="row3a" for="preferred_work_location"> <div style="grid-column: 1 / span 2;border: 1px solid;">PREFERRED WORK LOCATION</div> <div class="row3b"> <div style="text-wrap: nowrap;place-content: center;padding: 3px;text-align: center;"> <input type="radio" id="local_radio" name="preferred_work_location" value="local"> <label for="local_radio">Local (specify cities/municipalities):</label> </div> <input style="outline: none; border: 1px solid;" type="text" name="local_city[]" placeholder="1."> <input style="outline: none; border: 1px solid;" type="text" name="local_city[]" placeholder="2."> <input style="outline: none; border: 1px solid;" type="text" name="local_city[]" placeholder="3."> </div> <div class="row3c"> <div style="text-wrap: nowrap;place-self: center;text-align: center;margin: 0;height: 0px;display: flex;align-items: center;padding: 16px;"> <input type="radio" id="overseas_radio" name="preferred_work_location" value="overseas"> <label for="overseas_radio" style="margin: 0;padding-left: 3px;">Overseas, (specify countries):</label> </div> <input style="outline: none; border: 1px solid;" type="text" name="overseas_country[]" placeholder="Country 1"> <input style="outline: none; border: 1px solid;" type="text" name="overseas_country[]" placeholder="Country 2"> <input style="outline: none; border: 1px solid;" type="text" name="overseas_country[]" placeholder="Country 3"> </div> </div></div>
+        <div class="form-group_registration3"> <h3 class="row1a">III. LANGUAGE / DIALECT PROFICIENCY (check if applicable)</h3> <div class="row2a">LANGUAGE/DIALECT <label>English</label> <label>Filipino</label> <label>Mandarin</label> <input style="width: -webkit-fill-available;outline: none;border: 1px solid;padding: 3px;" type="text" name="other_language" placeholder="Others:"> </div> <div class="row2b">Read <span><input type="checkbox" name="read_language[]" value="English"></span><span> <input type="checkbox" name="read_language[]" value="Filipino"> </span><span><input type="checkbox" name="read_language[]" value="Mandarin"> </span><span><input type="checkbox" name="read_language[]" value="Other"> </span></div> <div class="row2c">Write <span><input type="checkbox" name="write_language[]" value="English"> </span><span><input type="checkbox" name="write_language[]" value="Filipino"> </span><span><input type="checkbox" name="write_language[]" value="Mandarin"> </span><span><input type="checkbox" name="write_language[]" value="Other"> </span></div> <div class="row2d">Speak <span><input type="checkbox" name="speak_language[]" value="English"> </span><span><input type="checkbox" name="speak_language[]" value="Filipino"> </span><span><input type="checkbox" name="speak_language[]" value="Mandarin"> </span><span><input type="checkbox" name="speak_language[]" value="Other"></span> </div> <div class="row2e">Understand <span><input type="checkbox" name="understand_language[]" value="English"> </span><span><input type="checkbox" name="understand_language[]" value="Filipino"></span><span> <input type="checkbox" name="understand_language[]" value="Mandarin"></span> <span><input type="checkbox" name="understand_language[]" value="Other"></span> </div> </div>
+        <div class="form-group_registration4"> <h3 class="row1a">IV. EDUCATIONAL BACKGROUND</h3> <div class="currently_school" for="educational">Currently in school? <div style=" display: flex; margin-left: 2rem; "><input type="radio" name="educational" value="Yes">Yes<input type="radio" name="educational" value="No" style="margin-left: 20px;">No</div></div> <div class="row2b"> <label style="grid-column: 1;grid-row: 1/span 2;text-align: center;align-content: center;margin: 0;padding: 0;border: 1px solid;width: -webkit-fill-available;height: -webkit-fill-available;">Level:</label> <label style="grid-row: 1 / span 2;grid-column: 2;text-align: center;align-content: flex-start;margin: 0;width: -webkit-fill-available;height: -webkit-fill-available;border: 1px solid;display: flex;flex-wrap: wrap;justify-content: center;padding: 3px;" for="course">COURSE:<input id="course" name="course" style="outline: none; border:none;"></label> <label style="grid-column: 3;grid-row: 1/span 2;text-align: center;margin: 0;padding: 0;border: 1px solid;width: -webkit-fill-available;height: -webkit-fill-available;align-content: center;">Year Graduated</label> <label style="grid-column: 4/span 2;text-align: center;border: 1px solid;align-content: center;grid-row: 1/span 1;margin: 0;">IF UNDERGRADUATE</label> <label style="grid-column: 4;grid-row: 2;text-align: center;border: 1px solid;align-content: center;height: -webkit-fill-available;margin: 0;">LEVEL REACHED</label> <label style="grid-column: 5;text-align: center;border: 1px solid;align-content: center;grid-row: 2;margin: 0;">YEAR LAST ATTENDED</label> <div class="row2c" for="elementary"> <label style="border: 1px solid; margin: 0;">Elementary</label> <input class="elementary_school" type="text" name="elementary_school"> <input class="elementary_graduated" type="text" name="elementary_graduated"> <input class="elementary_reached" type="text" name="elementary_reached"> <input class="elementary_last_attended" type="text" name="elementary_last_attended"> </div> <div class="row2d" for="senior_high"><div style=" grid-column: 1; border: 1px solid; align-content: center; "> <input type="radio" name="secondary" value="Non-K12">Secondary<br>(Non-K12)</div><div style=" grid-column: 2; border: 1px solid; align-content: center; "><input type="radio" name="secondary" value="K12">Secondary<br>(K-12)</div><div style=" grid-column: 3; display: flex; flex-direction: column; border: 1px solid; align-content: center; padding: 3px; "><span>Senior High Strand:</span><input type="text" name="senior_strand" style=" outline: none;  border:none;"></div><input type="text" name="senior_graduated" style=" grid-column: 4; border: 1px solid; outline: none; align-content: center; "><input type="text" name="senior_reached" style=" grid-column: 5; outline: none; border: 1px solid; align-content: center; "><input type="text" name="senior_last_attended" style=" grid-column: 6; border: 1px solid; outline: none; align-content: center; "></div> <div class="row2e" for="tertiary"> <label style="border: 1px solid; margin: 0;">Tertiary</label> <input class="tertiary_school" type="text" name="tertiary_school"> <input class="tertiary_graduated" type="text" name="tertiary_graduated"> <input class="tertiary_reached" type="text" name="tertiary_reached"> <input class="tertiary_last_attended" type="text" name="tertiary_last_attended"> </div> <div class="row2f" for="graduate_studies"> <label style="border: 1px solid; margin: 0;">Graduate Studies/<br>Post-graduate</label> <input class="graduate_studies_school" type="text" name="graduate_studies_school"> <input class="graduate_studies_graduated" type="text" name="graduate_studies_graduated"> <input class="graduate_studies_reached" type="text" name="graduate_studies_reached"> <input class="graduate_studies_last_attended" type="text" name="graduate_studies_last_attended"> </div> </div> </div>
+        <div class="form-group_registration5"> <h3 class="row1a">V. TECHNICAL/VOCATIONAL AND OTHER TRAINING (Include courses takens as part of college education)</h3> <div class="row2a" for="technical_vocational"> <label style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px;">TRAINING/VOCATIONAL COURSE</label><label style="border: 1px solid;margin: 0;align-content: center;padding: 3px;">HOURS OF TRAINING</label><label style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px;">TRAINING INSTITUTION</label><label style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4;">SKILLS ACQUIRED</label><label style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5;">CERTIFICATES RECEIVED<span style=" font-size: 0.5vw; ">(NC I, NC II, NC II, NC IV, etc.)</span></label> <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="vocational_course_1" placeholder="1."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="hours_of_training_1"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="training_institution_1"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="skills_aquired_1"><input style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5; outline: none;" name="certificate_received_1"> <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="vocational_course_2" placeholder="2."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="hours_of_training_2"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="training_institution_2"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="skills_aquired_2"><input style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5; outline: none;" name="certificate_received_2"> <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="vocational_course_3" placeholder="3."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="hours_of_training_3"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="training_institution_3"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="skills_aquired_3"><input style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5; outline: none;" name="certificate_received_3"> </div> </div>
+        <div class="form-group_registration6">
+        <h3 class="row1a">VI. ELIGIBILITY/ PROFESSIONAL LICENSE</h3>
+        <div class="row2a" for="eligibility_professional_license"> <label style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px;">ELIGIBILITY<br>(Civil Service)</label><label style="border: 1px solid;margin: 0;align-content: center;padding: 3px;">DATE<br>TAKEN</label><label style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px;">PROFESSIONAL LICENSE (PRC)</label><label style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4;">VALID<br>UNTIL</label>
+        <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="eligibility_1" placeholder="1."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="eligibility_date_taken_1"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="eligibility_prc_1"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="eligibility_valid_until_1">
+        <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="eligibility_2" placeholder="2."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="eligibility_date_taken_2"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="eligibility_prc_2"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="eligibility_valid_until_2">
+        </div>   
+        </div>       
+        <div class="form-group_registration7">
+        <h3 class="row1a">VII. WORK EXPERIENCE (Limit to 10 year period, start with the most recent employment)</h3> 
+            <div class="row2a" for="work_experience">
+                <label style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px;">COMPANY NAME</label><label style="border: 1px solid;margin: 0;align-content: center;padding: 3px;">ADDRESS<br>(City/Municipality)</label><label style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px;">POSITION</label><label style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4;">NUMBER OF MONTHS</label><label style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5;">STATUS<span style=" font-size: 0.5vw; ">(Permanent, Contractual, Parttime, Probationary)</span></label> 
+                <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="work_experience_company_1" placeholder="1."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="work_experience_address_1"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="work_experience_position_1"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="work_experience_months_1"><input style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5; outline: none;" name="work_experience_status_1"> 
+                <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="work_experience_company_2" placeholder="2."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="work_experience_address_2"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="work_experience_position_2"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="work_experience_months_2"><input style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5; outline: none;" name="work_experience_status_2">
+                <input style="border: 1px solid;margin: 0;grid-column: 1;align-content: center;font-size: smaller;padding: 3px; outline:none" name="work_experience_company_3" placeholder="3."><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px; outline: none;" name="work_experience_address_3"><input style="border: 1px solid;margin: 0;align-content: center;align-content: center;padding: 3px; outline: none;" name="work_experience_position_3"><input style="border: 1px solid;margin: 0;align-content: center;padding: 3px;grid-column: 4; outline: none;" name="work_experience_months_3"><input style="border: 1px solid;margin: 0;padding: 0px;display: flex;flex-direction: column;padding: 3px;grid-column: 5; outline: none;" name="work_experience_status_3"> 
+            </div>
+        </div>
+        <div class="form-group_registration8">
+            <h3 class="row1a">VIII. OTHER SKILLS ACQUIRED WITHOUT CERTIFICATE</h3> 
+            <div class="skills-grid">
+                <!-- First Column -->
+                <div class="column">
+                    <label><input type="checkbox" id="skill_auto_mechanic" name="skills_acquired" value="AUTO MECHANIC"> AUTO MECHANIC</label>
+                    <label><input type="checkbox" id="skill_beautician" name="skills_acquired" value="BEAUTICIAN"> BEAUTICIAN</label>
+                    <label><input type="checkbox" id="skill_carpentry" name="skills_acquired" value="CARPENTRY WORK"> CARPENTRY WORK</label>
+                    <label><input type="checkbox" id="skill_computer_literate" name="skills_acquired" value="COMPUTER LITERATE"> COMPUTER LITERATE</label>
+                    <label><input type="checkbox" id="skill_domestic_chores" name="skills_acquired" value="DOMESTIC CHORES"> DOMESTIC CHORES</label>
+                    <label><input type="checkbox" id="skill_driver" name="skills_acquired" value="DRIVER"> DRIVER</label>
+                </div>
+        
+                <!-- Second Column -->
+                <div class="column">
+                    <label><input type="checkbox" id="skill_electrician" name="skills_acquired" value="ELECTRICIAN"> ELECTRICIAN</label>
+                    <label><input type="checkbox" id="skill_embroidery" name="skills_acquired" value="EMBROIDERY"> EMBROIDERY</label>
+                    <label><input type="checkbox" id="skill_gardening" name="skills_acquired" value="GARDENING"> GARDENING</label>
+                    <label><input type="checkbox" id="skill_masonry" name="skills_acquired" value="MASONRY"> MASONRY</label>
+                    <label><input type="checkbox" id="skill_painter_artist" name="skills_acquired" value="PAINTER/ARTIST"> PAINTER/ARTIST</label>
+                    <label><input type="checkbox" id="skill_painting_jobs" name="skills_acquired" value="PAINTING JOBS"> PAINTING JOBS</label>
+                </div>
+        
+                <!-- Third Column -->
+                <div class="column">
+                    <label><input type="checkbox" id="skill_photography" name="skills_acquired" value="PHOTOGRAPHY"> PHOTOGRAPHY</label>
+                    <label><input type="checkbox" id="skill_plumbing" name="skills_acquired" value="PLUMBING"> PLUMBING</label>
+                    <label><input type="checkbox" id="skill_sewing_dresses" name="skills_acquired" value="SEWING DRESSES"> SEWING DRESSES</label>
+                    <label><input type="checkbox" id="skill_stenography" name="skills_acquired" value="STENOGRAPHY"> STENOGRAPHY</label>
+                    <label><input type="checkbox" id="skill_tailoring" name="skills_acquired" value="TAILORING"> TAILORING</label>
+                    <label>OTHERS: <input type="text" id="skill_others" name="skills_acquired_other"></label>
+                </div>
+            </div>               
+            </div>
+            
+        <!-- <button type="button" class="btn btn-secondary"onclick="window.print()">Print</button> -->
+        <!-- <style> .print-button { background-color: #007bff; color: white; border: none; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 10px 2px; cursor: pointer; } </style> -->
+        <!-- <button type="submit" class="btn btn-primary" style="grid-column: 1 / span 4;">Submit</button> -->
     </div>
-    <form id="registrationForm" action="/submit_registration" method="post">
 
-
-        <div id="page1" class="page active">
-            <h2 class="headera">NSRP Form 1<br>September<br>2020</h2><p class="headerb">Republic of the Philippines<br>Department of Labor and Employment<span style="font-weight: bold;"><br>NATIONAL SKILLS REGISTRATION PROGRAM<br>JOBSEEKER REGISTRATION FORM</span></p>
-            <p class="headerc"><span style="font-weight:bold;">INSTRUCTIONS:</span> Please fill out the form legibly in block letters using a ballpoint pen. Check appropriate boxes. Please
-                do not leave any items unanswered. Indicate “NA” if not applicable. You may use extra sheet if needed. Submit
-                Accomplished form to the Public Employment Service Office (PESO) Manager or Officer in your city/municipality.
-                </p>
-            <div class="form-group_registration">
-                <h3 class="row1a">I.PERSONAL INFORMATION</h3>
-                <input class="row2a" type="text" id="surname" name="surname" required><input class="row2a" type="text" id="firstname" name="firstname" required><input class="row2a" type="text" id="middle" name="middlename"><input class="row2a" type="text" id="suffix" name="suffix">
-                <label class="row3a" for="surname">Surname</label><label class="row3a" for="firstname">First Name</label><label class="row3a" for="middlename">Middle Name</label><label class="row3a"for="suffix">Suffix (Ex: Sr., Jr., III, etc.)</label>
-                <label class="row4a" for="birthdate">DATE OF BIRTH (mm/dd/yyyy)</label><input class="row4b" type="text" id="birthdate" name="birthdate" required>
-                <label class="row5a" for="sex">SEX <span style="display: grid;grid-template-columns: repeat(4, auto);transform: translate(20px, 0px);font-size: 12px;height: min-content;"><input type="radio" class="gender" name="sex" value="Male" required=""> Male<input type="radio" class="gender" name="sex" value="Female" required="" style=" margin-left: 20px; "> Female</span></label>
-                <label class="row6a"><span style="padding: 3px; padding-left: 10px; border: 1px solid; grid-column: 1 / span 2;">PRESENT ADDRESS</span>
-                    <label class="row6b" for="address">House No./ Street Village</label><input class="row6b" type="text" id="address" name="address">
-                    <label class="row6c" for="barangay">Barangay</label><input class="row6c" type="text" id="barangay" name="barangay">
-                    <label class="row6d" for="city">City/Municipality</label><input class="row6d" type="text" id="municipality" name="municipality">
-                    <label class="row6e" for="province">Province</label><input class="row6e" type="text" id="province" name="province">
-                </label>
-                <label class="row7a" for="relgion">RELIGION <input class="row7b" type="text" id="relgion" name="relgion" required></label>
-                <label class="row8a" for="civilstatus">CIVIL STATUS <span style=""><input type="radio" name="civilstatus" value="Single" required> Single <input type="radio" name="civilstatus" value="Married" required> Married <input type="radio" name="civilstatus" value="Widow" required> Widow</span></label>
-            </div>
-            <button type="button" class="btn btn-primary" style="grid-column: 1 / span 4;" onclick="nextPage()">Next</button>
-        </div>
-
-
-
-
-
-        <div id="page2" class="page">
-            <h3>Page 2</h3>
-            <div class="form-group_registration">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-                <div class="invalid-feedback">Please enter your email.</div>
-            </div>
-            <div class="button-container">
-            <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
-            <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
-            </div>
-        </div>
-        <div id="page3" class="page">
-            <h3>Page 3</h3>
-            <div class="form-group_registration">
-                <label for="phone">Phone:</label>
-                <input type="tel" id="phone" name="phone" required>
-                <div class="invalid-feedback">Please enter your phone number.</div>
-            </div>
-            <div class="button-container">
-                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
-                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
-            </div>
-        </div>
-        <div id="page4" class="page">
-            <h3>Page 4</h3>
-            <div class="form-group_registration">
-                <label for="address">Address:</label>
-                <input type="text" id="address" name="address" required>
-                <div class="invalid-feedback">Please enter your address.</div>
-            </div>
-            <div class="button-container">
-                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
-                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
-                </div>
-        </div>
-        <div id="page5" class="page">
-            <h3>Page 5</h3>
-            <div class="form-group_registration">
-                <label for="dob">Date of Birth:</label>
-                <input type="date" id="dob" name="dob" required>
-                <div class="invalid-feedback">Please enter your date of birth.</div>
-            </div>
-            <div class="button-container">
-                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
-                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
-                </div>
-        </div>
-        <div id="page6" class="page">
-            <h3>Page 6</h3>
-            <div class="form-group_registration">
-                <label>Gender:</label><br>
-                <label>
-                    <input type="radio" name="gender" value="Male" required> Male
-                </label>
-                <label>
-                    <input type="radio" name="gender" value="Female" required> Female
-                </label>
-                <div class="invalid-feedback">Please select your gender.</div>
-            </div>
-            <div class="button-container">
-                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
-                <button type="button" class="btn btn-primary" onclick="nextPage()">Next</button>
-                </div>
-        </div>
-        <div id="page7" class="page">
-            <h3>Page 7</h3>
-            <div class="form-group_registration">
-                <label for="additional">Additional Information:</label>
-                <textarea id="additional" name="additional"></textarea>
-            </div>
-            <div class="button-container">
-                <button type="button" class="btn btn-secondary" onclick="previousPage()">Back</button>
-                <button type="submit" class="btn btn-primary">Submit</button>
-                </div>
-        </div>
-    </form>
 </div>
 
 <script>
-    let currentPage = 1;
+    // Handling the visibility of sub-options for Employment and Unemployment
+    document.addEventListener('DOMContentLoaded', function() {
+        const employmentCheckbox = document.getElementById('employment-checkbox');
+        const unemployedCheckbox = document.getElementById('unemployed-checkbox');
+        const employmentOptions = document.getElementById('employment-options');
+        const unemploymentOptions = document.getElementById('unemployment-options');
+        
+        const wage_employed = document.getElementById('wage-employed');
+        const selfEmployedCheckbox = document.getElementById('self-employed-checkbox');
+        const selfEmploymentOptions = document.getElementById('self-employment-options');
+        const otherSelfEmployedCheckbox = document.getElementById('other-self-employed');
+        const otherSelfEmployedSpecify = document.getElementById('other-self-employed-specify');
 
-    function showPage(pageNumber) {
-        document.querySelectorAll('.page').forEach((page) => {
-            page.classList.remove('active');
-        });
-        document.getElementById(`page${pageNumber}`).classList.add('active');
-    }
+        const specifyCountryCheckbox = document.getElementById('specify-country');
+        const countrySpecify = document.getElementById('country-specify');
+        const othersUnemployedCheckbox = document.getElementById('others-unemployed');
+        const othersUnemployedSpecify = document.getElementById('others-unemployed-specify');
 
-    function nextPage() {
-        let currentPageElement = document.querySelector(`#page${currentPage}`);
-        let inputs = currentPageElement.querySelectorAll('input, select, textarea');
-        let allValid = true;
+        // Function to uncheck and hide all employment options
+        function resetEmploymentOptions() {
+            const employmentSubOptions = document.querySelectorAll('#employment-options input[type="checkbox"]');
+            employmentSubOptions.forEach(option => option.checked = false);
+            selfEmploymentOptions.style.display = 'none';
+            otherSelfEmployedSpecify.style.display = 'none';
+        }
 
-        inputs.forEach(input => {
-            if (input.required && !input.checkValidity()) {
-                input.reportValidity();
-                allValid = false;
+        // Function to uncheck and hide all unemployment options
+        function resetUnemploymentOptions() {
+            const unemploymentSubOptions = document.querySelectorAll('#unemployment-options input[type="checkbox"]');
+            unemploymentSubOptions.forEach(option => option.checked = false);
+            countrySpecify.style.display = 'none';
+            othersUnemployedSpecify.style.display = 'none';
+        }
+
+        // Handle Employment checkbox change
+        employmentCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                employmentOptions.style.display = 'block';
+                unemployedCheckbox.disabled = true;
+            } else {
+                employmentOptions.style.display = 'none';
+                unemployedCheckbox.disabled = false;
+                resetEmploymentOptions(); // Uncheck and hide all options
             }
         });
 
-        if (allValid) {
-            currentPage++;
-            if (currentPage > 7) currentPage = 7; // Prevent exceeding last page
-            showPage(currentPage);
-        }
-    }
+        // Handle Self-employed checkbox change
+        selfEmployedCheckbox.addEventListener('change', function() {
+            selfEmploymentOptions.style.display = this.checked ? 'block' : 'none';
+            wage_employed.disabled = this.checked ? true : false;
+        });
 
-    function previousPage() {
-        if (currentPage > 1) {
-            currentPage--;
-            showPage(currentPage);
-        }
-    }
+        wage_employed.addEventListener('change', function() {
+            selfEmployedCheckbox.disabled = this.checked ? true : false;
+        });
 
-    // Initialize the form by showing the first page
-    showPage(currentPage);
+        // Handle Other Self-employed checkbox change
+        otherSelfEmployedCheckbox.addEventListener('change', function() {
+            otherSelfEmployedSpecify.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Handle Unemployed checkbox change
+        unemployedCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                unemploymentOptions.style.display = 'block';
+                employmentCheckbox.disabled = true;
+                // Uncheck all sub-options and hide them
+                const subOptions = document.querySelectorAll('#employment-options input[type="checkbox"]');
+                subOptions.forEach(option => option.checked = false);
+                selfEmploymentOptions.style.display = 'none';
+                otherSelfEmployedSpecify.style.display = 'none';
+            } else {
+                unemploymentOptions.style.display = 'none';
+                employmentCheckbox.disabled = false;
+                resetUnemploymentOptions(); // Uncheck and hide all options
+            }
+        });
+
+        // Handle Specify Country checkbox change
+        specifyCountryCheckbox.addEventListener('change', function() {
+            countrySpecify.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Handle Others Unemployed checkbox change
+        othersUnemployedCheckbox.addEventListener('change', function() {
+            othersUnemployedSpecify.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle visibility of OFW details
+    document.getElementById('ofw-yes').addEventListener('change', function() {
+        document.getElementById('ofw-details').style.display = this.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('ofw-no').addEventListener('change', function() {
+        document.getElementById('ofw-details').style.display = 'none';
+    });
+
+    // Handle visibility of former OFW details
+    document.getElementById('former-ofw-yes').addEventListener('change', function() {
+        document.getElementById('former-ofw-details').style.display = this.checked ? 'flex' : 'none';
+    });
+
+    document.getElementById('former-ofw-no').addEventListener('change', function() {
+        document.getElementById('former-ofw-details').style.display = 'none';
+    });
+});
+
+</script>
+<script>
+    function printForm() {
+        var formContent = document.getElementById('registrationForm').outerHTML;
+        var printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Print Form</title>');
+        printWindow.document.write('<link rel="stylesheet" type="text/css" href="/static/css/registration_form.css">');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(formContent);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.onload = function() {
+            printWindow.focus();
+            printWindow.print();
+        };
+    }
+</script>
+<script>
+        document.querySelectorAll('input[name="4ps"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var householdIdContainer = document.getElementById('household-id-container');
+            if (document.getElementById('4ps-yes').checked) {
+                householdIdContainer.style.display = 'block';
+            } else {
+                householdIdContainer.style.display = 'none';
+            }
+        });
+    });
 </script>

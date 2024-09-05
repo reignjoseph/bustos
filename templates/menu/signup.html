@@ -10,13 +10,14 @@
     <link rel="stylesheet" href="/static/css/registration_form.css">
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/static/js/script.js" defer=""></script>
     <title>Home</title>
     <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
     <style>
-
     </style>
 </head>
 <body>
@@ -47,70 +48,99 @@
             </div>
         </div>
     </header>
-
     <main>
+        <form id="signupForm" class="signup-form" action="/create_account" method="POST">
         <div class="signup-container">
             <h2>Sign Up As</h2>
-            <form id="signupForm" class="signup-form" >
-                <div class="form-group-1 form-group-radio">
-                    <label>
-                        <input type="radio" name="role" value="jobseeker" checked> Jobseeker
-                    </label>
-                    <label>
-                        <input type="radio" name="role" value="employer"> Employer
-                    </label>
-                </div>
-                <div class="form-group-2 abc">
-                    <label for="name">Name:</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group-3 abc">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group-4 abc password-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
-                    <span class="toggle-password" onclick="togglePasswordVisibility()">
-                        <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password">
-                    </span>
-                </div>
-                <div class="form-group-5">
-                    <label>
-                        <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a>
-                    </label>
-                </div>
+
+            <div id="js-error-message" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none; padding-left: 2rem; padding-right: 2rem;">
+                <span id="js-error-text"></span>
+                <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="right: 0px; top: -15px; width: 0; height: 0; outline:none;"> -->
+                    <!-- <span aria-hidden="true">&times;</span> -->
+                </button>
+            </div>
+
+            
+                <div class="form-group-1 form-group-radio"> <label> <input type="radio" name="role" value="jobseeker" checked> Jobseeker </label> <label> <input type="radio" name="role" value="employer"> Employer </label> </div> <div class="form-group-2 abc"> <label for="name">Name:</label> <input type="text" id="name" name="name" required> </div> <div class="form-group-3 abc"> <label for="email">Email:</label> <input type="email" id="email" name="email" required> </div> <div class="form-group-4 abc password-group"> <label for="password">Password:</label> <input type="password" id="password" name="password" required> <span class="toggle-password" onclick="togglePasswordVisibility()"> <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password"> </span> </div> <div class="form-group-5"> <label> <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a> </label> </div>
                 <div class="form-group-6">
-                    <button type="submit" class="btn-signup">Sign Up</button>
+                    <button type="button" onclick="displayDetails()" class="btn-signup">Additional Details</button>
+                </div> 
+                <div class="modal fade" id="registrationModal" tabindex="-1" role="dialog" aria-labelledby="registrationModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="registrationModalLabel">Additional Registration Details</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                {% include 'menu/registration_form.html' %}
+                            </div>
+                            <div class="modal-footer">
+                                <button style="width: 20%;" type="button" onclick="validateAndSubmit()" class="btn-signup">Submit</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
+
             <div class="signin-link">
                 Have an already Account? <a href="/signin">Click Sign In</a>
             </div>
         </div>
-    </main>
+    </form>
+</main>
 
-<!-- Modal for additional registration details -->
-<div class="modal fade" id="registrationModal" tabindex="-1" role="dialog" aria-labelledby="registrationModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="registrationModalLabel">Additional Registration Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                {% include 'menu/registration_form.html' %}
-            </div>
-            <div class="modal-footer">
-                <!-- No need for a separate submit button here since the form inside the modal already has one -->
-            </div>
-        </div>
-    </div>
-</div>
 
-    <script>
+
+
+
+
+
+
+
+<script>
+function displayDetails() {
+    var name = document.getElementById("name").value.trim();
+    var email = document.getElementById("email").value.trim();
+    var password = document.getElementById("password").value.trim();
+    var terms = document.querySelector('input[name="terms"]').checked;
+    var errorMessageDiv = document.getElementById("js-error-message");
+    var errorMessageText = document.getElementById("js-error-text");
+
+    // Check if all required fields are filled
+    if (name === "" || email === "" || password === "" || !terms) {
+        errorMessageDiv.style.display = "block";
+        errorMessageText.innerHTML = "Please complete all required fields.";
+    } else {
+        // Hide the error message div if validation passes
+        errorMessageDiv.style.display = "none";
+
+        // Perform the AJAX call to check email
+        $.ajax({
+            url: "/check_email",
+            method: "POST",
+            data: { email: email },
+            success: function(response) {
+                if (response.email_exists) {
+                    errorMessageDiv.style.display = "block";
+                    errorMessageText.innerHTML = "Email is already registered.";
+                } else {
+                    // Email is not registered, show additional details section
+                    $('#registrationModal').modal('show');
+                }
+            },
+            error: function() {
+                errorMessageDiv.style.display = "block";
+                errorMessageText.innerHTML = "An error occurred. Please try again.";
+            }
+        });
+    }
+}
+
+</script>
+
+<script>
         function togglePasswordVisibility() {
             var passwordField = document.getElementById("password");
             var eyeIcon = document.querySelector(".eye");
@@ -123,19 +153,33 @@
                 eyeIcon.src = "/static/images/eye-open.png";
             }
         }
+        function validateAndSubmit() {
+    var form = document.getElementById("signupForm");
+    var email = form.querySelector("input[name='email']").value; // Adjust selector if needed
 
-        // Handle form submission and modal display
-        document.getElementById('signupForm').addEventListener('submit', function(event) {
-            if (!this.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
+    // Perform AJAX request to check email
+    $.ajax({
+        url: "/check_email",
+        method: "POST",
+        data: { email: email },
+        success: function(response) {
+            if (response.email_exists) {
+                alert("Email is already registered. Please use a different email.");
             } else {
-                // If form is valid, prevent the default form submission and show the modal
-                event.preventDefault();
-                $('#registrationModal').modal('show');
+                // Proceed with form submission if email does not exist
+                if (form.checkValidity()) {
+                    form.submit(); // Only submit the form here, after validation
+                } else {
+                    form.reportValidity();
+                }
             }
-            this.classList.add('was-validated');
-        });
-    </script>
+        },
+        error: function() {
+            alert("An error occurred while checking the email.");
+        }
+    });
+}
+
+</script>
 </body>
 </html>

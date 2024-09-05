@@ -196,17 +196,22 @@ def post_job():
         location = request.form['location']
         natureOfWork = request.form['natureOfWork']
         salary = request.form['salary']
-        closingDate = request.form['closingDate']
+        closingDate = request.form.get('closingDate', '')  # Use get to provide default value
         jobStatus = request.form['jobStatus']
+        skills = request.form.getlist('skills[]')
     except KeyError as e:
         flash(f'Missing form field: {e}')
         return redirect(request.url)
 
-    try:
-        closing_date = datetime.strptime(closingDate, '%Y-%m-%d %H:%M')
-    except ValueError:
-        flash('Invalid date format. Please use YYYY-MM-DD HH:MM.')
-        return redirect(request.url)
+    # Handle empty closingDate by setting it to the current date and time if empty
+    if not closingDate:
+        closing_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        try:
+            closing_date = datetime.strptime(closingDate, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            flash('Invalid date format. Please use YYYY-MM-DD HH:MM:SS.')
+            return redirect(request.url)
 
     if jobStatus not in ['Available', 'Unavailable']:
         flash('Invalid job status. Please select either "Available" or "Unavailable".')
@@ -215,12 +220,12 @@ def post_job():
     if 'image' not in request.files:
         flash('No file part')
         return redirect(request.url)
-    
+
     file = request.files['image']
     if file.filename == '':
         flash('No selected file')
         return redirect(request.url)
-    
+
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -234,16 +239,16 @@ def post_job():
         employer_data = cursor.fetchone()
         if employer_data:
             employer_fname = employer_data[0]
-            # Use default profile image if profile field is empty
             employer_profile = employer_data[1] if employer_data[1] else 'static/images/employer-images/avatar.png'
         else:
             employer_fname = 'Unknown'
             employer_profile = 'static/images/employer-images/avatar.png'
 
+        skills_str = ','.join([f'[{skill}]' for skill in skills])
         # Insert job details into jobs table including employer_ID
         conn.execute(
-            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'])
+            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID, request, skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'], "Pending", skills_str)
         )
 
         # Fetch jobseekers' details

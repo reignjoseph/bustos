@@ -29,7 +29,10 @@
 .container5{position: relative;max-width: 500px;margin-right: 30px;}
 .container6{position: relative;max-width: 500px;margin-right: 30px;transform: translate(0px, 60px);}
 .container7{position: relative;max-width: 500px;margin-right: 30px;}
-.container8{position: relative;max-width: 500px;margin-right: 30px;}
+.container8{position: relative;max-width: 500px;margin-right: 30px;display: grid;grid-template-columns: 20% 80%;grid-column-gap: 2rem;}
+.container8 input{position: relative; outline: none;}
+.remove-skill-btn{position: relative;outline:  none;border: 1px solid;margin-left: 5px;}
+
 .container9{position: relative;max-width: 500px;margin-right: 30px;}
 .container10{position: relative;max-width: 160px;margin-right: 30px;}
 .container11{position: relative;}
