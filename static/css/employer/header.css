@@ -38,6 +38,7 @@ body {
     width: 80px;
     margin-bottom: 0px;
     border: 1px solid;
+    height: 80px;
 }
 
 .sidebar .menu-item {

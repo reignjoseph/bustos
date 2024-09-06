@@ -162,28 +162,5 @@ function updateProfilePicture(event) {
         });
     }
 }
-    const file = event.target.files[0];
-    if (file) {
-        const formData = new FormData();
-        formData.append('profile_picture', file);
-
-        // Send the file to the server using fetch
-        fetch('/employer_profile_update', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update the profile picture src with the new image URL
-                document.getElementById('profile-picture').src = data.image_url;
-            } else {
-                alert('Failed to update profile picture: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to update profile picture. Please try again.');
-        });
-    }
+ 
 </script>

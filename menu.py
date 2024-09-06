@@ -58,6 +58,18 @@ def signin():
             session['user_bio'] = user[9]         # User Bio
             session['user_address'] = user[10]    # User Address
 
+            print(user[0])  # User ID
+            print(user[1])  # User Email
+            print(user[2])  # User Password
+            print(user[3])  # User First Name (fname)
+            print(user[4])  # User Type
+            print(user[5])  # User Contact Number
+            print(user[6])  # User Profile Image
+            print(user[7])  # User Status
+            print(user[8])  # User Registration Date
+            print(user[9]) # User Bio
+            print(user[10]) # User Address
+
             cursor.close()
             conn.close()
             
@@ -71,7 +83,7 @@ def signin():
             cursor.close()
             conn.close()
             return render_template('/menu/signin.html', error_message='Not registered email.')
-
+    
     return render_template('/menu/signin.html')
 
 

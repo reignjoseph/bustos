@@ -26,7 +26,7 @@ def internal_error(error):
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
 
-app.config['UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
+app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 
@@ -40,6 +40,107 @@ def get_db_connection():
     conn = sqlite3.connect('trabahanap.db')
     conn.row_factory = sqlite3.Row
     return conn
+
+
+
+@app.route('/advance_filter', methods=['GET'])
+def advance_filter():
+    skill_filter = request.args.get('skill_filter', 'Default')
+    location_filter = request.args.get('location_filter', 'Default')
+
+    if 'user_id' not in session:
+        return jsonify({"error": "User is not logged in"}), 401  # Unauthorized response
+
+    conn = get_db_connection()
+
+    # Skill filter logic
+    if skill_filter == 'Default':
+        jobseeker_id = session['user_id']
+        skills_query = "SELECT skills FROM form101 WHERE jobseeker_id = ?"
+        skills_result = conn.execute(skills_query, (jobseeker_id,)).fetchone()
+
+        if skills_result:
+            # Remove unwanted prefixes and standardize skills
+            skills = skills_result['skills'].replace("[", "").replace("]", "").split(",")
+            skills = [skill.strip().replace("Skill: ", "").lower() for skill in skills]
+            print("Extracted Skills:", skills)  # Debugging line
+
+            # Prepare the query to match jobs with any of these skills
+            skill_query = "SELECT * FROM jobs WHERE " + " OR ".join(["LOWER(skills) LIKE ?"] * len(skills))
+            skill_params = [f"%{skill}%" for skill in skills]
+
+            print("Skill SQL Query:", skill_query)  # Debugging line
+            print("Skill Query Parameters:", skill_params)  # Debugging line
+
+            skill_jobs = conn.execute(skill_query, skill_params).fetchall()
+        else:
+            skill_jobs = []  # No skills found, return empty result
+    else:
+        skill_query = "SELECT * FROM jobs WHERE LOWER(skills) LIKE ?"
+        skill_jobs = conn.execute(skill_query, (f'%{skill_filter.lower()}%',)).fetchall()
+
+    # Location filter logic
+    if location_filter == 'Default':
+        location_jobs = skill_jobs
+    else:
+        location_query = "SELECT * FROM jobs WHERE LOWER(location) LIKE ?"
+        location_jobs = conn.execute(location_query, (f'%{location_filter.lower()}%',)).fetchall()
+
+        # Intersection of location filtered jobs with skill filtered jobs
+        location_jobs = [job for job in skill_jobs if job in location_jobs]
+
+    conn.close()
+
+    # Convert jobs to a list of dictionaries
+    job_list = [{
+        "Company": job['Company'],
+        "title": job['title'],
+        "image": job['image'],
+        "location": job['location'],
+        "natureOfWork": job['natureOfWork'],
+        "jobStatus": job['jobStatus'],
+        "closingDate": job['closingDate'],
+        "skills": job['skills']
+    } for job in location_jobs]
+
+    print("Jobs Returned:", job_list)  # Debugging line
+
+    return jsonify(job_list)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -244,13 +345,13 @@ def create_account():
     # Append each training entry if it has at least one non-empty field
     for i in range(1, 4):
         # Directly retrieve values for each field
-        course = request.form.get(f'vocational_course_{i}', None)
-        hours = request.form.get(f'hours_of_training_{i}', None)
-        institution = request.form.get(f'training_institution_{i}', None)
-        skills = request.form.get(f'skills_aquired_{i}', None)
-        certificate = request.form.get(f'certificate_received_{i}', None)
+        v_course = request.form.get(f'vocational_course_{i}', None)
+        v_hours = request.form.get(f'hours_of_training_{i}', None)
+        v_institution = request.form.get(f'training_institution_{i}', None)
+        v_skills = request.form.get(f'skills_aquired_{i}', None)
+        v_certificate = request.form.get(f'certificate_received_{i}', None)
 
-        entry = [course, hours, institution, skills, certificate]
+        entry = [v_course, v_hours, v_institution, v_skills, v_certificate]
         
         # Filter out empty values and join with commas
         entry_str = ', '.join([value for value in entry if value])
@@ -332,6 +433,8 @@ def create_account():
     conn.close()
 
     print(f"Received data - Role: {role}, Name: {name}, Email: {email}, Password: {password}, User_ID: {user_id}")
+    print(f"Received data - Strand: {senior_strand}")
+    print(f"Received data - COURSE: {course}")
     print(f"Received data - Skills: {formatted_skills}")
 
     # print(f"Received data - User_ID: {user_id}, Surname: {surname}, Firstname: {firstname}, Middlename: {middlename}, Suffix: {suffix}, Birthdate: {birthdate}, Sex: {sex}, Address: {address}, Barangay: {barangay}, Municipality: {municipality}, Province: {province}, Religion: {religion}, Civil Status: {civilstatus}, TIN: {tin}, Height: {height}, Disability: {', '.join(disability)}, Contact No: {contact_no}, Email Address: {emailaddress}, Employment Status: {employment_status}, OFW: {ofw}, Specify Country: {specify_country}, Former OFW: {former_ofw}, Latest Country: {latest_country}, Return Date: {return_date}, 4Ps: {four_ps}, Household ID: {household_id}")
@@ -515,7 +618,7 @@ def jobseeker():
     return redirect(url_for('signin'))
 
 
-@app.route('/update_profile', methods=['POST'])
+@app.route('/jobseeker_update_profile', methods=['POST'])
 def update_profile():
     # Check if the user is logged in
     if 'user_id' not in session:
@@ -548,7 +651,7 @@ def update_profile():
         file = request.files['profile_picture']
         if allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            filepath = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
             file.save(filepath)
             image_path = f'images/jobseeker-uploads/{filename}'
         else:
@@ -560,7 +663,7 @@ def update_profile():
     cursor = conn.cursor()
     cursor.execute("""
         UPDATE users
-        SET bio = ?, address = ?, contactnum = ?, profile = ?, AccountStatus = 'Active'
+        SET bio = ?, address = ?, contactnum = ?, profile = ?
         WHERE User_ID = ?
     """, (bio, address, phone, image_path, user_id))
     

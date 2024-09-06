@@ -44,7 +44,7 @@
                      <div id="skills-container"> </div>
                      </div> 
                      
-                     <!--  --> </div>
+                      </div>
 
 <!--  -->
         <div class="container5 form-group">
@@ -70,6 +70,13 @@ flatpickr("#closingDate", {
     enableTime: true,
     dateFormat: "Y-m-d H:i",
 });
+document.querySelector('form').addEventListener('submit', function(event) {
+    const closingDateInput = document.getElementById('closingDate');
+    if (!closingDateInput.value) {
+        alert('Please select a closing date and time.');
+        event.preventDefault();
+    }
+});
 </script>
 <script>
     const addSkillButton = document.getElementById('add-skill-btn');
@@ -85,6 +92,7 @@ flatpickr("#closingDate", {
         newSkillInput.type = 'text';
         newSkillInput.name = 'skills[]';
         newSkillInput.placeholder = 'Enter a skill';
+        newSkillInput.required = true;
 
         // Create the remove button
         const removeSkillButton = document.createElement('button');

@@ -1,10 +1,10 @@
 .container-title {
-    font-size: 2.5vw;
+    /* font-size: 2.5vw; */
     position: relative;
-    padding: 0vw 0vw 4vw 0vw;
+    /* padding: 0vw 0vw 4vw 0vw; */
     /* background-color: white; */
-    width: min-content;
-    white-space: nowrap;
+    /* width: min-content; */
+    /* white-space: nowrap; */
     font-weight: bold;
 }
 
@@ -18,8 +18,7 @@
 .image-container {
     position: relative;
     border: 1px solid;
-    width: 15vw;
-    height: 15vw;
+    width: 70%;
     align-self: center;
     margin: 2vw;
     overflow: hidden;
@@ -28,6 +27,8 @@
 .image-container img {
     position: relative;
     object-fit: contain;
+    width: 100%;
+    height: 100%;
 }
 
 .modal {
@@ -89,3 +90,12 @@
 
 .uploadResume{display:flex;flex-direction: column;}
 .uploadResume button{align-self: center;margin-top: 30px;}
+
+
+.filter-button-container {text-align: right;margin-bottom: 10px;}
+#filter-button {width: 50px;height: 50px;background-color: #007bff;border: none;border-radius: 5px;cursor: pointer;display: flex;justify-content: center;align-items: center;transition: background-color 0.3s;}
+#filter-button img {width: 30px;height: 30px;}
+#filter-button:hover {background-color: #0056b3;}
+.advance_filter {padding: 10px;background-color: #f5f5f5;border-radius: 5px;display: none; /* Initially hidden */}
+.advance_filter input[type="text"] {margin-left: 10px;padding: 5px;border: 1px solid #ccc;border-radius: 3px;}
+

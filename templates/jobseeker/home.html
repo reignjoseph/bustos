@@ -1,5 +1,87 @@
 <div class="container mt-4 container-announcement">
     <h2 class="container-title">SUGGESTED JOB VACANCY</h2>
+    <!-- Advanced Filter Button -->
+    <div class="filter-button-container">
+        <button id="filter-button">
+            <img src="{{ url_for('static', filename='images/setting.png') }}" alt="Filter Icon">
+        </button>
+    </div>
+
+    <!-- Advanced Filter Section (Hidden initially) -->
+    <div class="advance_filter" id="filter-container" style="display: none;">
+        <input type="text" id="filter_input" name="filter_input" placeholder="Skills (Default)">
+        <input type="text" id="location_input" name="location_input" placeholder="Location (Default)">
+        <button type="button" onclick="applyFilter()">Apply Filter</button>
+    </div>
+    
+
+    <script>
+        function applyFilter() {
+            const skillFilter = document.getElementById('filter_input').value || 'Default';
+            const locationFilter = document.getElementById('location_input').value || 'Default';
+    
+            $.ajax({
+                url: '/advance_filter',
+                method: 'GET',
+                data: {
+                    skill_filter: skillFilter,
+                    location_filter: locationFilter
+                },
+                success: function(data) {
+                    if (Array.isArray(data)) {
+                        // Update the job list dynamically
+                        let jobListHtml = '';
+                        data.forEach(job => {
+                            jobListHtml += `
+                                <div class="col-md-4">
+                                    <div class="card mb-4 container-vacancy">
+                                        <div class="image-container">
+                                            <img src="/static/${job.image}" alt="Job Image" class="card-img-top">
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-text"><strong>Company:</strong> ${job.Company}</h5>
+                                            <p class="card-title"><strong>Job: </strong>${job.title}</p>
+                                            <p class="card-text">
+                                                <strong>Location:</strong> <img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image">${job.location}
+                                            </p>
+                                            <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
+                                            <p class="card-text"><strong>Job Status:</strong> ${job.jobStatus}</p>
+                                            <p class="card-text"><strong>Closing Date:</strong> ${job.closingDate}</p>
+                                            <a class="btn btn-primary" onclick="seeFullDetail(this)">See Full Details</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+    
+                        // Replace the current job list with the new filtered jobs
+                        document.querySelector('.row').innerHTML = jobListHtml;
+                    } else {
+                        console.error("Error: Expected an array, but received:", data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle the error
+                    console.error("Error: " + error + " Status: " + status);
+                    if (xhr.status === 401) {
+                        alert("You are not authorized. Please log in.");
+                    } else {
+                        alert("An error occurred while fetching the jobs. Please try again later.");
+                    }
+                }
+            });
+        }
+    </script>
+    
+    
+
+
+
+    <script> document.getElementById('filter-button').addEventListener('click', function() { const filterContainer = document.getElementById('filter-container');if (filterContainer.style.display === 'none') { $(filterContainer).slideDown(); } else { $(filterContainer).slideUp(); } }); </script>
+
+
+
+
     <div class="row">
         {% for job in jobs %}
         <div class="col-md-4">
@@ -36,6 +118,7 @@
                     data-JOB_ID="{{ job.JOB_ID }}"
                     data-employer_id="{{job.employer_id}}"
                     data-status="{{ job.request }}"
+                    data-skilss="{{ job.skills }}"
                     onclick="seeFullDetail(this)">See Full Details</a>
                 </div>
             </div>
@@ -92,7 +175,7 @@
     function seeFullDetail(element) {
         const detailsModal = $('#detailsModal');
         const frameDetail = detailsModal.find('#frameDetail');
-
+        
         // Extract job details from data attributes
         const job = {
             image: element.getAttribute('data-image'),
@@ -104,7 +187,8 @@
             natureOfWork: element.getAttribute('data-natureofwork'),
             position: element.getAttribute('data-position'),
             jobId: element.getAttribute('data-JOB_ID'),
-            employerId: element.getAttribute('data-employer_id')
+            employerId: element.getAttribute('data-employer_id'),
+            skillId: element.getAttribute('data-skill_id')
         };
 
         // Create the HTML for the job details
@@ -116,8 +200,8 @@
                 <h5 class="card-title"><strong>Company: </strong>${job.company}</h5>
                 <p class="card-title"><strong>Job: </strong>${job.title}</p>
                 <p class="card-text"><strong>Description: </strong>${job.description}</p>
-                <p class="card-text">
-                    <strong>Location: </strong><img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image" onclick="showLocation('${job.location}')"> ${job.location}
+                 <p class="card-text">
+                     <strong>Location: </strong>${job.location}
                 </p>
                 <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
                 <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
@@ -216,4 +300,10 @@ function uploadFile(formData) {
         document.querySelector('#error-message').textContent = 'Error uploading file.';
     });
 }    
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply default filter when the page loads
+        applyFilter();
+    });
 </script>
