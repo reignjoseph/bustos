@@ -55,8 +55,9 @@
                                             <h5 class="card-text"><strong>Company:</strong> ${job.Company}</h5>
                                             <p class="card-title"><strong>Job: </strong>${job.title}</p>
                                             <p class="card-text">
-                                                <strong>Location:</strong> <img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image">${job.location}
-                                            </p>
+                                                <strong>Location:</strong> <img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image" onclick="showLocation('${job.location}')">${job.location}
+                                                
+                                                </p>
                                             <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
                                             <p class="card-text"><strong>Job Status:</strong> ${job.jobStatus}</p>
                                             <p class="card-text"><strong>Closing Date:</strong> ${job.closingDate}</p>
@@ -137,8 +138,8 @@ function seeFullDetail(button) {
                     <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
                     <p class="card-text"><strong>Position:</strong> ${job.position}</p>
                     <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" action="/applicant" method="post">
-                        <input type="hidden" name="job_id" value="${job.jobId}" />
-                        <input type="hidden" name="employer_id" value="${job.employerId}" />
+                        <input type="hidden" name="job_id" value="${job.Job_ID}" />
+                        <input type="hidden" name="employer_id" value="${job.employer_ID}" />
                         <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
                         <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
                         <div id="error-message" style="color: red;"></div>

@@ -28,7 +28,7 @@ def internal_error(error):
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
 
 app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','pdf'}
 
 
 def allowed_file(filename):
@@ -145,6 +145,7 @@ def advance_filter():
     # Convert jobs to a list of dictionaries including Job_ID
     job_list = [{
         "Job_ID": job['Job_ID'],  # Include Job_ID
+        "employer_ID": job['employer_ID'],  # Add employer_ID to the output
         "Company": job['Company'],
         "title": job['title'],
         "position": job['position'],  # Add position to the output
@@ -553,6 +554,9 @@ def check_email():
 
 
 
+def allowed_file(filename):
+    """Check if the file has an allowed extension."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @app.route('/applicant', methods=['POST'])
 def applicant():
@@ -563,15 +567,19 @@ def applicant():
         file = request.files['file']
         
         # Check if the file is provided
-        if not file:
+        if not file or file.filename == '':
             return "No file selected", 400
+        
+        # Check if the file type is allowed
+        if not allowed_file(file.filename):
+            return "File type not allowed", 400
         
         # Ensure a safe filename and avoid filename conflicts
         filename = secure_filename(file.filename)
         base, ext = os.path.splitext(filename)
         timestamp = int(time.time())
         filename = f"{base}_{timestamp}{ext}"
-        file_path = f'static/images/jobseeker-uploads/{filename}'
+        file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
         file.save(file_path)
         
         # Get user details from session
@@ -595,7 +603,6 @@ def applicant():
         conn.close()
         
         return "Application submitted successfully!", 200
-
 
 
 

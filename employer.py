@@ -55,6 +55,79 @@ def employer():
 
 
 
+@app.route('/fetch_applicants', methods=['GET'])
+def fetch_applicants():
+    try:
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM applicant
+        ''')
+
+        applicants = cursor.fetchall()
+        print("Fetched applicants from DB:", applicants)  # Debug the SQL response
+
+        conn.close()
+
+        applicant_list = []
+        for row in applicants:
+            print(f"Processing row: {row}")  # Debug each row as it's processed
+            applicant_list.append({
+                'Apppicant_ID': row[0],
+                'job_id': row[1],
+                'employer_id': row[2],
+                'jobseeker_name': row[3],
+                'email': row[4],
+                'contact_no': row[5],
+                'form': row[6],
+                'schedule': row[7],
+                'status': row[8],
+                'action': row[9]
+            })
+
+        return jsonify(applicant_list)
+
+    except Exception as e:
+        print(f"Error fetching applicants: {e}")
+        return jsonify({'error': 'An error occurred while fetching applicants'}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

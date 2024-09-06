@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/employer/header.css">
     <link rel="stylesheet" href="/static/css/employer/add-job.css">
     <link rel="stylesheet" href="/static/css/employer/employer_profile.css">
+    <link rel="stylesheet" href="/static/css/employer/employer_notification.css">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- DateTimePicker CSS -->
@@ -39,7 +40,7 @@
                <img src="/static/images/add-job.png" style="max-width: 40px;" alt="Logo">
                 <span>Add Job</span>
             </div>
-            <div class="menu-item">
+            <div class="menu-item" onclick="openEmployerNotification()">
                <img src="/static/images/notification.png" style="max-width: 40px;" alt="Logo">
                 <span>Notification</span>
             </div>
@@ -65,6 +66,13 @@
             addJobContainer.style.display = 'block';
         }
     </script>
+    <script>
+        function openEmployerNotification() {
+            var addJobContainer = document.querySelector('.employernotification-container');
+            addJobContainer.style.display = 'block';
+        }
+    </script>
+
 
 </body>
 </html>
