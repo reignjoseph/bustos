@@ -2,6 +2,7 @@ import re
 from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
 import sqlite3
 import os
+import time
 from werkzeug.utils import secure_filename
 from datetime import datetime, timezone, timedelta
 import random
@@ -47,6 +48,10 @@ def get_db_connection():
 def advance_filter():
     skill_filter = request.args.get('skill_filter', 'Default')
     location_filter = request.args.get('location_filter', 'Default')
+    company_filter = request.args.get('company_filter', 'Default')
+    position_filter = request.args.get('position_filter', 'Default')  # Add position filter
+    natureOfWork_filter = request.args.get('natureOfWork_filter', 'Default')  # Add natureOfWork filter
+    job_filter = request.args.get('job_filter', 'Default')  # Add job filter
 
     if 'user_id' not in session:
         return jsonify({"error": "User is not logged in"}), 401  # Unauthorized response
@@ -69,7 +74,6 @@ def advance_filter():
             skill_query = "SELECT * FROM jobs WHERE " + " OR ".join(["LOWER(skills) LIKE ?"] * len(skills))
             skill_params = [f"%{skill}%" for skill in skills]
 
-            print("Skill SQL Query:", skill_query)  # Debugging line
             print("Skill Query Parameters:", skill_params)  # Debugging line
 
             skill_jobs = conn.execute(skill_query, skill_params).fetchall()
@@ -78,6 +82,8 @@ def advance_filter():
     else:
         skill_query = "SELECT * FROM jobs WHERE LOWER(skills) LIKE ?"
         skill_jobs = conn.execute(skill_query, (f'%{skill_filter.lower()}%',)).fetchall()
+
+    print("Skill Jobs:", [job['Job_ID'] for job in skill_jobs])  # Print Job_IDs
 
     # Location filter logic
     if location_filter == 'Default':
@@ -89,12 +95,59 @@ def advance_filter():
         # Intersection of location filtered jobs with skill filtered jobs
         location_jobs = [job for job in skill_jobs if job in location_jobs]
 
+    print("Location Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
+
+    # Company filter logic
+    if company_filter != 'Default':
+        company_query = "SELECT * FROM jobs WHERE LOWER(company) LIKE ?"
+        company_jobs = conn.execute(company_query, (f'%{company_filter.lower()}%',)).fetchall()
+
+        # Intersection of company filtered jobs with location and skill filtered jobs
+        location_jobs = [job for job in location_jobs if job in company_jobs]
+
+    print("Company Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
+
+    # Position filter logic
+    if position_filter != 'Default':
+        position_query = "SELECT * FROM jobs WHERE LOWER(position) LIKE ?"
+        position_jobs = conn.execute(position_query, (f'%{position_filter.lower()}%',)).fetchall()
+
+        # Intersection of position filtered jobs with company, location, and skill filtered jobs
+        location_jobs = [job for job in location_jobs if job in position_jobs]
+
+    print("Position Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
+
+    # Nature of Work filter logic
+    if natureOfWork_filter != 'Default':
+        natureOfWork_query = "SELECT * FROM jobs WHERE LOWER(natureOfWork) LIKE ?"
+        natureOfWork_jobs = conn.execute(natureOfWork_query, (f'%{natureOfWork_filter.lower()}%',)).fetchall()
+
+        # Intersection of natureOfWork filtered jobs with company, location, skill, and position filtered jobs
+        location_jobs = [job for job in location_jobs if job in natureOfWork_jobs]
+
+    print("Nature of Work Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
+
+    # Job filter logic
+    if job_filter != 'Default':
+        job_query = "SELECT * FROM jobs WHERE LOWER(title) LIKE ?"
+        job_jobs = conn.execute(job_query, (f'%{job_filter.lower()}%',)).fetchall()
+
+        # Intersection of job filtered jobs with company, location, skill, position, and natureOfWork filtered jobs
+        location_jobs = [job for job in location_jobs if job in job_jobs]
+
+    print("Job Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
+
+
+
+
     conn.close()
 
-    # Convert jobs to a list of dictionaries
+    # Convert jobs to a list of dictionaries including Job_ID
     job_list = [{
+        "Job_ID": job['Job_ID'],  # Include Job_ID
         "Company": job['Company'],
         "title": job['title'],
+        "position": job['position'],  # Add position to the output
         "image": job['image'],
         "location": job['location'],
         "natureOfWork": job['natureOfWork'],
@@ -118,6 +171,37 @@ def advance_filter():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/job_details', methods=['GET'])
+def job_details():
+    job_id = request.args.get('job_id')
+    if not job_id:
+        return jsonify({"error": "Job ID not provided"}), 400
+
+    conn = get_db_connection()
+    job = conn.execute("SELECT * FROM jobs WHERE Job_ID = ?", (job_id,)).fetchone()
+    conn.close()
+
+    if job:
+        # Convert Row to dictionary
+        job_dict = {key: job[key] for key in job.keys()}
+        print("Job Data:", job_dict)  # Debugging line
+        return jsonify(job_dict)
+    else:
+
+        return jsonify({"error": "Job not found"}), 404
+    
 
 
 
@@ -482,8 +566,11 @@ def applicant():
         if not file:
             return "No file selected", 400
         
-        # Save the file
-        filename = secure_filename(file.filename)  # Ensure a safe filename
+        # Ensure a safe filename and avoid filename conflicts
+        filename = secure_filename(file.filename)
+        base, ext = os.path.splitext(filename)
+        timestamp = int(time.time())
+        filename = f"{base}_{timestamp}{ext}"
         file_path = f'static/images/jobseeker-uploads/{filename}'
         file.save(file_path)
         
@@ -508,7 +595,6 @@ def applicant():
         conn.close()
         
         return "Application submitted successfully!", 200
-
 
 
 

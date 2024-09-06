@@ -7,25 +7,38 @@
         </button>
     </div>
 
-    <!-- Advanced Filter Section (Hidden initially) -->
-    <div class="advance_filter" id="filter-container" style="display: none;">
-        <input type="text" id="filter_input" name="filter_input" placeholder="Skills (Default)">
-        <input type="text" id="location_input" name="location_input" placeholder="Location (Default)">
-        <button type="button" onclick="applyFilter()">Apply Filter</button>
-    </div>
+<!-- Advanced Filter Section (Hidden initially) -->
+<div class="advance_filter" id="filter-container" style="display: none;">
+    <input type="text" id="filter_input" name="filter_input" placeholder="Skills (Default)">
+    <input type="text" id="location_input" name="location_input" placeholder="Location (Default)">
+    <input type="text" id="company_input" name="company_input" placeholder="Company (Default)">
+    <input type="text" id="job_input" name="job_input" placeholder="Job (Default)">
+    <input type="text" id="position_input" name="position_input" placeholder="Position (Default)">
+    <input type="text" id="natureOfWork_input" name="natureOfWork_input" placeholder="natureOfWork(Default)">
+
+    <button type="button" style="outline: none; border: 1px solid; padding: 5px; margin-left: 1em; border-radius: 5px;" onclick="applyFilter()">Apply Filter</button>
+</div>
+
     
 
     <script>
         function applyFilter() {
             const skillFilter = document.getElementById('filter_input').value || 'Default';
             const locationFilter = document.getElementById('location_input').value || 'Default';
-    
+            const companyFilter = document.getElementById('company_input').value || 'Default';
+            const positionFilter = document.getElementById('position_input').value || 'Default';
+            const natureOfWorkFilter = document.getElementById('natureOfWork_input').value || 'Default';
+            const jobFilter = document.getElementById('job_input').value || 'Default';
             $.ajax({
                 url: '/advance_filter',
                 method: 'GET',
                 data: {
                     skill_filter: skillFilter,
-                    location_filter: locationFilter
+                    location_filter: locationFilter,
+                    company_filter: companyFilter,
+                    position_filter: positionFilter,
+                    natureOfWork_filter: natureOfWorkFilter,
+                    job_filter: jobFilter,
                 },
                 success: function(data) {
                     if (Array.isArray(data)) {
@@ -47,7 +60,9 @@
                                             <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
                                             <p class="card-text"><strong>Job Status:</strong> ${job.jobStatus}</p>
                                             <p class="card-text"><strong>Closing Date:</strong> ${job.closingDate}</p>
-                                            <a class="btn btn-primary" onclick="seeFullDetail(this)">See Full Details</a>
+                                            <a class="btn btn-primary" data-job-id="${job.Job_ID}" onclick="seeFullDetail(this)">See Full Details</a>
+
+
                                         </div>
                                     </div>
                                 </div>
@@ -84,48 +99,75 @@
 
     <div class="row">
         {% for job in jobs %}
-        <div class="col-md-4">
-            <div class="card mb-4 container-vacancy">
-                <div class="image-container">
-                    <img src="{{ url_for('static', filename=job.image) }}" alt="Job Image" class="card-img-top">
-                </div>
-                
-                <div class="card-body">
-                    <h5 class="card-text"><strong>Company:</strong> {{ job.Company }}</h5>
-                    
-                    <p class="card-title"><strong>Job: </strong>{{ job.title }}</p>
-                    <!-- <p class="card-text">{{ job.description }}</p> -->
-                    <p class="card-text">
-                        <strong>Location:</strong> <img src="{{ url_for('static', filename='images/jobseeker-images/pin.png') }}" alt="Location Image" class="location-image" onclick="showLocation('{{ job.location }}')">{{ job.location }}
-                        
-                    </p>
 
-                    
-                    <!-- <p class="card-text"><strong>Salary:</strong> {{ job.salary }}</p> -->
-                    <p class="card-text"><strong>Nature of Work:</strong> {{ job.natureOfWork }}</p>
-                    <!-- <p class="card-text"><strong>Position:</strong> {{ job.position }}</p> -->
-                    <p class="card-text"><strong>Job Status:</strong> {{ job.jobStatus }}</p>
-                    <p class="card-text"><strong>Closing Date:</strong> {{ job.closingDate }}</p>
-                    <a class="btn btn-primary"
-                    data-image="{{ url_for('static', filename=job.image) }}"
-                    data-company="{{ job.company }}"
-                    data-title="{{ job.title }}"
-                    data-description="{{ job.description }}"
-                    data-location="{{ job.location }}"
-                    data-salary="{{ job.salary }}"
-                    data-natureofwork="{{ job.natureOfWork }}"
-                    data-position="{{ job.position }}"
-                    data-JOB_ID="{{ job.JOB_ID }}"
-                    data-employer_id="{{job.employer_id}}"
-                    data-status="{{ job.request }}"
-                    data-skilss="{{ job.skills }}"
-                    onclick="seeFullDetail(this)">See Full Details</a>
-                </div>
-            </div>
-        </div>
         {% endfor %}
     </div>
 </div>
+
+
+<script>
+function seeFullDetail(button) {
+    // Get the Job_ID from the button's data attribute
+    const jobId = button.getAttribute('data-job-id');
+    console.log("Job ID:", jobId); // Debugging line
+
+    if (!jobId) {
+        console.error("Job ID is undefined or null");
+        return;
+    }
+
+    // Perform an AJAX request to fetch job details
+    $.ajax({
+        url: '/job_details',
+        method: 'GET',
+        data: { job_id: jobId },
+        success: function(job) {
+            // Populate the modal with job details
+            const modalBody = document.getElementById('frameDetail');
+            modalBody.innerHTML = `
+                <div class="image-container">
+                    <img src="/static/${job.image}" alt="Job Image" class="card-img-top">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title"><strong>Company: </strong>${job.Company}</h5>
+                    <p class="card-title"><strong>Job: </strong>${job.title}</p>
+                    <p class="card-text"><strong>Description: </strong>${job.description}</p>
+                    <p class="card-text"><strong>Location: </strong>${job.location}</p>
+                    <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
+                    <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
+                    <p class="card-text"><strong>Position:</strong> ${job.position}</p>
+                    <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" action="/applicant" method="post">
+                        <input type="hidden" name="job_id" value="${job.jobId}" />
+                        <input type="hidden" name="employer_id" value="${job.employerId}" />
+                        <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
+                        <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
+                        <div id="error-message" style="color: red;"></div>
+                        <button type="submit" class="btn btn-primary">Apply Now</button>
+                    </form>
+                </div>
+            `;
+
+            // Show the modal
+            $('#detailsModal').modal('show');
+        },
+        error: function(xhr, status, error) {
+            console.error("Error: " + error + " Status: " + status);
+            alert("An error occurred while fetching job details. Please try again later.");
+        }
+    });
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+
 
 
 <!-- Full Details Modal -->
@@ -172,58 +214,7 @@
         $('#mapModal').modal('show');
     }
 
-    function seeFullDetail(element) {
-        const detailsModal = $('#detailsModal');
-        const frameDetail = detailsModal.find('#frameDetail');
-        
-        // Extract job details from data attributes
-        const job = {
-            image: element.getAttribute('data-image'),
-            title: element.getAttribute('data-title'),
-            company: element.getAttribute('data-company'),
-            description: element.getAttribute('data-description'),
-            location: element.getAttribute('data-location'),
-            salary: element.getAttribute('data-salary'),
-            natureOfWork: element.getAttribute('data-natureofwork'),
-            position: element.getAttribute('data-position'),
-            jobId: element.getAttribute('data-JOB_ID'),
-            employerId: element.getAttribute('data-employer_id'),
-            skillId: element.getAttribute('data-skill_id')
-        };
-
-        // Create the HTML for the job details
-        const jobDetailsHtml = `
-            <div class="image-container">
-                <img src="${job.image}" alt="Job Image" class="card-img-top">
-            </div>
-            <div class="card-body">
-                <h5 class="card-title"><strong>Company: </strong>${job.company}</h5>
-                <p class="card-title"><strong>Job: </strong>${job.title}</p>
-                <p class="card-text"><strong>Description: </strong>${job.description}</p>
-                 <p class="card-text">
-                     <strong>Location: </strong>${job.location}
-                </p>
-                <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
-                <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
-                <p class="card-text"><strong>Position:</strong> ${job.position}</p>
-                <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" action="/applicant" method="post">
-                    <input type="hidden" name="job_id" value="${job.jobId}" />
-                    <input type="hidden" name="employer_id" value="${job.employerId}" />
-                    <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
-                    <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
-                    <div id="error-message" style="color: red;"></div>
-                    <button type="submit" class="btn btn-primary">Apply Now</button>
-                </form>
-            </div>
-        `;
-
-        // Insert the job details HTML into the modal
-        frameDetail.html(jobDetailsHtml);
-
-        // Show the modal
-        detailsModal.modal('show');
-    }
-</script>
+ </script>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>

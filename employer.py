@@ -199,6 +199,7 @@ def post_job():
         closingDate = request.form['closingDate']
         jobStatus = request.form['jobStatus']
         skills = request.form.getlist('skills[]')
+        
 
         skills_str = ','.join(skills)
     except KeyError as e:
