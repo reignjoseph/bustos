@@ -1,16 +1,31 @@
 <div class="employernotification-container" style="display: none;">
     <h2>NOTIFICATION</h2>
-    <table id="applicant-list" border="1" style="border-collapse: collapse; width: 100%;">
-        <!-- Table Headers and Applicants will be dynamically inserted here -->
-    </table>
+    <div id="applicant-list" class="applicant-grid">
+        <!-- Applicant data will be dynamically inserted here -->
+    </div>
+    <div id="pagination-controls" style="text-align:center; margin-top:10px;">
+        <button id="prev-page" disabled>Previous</button>
+        <span id="page-info">Page 1</span>
+        <button id="next-page">Next</button>
+    </div>
 </div>
 
+
+
+
+
+
+<!--  -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    fetchApplicants();
+    fetchApplicants(1); // Load the first page initially
 });
 
-function fetchApplicants() {
+let applicantsPerPage = 5; // Number of applicants to show per page
+let currentPage = 1;
+let totalApplicants = 0;
+
+function fetchApplicants(page) {
     $.ajax({
         url: '/fetch_applicants',
         method: 'GET',
@@ -18,43 +33,42 @@ function fetchApplicants() {
             console.log("Received data: ", data);
 
             if (Array.isArray(data)) {
-                // Add table headers
+                totalApplicants = data.length;
+                let start = (page - 1) * applicantsPerPage;
+                let end = start + applicantsPerPage;
+                let paginatedData = data.slice(start, end);
+
                 let applicantHtml = `
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Contact</th>
-                            <th>Form</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                    <div class="notification_frame">
+                        <div class="header1">Name</div>
+                        <div class="header2">Email</div>
+                        <div class="header3">Contact</div>
+                        <div class="header4">Form</div>
+                        <div class="header5">Status</div>
+                        <div class="header6">Action</div>
+                    </div>
                 `;
 
-                // Loop through applicants and create table rows
-                data.forEach(applicant => {
+                // Loop through paginated applicants and create grid items
+                paginatedData.forEach(applicant => {
                     applicantHtml += `
-                        <tr>
-                            <td>${applicant.jobseeker_name}</td>
-                            <td>${applicant.email}</td>
-                            <td>${applicant.contact_no}</td>
-                            <td><a href="/static/${applicant.form}" target="_blank">View Resume</a></td>
-                            <td>${applicant.status}</td>
-                            <td>
-                                <input type="button" value="APPROVE">
-                                <input type="button" value="DENIED">
-                            </td>
-                        </tr>
+                        <div class="applicant-card">
+                            <span>${applicant.jobseeker_name}</span>
+                            <span>${applicant.email}</span>
+                            <span>${applicant.contact_no}</span>
+                            <span><a href="${applicant.form}" target="_blank">View Resume</a></span>
+                            <span>${applicant.status}</span>
+                            <span style="display:flex;justify-content:space-evenly;">
+                                <input type="button" value="APPROVE" class="approve-btn" onclick="approvedApplicant(${applicant.Applicant_ID})">
+                                <input type="button" value="DENIED" class="deny-btn" onclick="deniedApplicant(${applicant.Applicant_ID})">
+                            </span>
+                        </div>
                     `;
                 });
 
-                applicantHtml += `</tbody>`;
-
-                // Insert the generated HTML into the table
                 document.getElementById('applicant-list').innerHTML = applicantHtml;
-                document.querySelector('.employernotification-container').style.display = 'block';
+                // document.querySelector('.employernotification-container').style.display = 'block';
+                updatePaginationControls(page);
             } else {
                 console.error("Error: Expected an array, but received:", data);
             }
@@ -65,4 +79,67 @@ function fetchApplicants() {
         }
     });
 }
+
+function updatePaginationControls(page) {
+    // Update the page information
+    document.getElementById('page-info').textContent = `Page ${page}`;
+
+    // Handle previous/next button disabling
+    document.getElementById('prev-page').disabled = (page === 1);
+    document.getElementById('next-page').disabled = (page * applicantsPerPage >= totalApplicants);
+}
+
+// Event listeners for pagination controls
+document.getElementById('prev-page').addEventListener('click', function() {
+    if (currentPage > 1) {
+        currentPage--;
+        fetchApplicants(currentPage);
+    }
+});
+
+document.getElementById('next-page').addEventListener('click', function() {
+    if (currentPage * applicantsPerPage < totalApplicants) {
+        currentPage++;
+        fetchApplicants(currentPage);
+    }
+});
+</script>
+
+<script>
+// Function to approve the applicant
+function approvedApplicant(applicantId) {
+    $.ajax({
+        url: '/update_applicant_status',
+        method: 'POST',
+        data: JSON.stringify({ 'applicant_id': applicantId, 'status': 'Approved' }),
+        contentType: 'application/json',
+        success: function(response) {
+            alert('Applicant approved successfully!');
+            fetchApplicants(currentPage); // Refresh the list after updating
+        },
+        error: function(xhr, status, error) {
+            console.error("Error approving applicant: " + error);
+            alert("An error occurred while approving the applicant. Please try again.");
+        }
+    });
+}
+
+// Function to deny the applicant
+function deniedApplicant(applicantId) {
+    $.ajax({
+        url: '/update_applicant_status',
+        method: 'POST',
+        data: JSON.stringify({ 'applicant_id': applicantId, 'status': 'Denied' }),
+        contentType: 'application/json',
+        success: function(response) {
+            alert('Applicant denied successfully!');
+            fetchApplicants(currentPage); // Refresh the list after updating
+        },
+        error: function(xhr, status, error) {
+            console.error("Error denying applicant: " + error);
+            alert("An error occurred while denying the applicant. Please try again.");
+        }
+    });
+}
+
 </script>

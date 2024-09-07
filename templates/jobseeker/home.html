@@ -259,9 +259,17 @@ async function convertImageToPDF(imageFile, formData) {
     const page = pdfDoc.addPage();
 
     const imageBytes = await imageFile.arrayBuffer();
-    const image = await pdfDoc.embedPng(imageBytes);
-    const { width, height } = image;
+    let image;
 
+    if (imageFile.type === 'image/jpeg') {
+        image = await pdfDoc.embedJpg(imageBytes);
+    } else if (imageFile.type === 'image/png') {
+        image = await pdfDoc.embedPng(imageBytes);
+    } else {
+        throw new Error('Unsupported image type');
+    }
+
+    const { width, height } = image;
     page.drawImage(image, {
         x: 0,
         y: 0,

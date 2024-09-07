@@ -1,7 +1,8 @@
 <!-- Employer Profile Container -->
 <div id="employer_profile_container" class="employer_profile_container flex center" style="display: none;">
-    <!-- Profile Picture Section -->
-    <div class="profile-picture-container">
+  <div style="display: flex; align-items: center; flex-direction: column;">
+      <!-- Profile Picture Section -->
+      <div class="profile-picture-container">
         <img id="profile-picture" src="{{ url_for('static', filename='images/employer-images/' ~ (session['user_profile'] if session['user_profile'] else 'avatar.png')) }}" class="profile-picture">
         <img src="{{ url_for('static', filename='images/camera.png') }}" class="camera-icon" onclick="triggerFileInput()">
         <input type="file" id="file-input" style="display: none;" accept="image/*" onchange="updateProfilePicture(event)">
@@ -49,16 +50,12 @@
     
     <button type="submit" class="change-password-button flex-end">Change Password</button>
 </form>
+  </div>
 
 </div>
 
 
 <script>
-function openEmployerProfile() {
-    // Toggle the visibility of the employer profile container
-    const profileContainer = document.getElementById('employer_profile_container');
-    profileContainer.style.display = (profileContainer.style.display === 'none' || profileContainer.style.display === '') ? 'flex' : 'none';
-}
 
 function showPersonalInformation() {
     document.getElementById('personal-information-section').style.display = 'flex';

@@ -1,1 +1,70 @@
-#applicant-list {}
+#applicant-list {
+    display: grid;
+    gap: 10px;
+    text-align: center;
+    margin: 0 10px;
+}
+
+.notification_frame {
+    display: flex;
+    justify-content: space-around;
+    font-weight: bold;
+    border-bottom: 2px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.applicant-card {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.applicant-card span {
+    flex: 1;
+    margin: 5px;
+}
+
+#pagination-controls button {
+    padding: 10px 15px;
+    margin: 0 5px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+#pagination-controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Button hover animations */
+.approve-btn {
+    background-color: white;
+    border: 1px solid #28a745;
+    color: #28a745;
+    padding: 5px 10px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.approve-btn:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+.deny-btn {
+    background-color: white;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 5px 10px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.deny-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}

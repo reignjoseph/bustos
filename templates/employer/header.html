@@ -8,44 +8,40 @@
     <link rel="stylesheet" href="/static/css/employer/add-job.css">
     <link rel="stylesheet" href="/static/css/employer/employer_profile.css">
     <link rel="stylesheet" href="/static/css/employer/employer_notification.css">
+    <link rel="stylesheet" href="/static/css/employer/employer_applicant.css">
+    <link rel="stylesheet" href="/static/css/employer/employer_home.css">
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- DateTimePicker CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.6/css/tempusdominus-bootstrap-4.min.css">
     <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
     <!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
-
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 </head>
 <body>
     <div class="container_class">
         <div class="sidebar">
             <div>
-                <img  src="/static/images/peso_logo.png" style="max-width: 100px;" alt="Logo">
+                <img src="/static/images/peso_logo.png" style="max-width: 100px;" alt="Logo">
             </div>
-            <div onclick="openEmployerProfile()" class="profile">
-                <img src="{{ url_for('static', filename='images/employer-images/' ~ (session['user_profile'] if session['user_profile'] else 'avatar.png')) }}" >
+            <div onclick="openSection('employer_profile_container')" class="profile">
+                <img src="{{ url_for('static', filename='images/employer-images/' ~ (session['user_profile'] if session['user_profile'] else 'avatar.png')) }}">
                 <p>{{ session['user_fname'] }}</p style="margin: 0px;">
             </div>
-
-
-
-
-            <div class="menu-item">
-               <img src="/static/images/home.png" style="max-width: 40px;" alt="Logo">
+            <div class="menu-item" onclick="openSection('employer_home_container')">
+                <img src="/static/images/home.png" style="max-width: 40px;" alt="Logo">
                 <span>Home</span>
             </div>
-            <div class="menu-item" onclick="openAddJob()">
-               <img src="/static/images/add-job.png" style="max-width: 40px;" alt="Logo">
+            <div class="menu-item" onclick="openSection('add-job-container')">
+                <img src="/static/images/add-job.png" style="max-width: 40px;" alt="Logo">
                 <span>Add Job</span>
             </div>
-            <div class="menu-item" onclick="openEmployerNotification()">
-               <img src="/static/images/notification.png" style="max-width: 40px;" alt="Logo">
+            <div class="menu-item" onclick="openSection('employernotification-container')">
+                <img src="/static/images/notification.png" style="max-width: 40px;" alt="Logo">
                 <span>Notification</span>
             </div>
-            <div class="menu-item">
-               <img src="/static/images/user.png" style="max-width: 40px;" alt="Logo">
+            <div class="menu-item" onclick="openSection('employer_applicant_container')">
+                <img src="/static/images/user.png" style="max-width: 40px;" alt="Logo">
                 <span>Applicant</span>
             </div>
             <a href="/logout" class="menu-item">
@@ -53,26 +49,38 @@
                 <span>Logout</span>
             </a>
         </div>
-    
     </div>
-    <main> 
+    <main>
         {% block content %}
         <!-- Page specific content will go here -->
         {% endblock %}
     </main>
-    <script>
-        function openAddJob() {
-            var addJobContainer = document.querySelector('.add-job-container');
-            addJobContainer.style.display = 'block';
-        }
-    </script>
-    <script>
-        function openEmployerNotification() {
-            var addJobContainer = document.querySelector('.employernotification-container');
-            addJobContainer.style.display = 'block';
-        }
-    </script>
 
+    <script>
+        function openSection(sectionClassOrId) {
+            // Hide all containers
+            const sections = [
+                '.add-job-container',
+                '.employernotification-container',
+                '#employer_profile_container',
+                '#employer_applicant_container',
+                '#employer_home_container'
+            ];
+
+            sections.forEach(section => {
+                const element = document.querySelector(section);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+
+            // Show the clicked section
+            const activeSection = document.querySelector(`.${sectionClassOrId}`) || document.getElementById(sectionClassOrId);
+            if (activeSection) {
+                activeSection.style.display = 'block';
+            }
+        }
+    </script>
 
 </body>
 </html>

@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
+from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify, send_from_directory,abort
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
@@ -23,7 +23,8 @@ def internal_error(error):
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','pdf'}
 
 
 def allowed_file(filename):
@@ -36,8 +37,6 @@ def get_db_connection():
     conn = sqlite3.connect('trabahanap.db')
     conn.row_factory = sqlite3.Row
     return conn
-
-
 
 
 
@@ -61,12 +60,13 @@ def fetch_applicants():
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
 
+        # Fetch only applicants with "Pending" status
         cursor.execute('''
-            SELECT * FROM applicant
-        ''')
+            SELECT * FROM applicant WHERE status = ?
+        ''', ('Pending',))
 
         applicants = cursor.fetchall()
-        print("Fetched applicants from DB:", applicants)  # Debug the SQL response
+        print("Fetched applicants with Pending status from DB:", applicants)  # Debug the SQL response
 
         conn.close()
 
@@ -74,7 +74,7 @@ def fetch_applicants():
         for row in applicants:
             print(f"Processing row: {row}")  # Debug each row as it's processed
             applicant_list.append({
-                'Apppicant_ID': row[0],
+                'Applicant_ID': row[0],
                 'job_id': row[1],
                 'employer_id': row[2],
                 'jobseeker_name': row[3],
@@ -82,8 +82,7 @@ def fetch_applicants():
                 'contact_no': row[5],
                 'form': row[6],
                 'schedule': row[7],
-                'status': row[8],
-                'action': row[9]
+                'status': row[8]
             })
 
         return jsonify(applicant_list)
@@ -92,6 +91,31 @@ def fetch_applicants():
         print(f"Error fetching applicants: {e}")
         return jsonify({'error': 'An error occurred while fetching applicants'}), 500
 
+@app.route('/update_applicant_status', methods=['POST'])
+def update_applicant_status():
+    try:
+        data = request.get_json()
+        applicant_id = data.get('applicant_id')
+        status = data.get('status')
+
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+
+        # Update the applicant's status
+        cursor.execute('''
+            UPDATE applicant
+            SET status = ?
+            WHERE Applicant_ID = ?
+        ''', (status, applicant_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'message': 'Status updated successfully!'})
+
+    except Exception as e:
+        print(f"Error updating applicant status: {e}")
+        return jsonify({'error': 'An error occurred while updating applicant status'}), 500
 
 
 
