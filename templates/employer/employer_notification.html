@@ -1,21 +1,22 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
+
 <div class="employernotification-container" style="display: none;">
     <h2>NOTIFICATION</h2>
+    <input type="text" id="search-input" placeholder="Search Name" oninput="searchApplicants()">
     <div id="applicant-list" class="applicant-grid">
         <!-- Applicant data will be dynamically inserted here -->
     </div>
     <div id="pagination-controls" style="text-align:center; margin-top:10px;">
+    
+    
+        
         <button id="prev-page" disabled>Previous</button>
         <span id="page-info">Page 1</span>
         <button id="next-page">Next</button>
     </div>
 </div>
 
-
-
-
-
-
-<!--  -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     fetchApplicants(1); // Load the first page initially
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 let applicantsPerPage = 5; // Number of applicants to show per page
 let currentPage = 1;
 let totalApplicants = 0;
+let allApplicants = []; // Store all fetched applicants for searching
 
 function fetchApplicants(page) {
     $.ajax({
@@ -33,42 +35,9 @@ function fetchApplicants(page) {
             console.log("Received data: ", data);
 
             if (Array.isArray(data)) {
+                allApplicants = data; // Store all applicants globally for searching
                 totalApplicants = data.length;
-                let start = (page - 1) * applicantsPerPage;
-                let end = start + applicantsPerPage;
-                let paginatedData = data.slice(start, end);
-
-                let applicantHtml = `
-                    <div class="notification_frame">
-                        <div class="header1">Name</div>
-                        <div class="header2">Email</div>
-                        <div class="header3">Contact</div>
-                        <div class="header4">Form</div>
-                        <div class="header5">Status</div>
-                        <div class="header6">Action</div>
-                    </div>
-                `;
-
-                // Loop through paginated applicants and create grid items
-                paginatedData.forEach(applicant => {
-                    applicantHtml += `
-                        <div class="applicant-card">
-                            <span>${applicant.jobseeker_name}</span>
-                            <span>${applicant.email}</span>
-                            <span>${applicant.contact_no}</span>
-                            <span><a href="${applicant.form}" target="_blank">View Resume</a></span>
-                            <span>${applicant.status}</span>
-                            <span style="display:flex;justify-content:space-evenly;">
-                                <input type="button" value="APPROVE" class="approve-btn" onclick="approvedApplicant(${applicant.Applicant_ID})">
-                                <input type="button" value="DENIED" class="deny-btn" onclick="deniedApplicant(${applicant.Applicant_ID})">
-                            </span>
-                        </div>
-                    `;
-                });
-
-                document.getElementById('applicant-list').innerHTML = applicantHtml;
-                // document.querySelector('.employernotification-container').style.display = 'block';
-                updatePaginationControls(page);
+                displayApplicants(page, data);
             } else {
                 console.error("Error: Expected an array, but received:", data);
             }
@@ -80,32 +49,73 @@ function fetchApplicants(page) {
     });
 }
 
-function updatePaginationControls(page) {
-    // Update the page information
-    document.getElementById('page-info').textContent = `Page ${page}`;
+function displayApplicants(page, applicants) {
+    let start = (page - 1) * applicantsPerPage;
+    let end = start + applicantsPerPage;
+    let paginatedData = applicants.slice(start, end);
 
-    // Handle previous/next button disabling
+    let applicantHtml = `
+        <div class="notification_frame"></div>
+    `;
+
+    // Loop through paginated applicants and create grid items
+    paginatedData.forEach(applicant => {
+        // Use moment.js to format the date_request to relative time
+        let formattedDate = moment(applicant.date_request).fromNow();
+
+        applicantHtml += `
+            <div class="applicant-card">
+                <img src="static/${applicant.profile}" alt="${applicant.jobseeker_name}'s profile picture" class="profile-pic"/>
+                <span>${applicant.jobseeker_name}</span>
+                <span>was applied at ${applicant.Company}</span>
+                <span><a href="${applicant.form}" target="_blank">View Resume</a></span>
+                <span>${applicant.status}</span>
+                <span style="display:flex;justify-content:space-evenly;">
+                    <input style="border-radius:10px;" type="button" value="APPROVE" class="approve-btn" onclick="approvedApplicant(${applicant.Applicant_ID})">
+                    <input style="margin-left:10px;border-radius:10px;" type="button" value="DENIED" class="deny-btn" onclick="deniedApplicant(${applicant.Applicant_ID})">
+                </span>
+                <span>${formattedDate}</span> <!-- Formatted date displayed here -->
+            </div>
+        `;
+    });
+
+    document.getElementById('applicant-list').innerHTML = applicantHtml;
+    updatePaginationControls(page);
+}
+
+function updatePaginationControls(page) {
+    document.getElementById('page-info').textContent = `Page ${page}`;
     document.getElementById('prev-page').disabled = (page === 1);
     document.getElementById('next-page').disabled = (page * applicantsPerPage >= totalApplicants);
 }
 
-// Event listeners for pagination controls
 document.getElementById('prev-page').addEventListener('click', function() {
     if (currentPage > 1) {
         currentPage--;
-        fetchApplicants(currentPage);
+        displayApplicants(currentPage, allApplicants);
     }
 });
 
 document.getElementById('next-page').addEventListener('click', function() {
     if (currentPage * applicantsPerPage < totalApplicants) {
         currentPage++;
-        fetchApplicants(currentPage);
+        displayApplicants(currentPage, allApplicants);
     }
 });
-</script>
 
-<script>
+// Search Functionality
+function searchApplicants() {
+    let searchTerm = document.getElementById('search-input').value.toLowerCase();
+    
+    let filteredApplicants = allApplicants.filter(applicant => 
+        applicant.jobseeker_name.toLowerCase().includes(searchTerm)
+    );
+    
+    totalApplicants = filteredApplicants.length; // Update the total applicants to reflect search results
+    currentPage = 1; // Reset to the first page
+    displayApplicants(currentPage, filteredApplicants); // Display filtered applicants
+}
+
 // Function to approve the applicant
 function approvedApplicant(applicantId) {
     $.ajax({
@@ -141,5 +151,4 @@ function deniedApplicant(applicantId) {
         }
     });
 }
-
 </script>
