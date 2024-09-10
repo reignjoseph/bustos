@@ -77,12 +77,14 @@ def fetch_applicants():
                 'Applicant_ID': row[0],
                 'job_id': row[1],
                 'employer_id': row[2],
-                'jobseeker_name': row[3],
-                'email': row[4],
-                'contact_no': row[5],
-                'form': row[6],
-                'schedule': row[7],
-                'status': row[8]
+                'jobseeker_id': row[3],
+                'jobseeker_name': row[4],
+                'email': row[5],
+                'contact_no': row[6],
+                'form': row[7],
+                'schedule': row[8],
+                'status': row[9],
+                'date_request': row[10],
             })
 
         return jsonify(applicant_list)
@@ -101,23 +103,80 @@ def update_applicant_status():
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
 
-        # Update the applicant's status
+        # Fetch details from the applicant table based on applicant_id
+        cursor.execute('''
+            SELECT job_id, employer_id, jobseeker_id
+            FROM applicant
+            WHERE Applicant_ID = ?
+        ''', (applicant_id,))
+        applicant = cursor.fetchone()
+
+        if applicant is None:
+            print(f"Error: Applicant not found for ID: {applicant_id}")
+            return jsonify({'error': 'Applicant not found'}), 404
+
+        job_id, employer_id, jobseeker_id = applicant
+        print(f"Fetched applicant details: job_id={job_id}, employer_id={employer_id}, jobseeker_id={jobseeker_id}")
+
+        # Fetch company name from the jobs table using job_id
+        cursor.execute('''
+            SELECT company
+            FROM jobs
+            WHERE Job_ID = ?
+        ''', (job_id,))
+        job = cursor.fetchone()
+
+        if job is None:
+            print(f"Error: Job not found for Job_ID: {job_id}")
+            return jsonify({'error': 'Job not found'}), 404
+
+        company = job[0]
+        print(f"Fetched company: {company}")
+
+        # Define status description templates
+        status_descriptions = [
+            f"Your application at {company} is now {status}.",
+            f"Update: Your application status at {company} is {status}.",
+            f"Notification: Your application for the position at {company} is {status}.",
+            f"Alert: The status of your application at {company} is now {status}.",
+            f"Info: Your application status at {company} has changed to {status}."
+        ]
+
+        # Choose a random status description
+        status_description = random.choice(status_descriptions)
+        print(f"Generated status description: {status_description}")
+
+        # Get current time in Philippine time (UTC+8)
+        philippine_tz = timezone(timedelta(hours=8))
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+        print(f"Current Philippine time: {current_time_pht}")
+
+        # Update the applicant's status in the applicant table
         cursor.execute('''
             UPDATE applicant
             SET status = ?
             WHERE Applicant_ID = ?
         ''', (status, applicant_id))
 
+        print(f"Updated applicant ID {applicant_id} status to {status}")
+
+        # Insert into the application_status table, including the applicant_id and date_posted
+        cursor.execute('''
+            INSERT INTO application_status (applicant_id, job_id, jobseeker_id, employer_id, status_description, status_type, company, date_posted)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (applicant_id, job_id, jobseeker_id, employer_id, status_description, status, company, current_time_pht))
+
+        print(f"Inserted into application_status: applicant_id={applicant_id}, job_id={job_id}, jobseeker_id={jobseeker_id}, employer_id={employer_id}, status_type={status}, company={company}, date_posted={current_time_pht}")
+
+        # Commit the transaction and close the connection
         conn.commit()
         conn.close()
 
-        return jsonify({'message': 'Status updated successfully!'})
+        return jsonify({'message': 'Status updated successfully and inserted into application_status!'})
 
     except Exception as e:
         print(f"Error updating applicant status: {e}")
         return jsonify({'error': 'An error occurred while updating applicant status'}), 500
-
-
 
 
 
@@ -239,10 +298,13 @@ def profile_employer():
 
 @app.route('/change_password', methods=['POST'])
 def change_password():
+    print("Received data:", request.form)
     old_password = request.form['oldpassword']
     new_password = request.form['newpassword']
     confirm_password = request.form['confirmpassword']
-
+    print(f"Old Password: {old_password}")
+    print(f"New Password: {new_password}")
+    print(f"Confirm Password: {confirm_password}")
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -274,7 +336,7 @@ def change_password():
     session['user_password'] = new_password
 
     # Redirect to the profile page or another page as needed
-    return jsonify({'success': True, 'redirect': url_for('employer')})
+    return jsonify({'success': True})
 
 
 
@@ -296,7 +358,9 @@ def post_job():
         closingDate = request.form['closingDate']
         jobStatus = request.form['jobStatus']
         skills = request.form.getlist('skills[]')
-        
+        philippine_tz = timezone(timedelta(hours=8))
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
 
         skills_str = ','.join(skills)
     except KeyError as e:
@@ -343,8 +407,8 @@ def post_job():
 
         # Insert job details into jobs table including employer_ID
         conn.execute(
-            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID,request,skills) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'],"Pending",skills_str)
+            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID,request,skills,date_posted) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)',
+            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'],"Pending",skills_str,current_time_pht)
         )
 
         # Fetch jobseekers' details

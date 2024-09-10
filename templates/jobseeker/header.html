@@ -13,13 +13,14 @@
     <link rel="stylesheet" href="/static/css/jobseeker/rating.css">
     <link rel="stylesheet" href="/static/css/jobseeker/profile.css">
     <link rel="stylesheet" href="/static/css/jobseeker/notification.css">
+    <link rel="stylesheet" href="/static/css/jobseeker/status.css">
     <!-- <link rel="stylesheet" href="/static/css/jobseeker/notification.css"> -->
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="/static/js/script.js" defer=""></script>
-    <title>{% block title %}Home{% endblock %}</title>
+    <title>{% block title %}Jobseeker{% endblock %}</title>
     
 </head>
 <body>
@@ -37,7 +38,7 @@
                     <a href="/jobseeker/notification" class="box">
                         <img class="image" src="/static/images/notification.png" alt="Logo">
                     Notification</a>
-                    <a href="/status" class="box">
+                    <a href="/jobseeker/status" class="box">
                         <img class="image" src="/static/images/status.png" alt="Logo">
                     Status</a>
                     <a class="box" onclick="openRate()">

@@ -24,13 +24,13 @@
     grid-column: 1/span2;
     place-self: center;
 }
-.profile_bio{width: 262px;height: 42px;max-width: -webkit-fill-available;grid-column: 1/span 2;/* place-self: center; */text-wrap: nowrap;grid-row: 2;place-self: center;}
+.profile_bio{width: -webkit-fill-available;height: 42px;max-width: -webkit-fill-available;grid-column: 1/span 2;/* place-self: center; */text-wrap: nowrap;grid-row: 2;place-self: center;margin: 10px;/* padding: 0; */}
 .profile-frame1 {height: auto;top: 100px;padding: 20px;display: grid;grid-template-rows: 1fr;gap: 0px;grid-template-columns: 1fr 1fr;max-width: 570px;}
 .profile-row1 {position: relative;grid-column: 1/span 2;/* transform: translate(0px, 0px); */display: grid;justify-content: center;align-items: start;}
-.button-profile {grid-column: 2;width: min-content;text-wrap: nowrap;grid-row: 4;font-size: 11px;align-self: end;justify-self: end;}
+.button-profile {grid-column: 2;width: min-content;text-wrap: nowrap;grid-row: 4;font-size: 11px;align-self: end;justify-self: center;}
 
 
-.formcontainer{display:grid;grid-template-columns: repeat(2, 45%);grid-template-rows: 1fr auto auto;grid-column-gap: 5%;grid-row: 1;grid-column: 1/span2;justify-content: center;align-items: center;grid-row-gap: 10px;background-color: beige;border-radius: 10px;padding: 10px;}
+.formcontainer{display:grid;grid-template-columns: repeat(2, 50%);grid-template-rows: 1fr auto auto;grid-row: 1;grid-column: 1/span2;justify-content: center;align-items: center;/* grid-row-gap: 10px; */background-color: beige;border-radius: 10px;padding: 10px;}
 .PIcontainer{/* display: block; *//* position: relative; *//* top: 0; */grid-row: 3;grid-column: 1 / span 2;width: 300px;display: grid;/* grid-template-columns: repeat(1, 20%) 80%; */grid-template-rows: 60px 60px 80px;/* height: min-content; *//* align-self: end; *//* margin-left: 20px; *//* row-gap: 0px; */place-items: center;/* background-color: beige; */border-radius: 10px;padding: 0px 10px 0px 10px;}
 
 .PIcontainer .email{
@@ -110,3 +110,6 @@
     width: -webkit-fill-available;}
 
 
+    .close-button{outline:none !important; border:none;float: right;}
+    .error-message{background-color: #f0c4c4;padding: 10px;border-radius: 10px;width:-webkit-fill-available}
+    

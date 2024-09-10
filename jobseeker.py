@@ -44,6 +44,88 @@ def get_db_connection():
 
 
 
+
+@app.route('/retrieve_application_status', methods=['GET'])
+def retrieve_application_status():
+    try:
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+
+        # Query to get application status and related information including date_posted
+        cursor.execute('''
+            SELECT a.status_id, a.applicant_id, a.job_id, a.jobseeker_id, a.employer_id, a.status_description, 
+                   a.status_type, a.company, u.profile, u.fname, a.date_posted
+            FROM application_status a
+            JOIN users u ON a.employer_id = u.User_ID
+        ''')
+
+        status_list = cursor.fetchall()
+        conn.close()
+
+        # Prepare the status data with the profile picture URL and date_posted
+        results = []
+        for row in status_list:
+            profile_picture = row[8]
+            # Dynamically generate the profile picture URL
+            if profile_picture:
+                profile_url = url_for('static', filename=f'images/employer-images/{profile_picture}')
+            else:
+                profile_url = url_for('static', filename='images/employer-images/default.jpg')
+
+            # Add the date_posted field to the result
+            results.append({
+                'status_id': row[0],
+                'applicant_id': row[1],
+                'job_id': row[2],
+                'jobseeker_id': row[3],
+                'employer_id': row[4],
+                'status_description': row[5],
+                'status_type': row[6],
+                'company': row[7],
+                'profile_picture': profile_url,  # Use the dynamic profile URL
+                'employer_name': row[9],
+                'date_posted': row[10]  # Include the date_posted field
+            })
+
+        return jsonify(results)
+
+    except Exception as e:
+        print(f"Error fetching application statuses: {e}")
+        return jsonify({'error': 'An error occurred while retrieving application statuses'}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/advance_filter', methods=['GET'])
 def advance_filter():
     skill_filter = request.args.get('skill_filter', 'Default')
@@ -237,16 +319,20 @@ def create_account():
     email = request.form.get('email')
     password = request.form.get('password')
     
-
+    
     # Establish database connection
     conn = get_db_connection()
     cursor = conn.cursor()
 
+        # Get current time in Philippine Time (PHT)
+    philippine_tz = timezone(timedelta(hours=8))
+    current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+    
     # Insert data into the users table
     cursor.execute('''
         INSERT INTO users (email, password, fname, userType, status, dateRegister)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (email, password, name, role, 'Pending', datetime.now().strftime('%Y-%m-%d')))
+    ''', (email, password, name, role, 'Pending',current_time_pht))
 
     # Get the newly created User_ID
     user_id = cursor.lastrowid
@@ -583,26 +669,72 @@ def applicant():
         file.save(file_path)
         
         # Get user details from session
+        jobseeker_id = session.get('user_id')  # Get jobseeker_id from the session
         jobseeker_name = session.get('user_fname')
         email = session.get('user_email')
         contact_no = session.get('user_contact')
-        
+        philippine_tz = timezone(timedelta(hours=8))
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')        
+
         # Connect to the database
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
         
         # Insert the application into the database
         cursor.execute('''
-            INSERT INTO applicant (job_id, employer_id, jobseeker_name, email, contact_no, form, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (job_id, employer_id, jobseeker_name, email, contact_no, file_path, 'Pending'))
+            INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status,date_request)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
+        ''', (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, file_path, 'Pending',current_time_pht))
         
+        print(f"Received data - Date Request: {current_time_pht}")
         # Commit and close the connection
         conn.commit()
         cursor.close()
         conn.close()
-        
+
         return "Application submitted successfully!", 200
+
+
+
+
+
+@app.route('/jobseeker/status')
+def jobseeker_status():
+    if 'user_id' in session and session['user_type'] == 'Jobseeker':
+        user_id = session['user_id']
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch user data
+        cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
+        user_data = cursor.fetchone()
+
+        
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
+
+        # Pass the notifications to the template
+        return render_template('jobseeker/status.html', user_data=user_data)
+    
+    return redirect(url_for('signin'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -775,12 +907,15 @@ def submit_rating():
     star = request.form['star']
     comments = request.form['comments']
     user_id = request.form['user_id']
-    created = datetime.now().strftime('%d/%m/%Y')
-    
+    date_created = datetime.now().strftime('%d/%m/%Y')
+    philippine_tz = timezone(timedelta(hours=8))
+    current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO rating (star, comments, User_ID, created) VALUES (?, ?, ?, ?)",
-                   (star, comments, user_id, created))
+    cursor.execute("INSERT INTO rating (star, comments, User_ID, date_created) VALUES (?, ?, ?, ?)",
+                   (star, comments, user_id, current_time_pht))
     conn.commit()
     conn.close()
     

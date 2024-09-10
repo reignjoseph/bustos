@@ -107,7 +107,7 @@ document.getElementById('password-section').addEventListener('submit', function(
             errorMessageDiv.style.color = 'green'; // Change text color to green
             errorMessageDiv.style.backgroundColor = '#dff0d8'; // Light green background
             errorMessageDiv.style.display = 'block'; // Show success message
-            setTimeout(() => window.location.href = data.redirect, 2000); // Redirect after 2 seconds
+            // setTimeout(() => window.location.href = data.redirect, 2000); // Redirect after 2 seconds
         } else {
             // Display server-side error message
             errorTextSpan.innerHTML = data.error_message;

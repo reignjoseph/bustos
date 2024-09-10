@@ -56,27 +56,35 @@
     </form>
 
     <!-- Form for Changing Password -->
-    <form id="password-form" action="/change_password" method="post" class="password_container"style="display: none;">
+    <form id="password-form" action="/change_password" method="post" class="password_container" style="display: none;">
         <div class="col-span-2 flex flex-col items-center justify-center">
             <div class="password-update mt-4">
                 <h3 class="text-xl font-bold mb-4">Change Password</h3>
+                
+                <div id="password-error-message" class="error-message mt-4" style="display: none;">
+                    <span id="error-text"></span>
+                    <button type="button" id="close-error-message" class="close-button">&times;</button>
+                </div>
 
-                <label for="old_password" class="block mb-2">Old Password:</label>
-                <input type="password" id="old_password" name="old_password" class="w-full p-2 border border-gray-300 rounded mb-4"
+                <label for="oldpassword" class="block mb-2">Old Password:</label>
+                <input type="password" id="oldpassword" name="oldpassword" class="w-full p-2 border border-gray-300 rounded mb-4"
                        placeholder="Old Password" required autocomplete="current-password">
-
-                <label for="new_password" class="block mb-2">New Password:</label>
-                <input type="password" id="new_password" name="new_password" class="w-full p-2 border border-gray-300 rounded mb-4"
+    
+                <label for="newpassword" class="block mb-2">New Password:</label>
+                <input type="password" id="newpassword" name="newpassword" class="w-full p-2 border border-gray-300 rounded mb-4"
                        placeholder="New Password" required autocomplete="new-password">
-
-                <label for="confirm_password" class="block mb-2">Confirm New Password:</label>
-                <input type="password" id="confirm_password" name="confirm_password" class="w-full p-2 border border-gray-300 rounded mb-4"
+    
+                <label for="confirmpassword" class="block mb-2">Confirm New Password:</label>
+                <input type="password" id="confirmpassword" name="confirmpassword" class="w-full p-2 border border-gray-300 rounded mb-4"
                        placeholder="Confirm New Password" required autocomplete="new-password">
-
+    
                 <button type="submit" class="button-profile bg-blue-500 text-white px-4 py-2 rounded">Change Password</button>
+    
+
             </div>
         </div>
     </form>
+    
 </div>
 
 
@@ -90,37 +98,93 @@
         </div>
     </div>
 
-<script>
-    function openProfile() {
-        document.getElementById('modal-profile').classList.add('active');
-        document.body.classList.add('hidden-scroll');
-    }
-
-    document.getElementById('close-profile-btn').addEventListener('click', () => {
-        document.getElementById('modal-profile').classList.remove('active');
-        document.body.classList.remove('hidden-scroll');
-    });
-
-    document.getElementById('profile-picture-input').addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('profile-picture').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+    <script>
+        function openProfile() {
+            document.getElementById('modal-profile').classList.add('active');
+            document.body.classList.add('hidden-scroll');
         }
-    });
-
-
-
-    function showPersonalInfo() {
-    document.getElementById('personal-info-form').style.display = 'grid';
-    document.getElementById('password-form').style.display = 'none';
-}
-
-function showPassword() {
-    document.getElementById('personal-info-form').style.display = 'none';
-    document.getElementById('password-form').style.display = 'grid';
-}
-</script>
+    
+        document.getElementById('close-profile-btn').addEventListener('click', () => {
+            document.getElementById('modal-profile').classList.remove('active');
+            document.body.classList.remove('hidden-scroll');
+        });
+    
+        document.getElementById('profile-picture-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('profile-picture').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    
+        function showPersonalInfo() {
+            document.getElementById('personal-info-form').style.display = 'grid';
+            document.getElementById('password-form').style.display = 'none';
+        }
+    
+        function showPassword() {
+            document.getElementById('personal-info-form').style.display = 'none';
+            document.getElementById('password-form').style.display = 'grid';
+        }
+    
+        document.getElementById('password-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission
+    
+            const oldPassword = document.getElementById('oldpassword').value;
+            const newPassword = document.getElementById('newpassword').value;
+            const confirmPassword = document.getElementById('confirmpassword').value;
+            const errorMessageDiv = document.getElementById('password-error-message');
+            const errorTextSpan = document.getElementById('error-text');
+    
+            errorMessageDiv.style.display = 'none'; // Hide error message by default
+            errorTextSpan.innerHTML = ''; // Clear previous error message
+    
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                errorTextSpan.innerHTML = "All fields are required";
+                errorMessageDiv.style.display = 'block'; // Show error message
+                return;
+            }
+    
+            if (newPassword !== confirmPassword) {
+                errorTextSpan.innerHTML = "Password does not match";
+                errorMessageDiv.style.display = 'block'; // Show error message
+                return;
+            }
+    
+            // Create a FormData object to send form data via AJAX
+            const formData = new FormData(this);
+    
+            fetch('/change_password', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Password change was successful, handle accordingly
+                    errorTextSpan.innerHTML = "Password successfully updated";
+                    errorMessageDiv.style.color = 'green'; // Change text color to green
+                    errorMessageDiv.style.backgroundColor = '#dff0d8'; // Light green background
+                    errorMessageDiv.style.display = 'block'; // Show success message
+                } else {
+                    // Display server-side error message
+                    errorTextSpan.innerHTML = data.error_message;
+                    errorMessageDiv.style.color = 'red'; // Keep text color red for errors
+                    errorMessageDiv.style.backgroundColor = '#fdd'; // Light red background
+                    errorMessageDiv.style.display = 'block'; // Show error message
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    
+        // Close error message on button click
+        document.getElementById('close-error-message').addEventListener('click', function() {
+            document.getElementById('password-error-message').style.display = 'none';
+        });
+    </script>
+    

@@ -1,3 +1,6 @@
+.close-button{outline:none; border:1px solid;float: right;}
+.error-message{background-color: #f0c4c4;padding: 10px;border-radius: 10px;width:-webkit-fill-available}
+
 .employer_profile_container {
     display: flex;
     flex-direction: column;
@@ -54,7 +57,6 @@
         transform: scale(1);
     }
 }
-/* Apply the animation on hover */
 .camera-icon:hover {
     animation: scaleUp 0.3s forwards;
 }
@@ -85,7 +87,6 @@
     align-items: baseline;
     width: 100%;
     max-width: 300px;
-    /* margin: 20px 0; */
 }
 
 .input-field {
@@ -104,14 +105,12 @@
 }
 
 .flex-end {
-    /* display: flex; */
     justify-content: flex-end;
     width: min-content;
     white-space: nowrap;
 }
 
 #bio{resize:none;}
-
 
 
 
