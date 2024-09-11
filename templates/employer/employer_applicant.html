@@ -41,7 +41,7 @@ $(document).ready(function() {
     const itemsPerPage = 5;
 
     // Event handler for result radio buttons
-    $(document).on('change', "input[name^='result-']", function() {
+    $("input[name^='result-']").change(function() {
         let applicantId = $(this).attr("name").split('-')[1];
         let result = $(this).val();
         let currentTime = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }); // Get current time in Philippine time
@@ -56,6 +56,8 @@ $(document).ready(function() {
             },
             success: function(response) {
                 alert('Interview result updated successfully');
+                // Disable the radio buttons after selection
+                $(`input[name='result-${applicantId}']`).prop('disabled', true);
             },
             error: function() {
                 alert('Error updating interview result');
@@ -128,8 +130,8 @@ $(document).ready(function() {
                         <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interviewed
                     </div>
                     <div style="text-align:center;">
-                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
-                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
+                        <input type="radio" name="result-${applicant.Applicant_ID}" value="PASSED" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
+                        <input type="radio" name="result-${applicant.Applicant_ID}" value="FAILED" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
                     </div>
                 </div>
             `;
