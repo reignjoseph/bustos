@@ -1,5 +1,10 @@
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <div id="employer_applicant_container" class="employer_applicant_container" style="display: none;">
-    <h2 style="padding: 20px;">APPROVED APPLICANT LIST</h2>
+    <h2 style="padding: 10px; font-family: fantasy; margin: 0;">APPROVED APPLICANT LIST</h2>
     <input style="border: 1px solid; margin: 10px; padding-left: 10px; border-radius: 3px;" type="text" id="approved-search-input" placeholder="Search Name" oninput="approvedSearchApplicants()">
     <div style="border: 1px solid; margin: 10px;"></div>
     <!-- Container for both the header and the approved applicants list -->
@@ -11,6 +16,8 @@
         <div class="a">Contact No</div>
         <div class="a">Form</div>
         <div class="a">Schedule</div>
+        <div class="a">Interviewed</div>
+        <div class="a">Result</div>
 
         <!-- Approved applicants list -->
         <div id="approved_jobseeker_list" class="approved_jobseeker_list" style="display: contents;">
@@ -31,7 +38,54 @@ $(document).ready(function() {
     let allApplicants = [];
     let filteredApplicants = []; // This will hold the applicants after search filter
     let currentPage = 1;
-    const itemsPerPage = 3;
+    const itemsPerPage = 5;
+
+    // Event handler for result radio buttons
+    $(document).on('change', "input[name^='result-']", function() {
+        let applicantId = $(this).attr("name").split('-')[1];
+        let result = $(this).val();
+        let currentTime = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }); // Get current time in Philippine time
+
+        $.ajax({
+            url: '/update_interview_result',
+            method: 'POST',
+            data: {
+                id: applicantId,
+                result: result,
+                date_posted: currentTime
+            },
+            success: function(response) {
+                alert('Interview result updated successfully');
+            },
+            error: function() {
+                alert('Error updating interview result');
+            }
+        });
+    });
+
+    function checkInterviewAvailability() {
+        $.ajax({
+            url: '/check_interview_availability', // Make sure this route is correctly set up
+            method: 'POST',
+            data: { ids: filteredApplicants.map(applicant => applicant.Applicant_ID) },
+            success: function(response) {
+                response.forEach(applicant => {
+                    let checkbox = $(`#interview-checkbox-${applicant.Applicant_ID}`);
+                    if (applicant.available) {
+                        checkbox.css('display', 'block');
+                    } else {
+                        checkbox.css('display', 'none');
+                    }
+                });
+            },
+            error: function() {
+                console.log('Error checking interview availability');
+            }
+        });
+    }
+
+    // Fetch interview availability every 60 seconds
+    setInterval(checkInterviewAvailability, 60000);
 
     function fetchApprovedApplicants() {
         $.ajax({
@@ -61,16 +115,94 @@ $(document).ready(function() {
             let applicantCard = `
                 <div class="each_container_approved">
                     <div style="text-align: center;">
-                        <img src="/static/${applicant.profile}" alt="${applicant.jobseeker_name}" style="width: 5vw; height: auto; border-radius: 50%;">
+                        <img src="/static/${applicant.profile}" alt="${applicant.jobseeker_name}" style="width: 50px; height: auto; border-radius: 50%;">
                     </div>
                     <div>${applicant.jobseeker_name}</div>
                     <div>${applicant.email}</div>
                     <div>${applicant.contact_no}</div>
-                    <div><a href="${applicant.form}" target="_blank" style="color: blue; text-decoration: underline;">View Form</a></div>
-                    <div>${applicant.schedule}</div>
+                    <div><a href="${applicant.form}" target="_blank" style="">View Resume</a></div>
+                    <div style="text-align:center;">
+                        <input style="width: 115px;" type="text" class="flatpickr-schedule" value="${applicant.schedule || 'Select Date and Time'}" data-applicant-id="${applicant.Applicant_ID}" placeholder="Select date and time">
+                    </div>
+                    <div id="interview-checkbox-${applicant.Applicant_ID}" style="display: none;">
+                        <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interviewed
+                    </div>
+                    <div style="text-align:center;">
+                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
+                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
+                    </div>
                 </div>
             `;
             container.append(applicantCard);
+
+            // Check interview availability based on schedule
+            $.ajax({
+                url: '/check_interview_availability',
+                method: 'POST',
+                data: { id: applicant.Applicant_ID },
+                success: function(response) {
+                    console.log(`Applicant ${applicant.Applicant_ID} availability status: `, response); // Debug log
+
+                    if (response.status === 'show') {
+                        $(`#interview-checkbox-${applicant.Applicant_ID}`).css('display', 'block');
+                    } else {
+                        console.log(`Interview not available for applicant ${applicant.Applicant_ID}`);
+                    }
+                },
+                error: function() {
+                    console.log('Error checking interview availability for applicant', applicant.Applicant_ID);
+                }
+            });
+        });
+
+        // Initialize flatpickr for each schedule input
+        $(".flatpickr-schedule").flatpickr({
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                let applicantId = $(instance.element).data("applicant-id");
+
+                $.ajax({
+                    url: '/update_applicant_schedule',
+                    method: 'POST',
+                    data: {
+                        id: applicantId,
+                        schedule: dateStr
+                    },
+                    success: function(response) {
+                        alert('Schedule updated successfully');
+                    },
+                    error: function() {
+                        alert('Error updating schedule');
+                    }
+                });
+            }
+        });
+
+        // Event handler for interview checkbox
+        $(document).on('change', ".interview-checkbox", function() {
+            let isChecked = $(this).is(':checked');
+            let applicantId = $(this).data("applicant-id");
+
+            if (isChecked) {
+                $.ajax({
+                    url: '/update_interview_status',
+                    method: 'POST',
+                    data: {
+                        id: applicantId,
+                        interviewed: 'YES'
+                    },
+                    success: function(response) {
+                        alert('Interview status updated successfully');
+                        $(this).prop('disabled', true); // Disable the checkbox
+                    }.bind(this), // Bind `this` to maintain context inside success
+                    error: function() {
+                        alert('Error updating interview status');
+                        $(this).prop('checked', false); // Revert the checkbox state on error
+                    }.bind(this) // Bind `this` to maintain context inside error
+                });
+            }
         });
     }
 

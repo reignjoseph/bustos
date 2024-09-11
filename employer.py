@@ -8,6 +8,7 @@ import logging
 from logging import FileHandler
 from main import app
 import random
+import pytz
 
 # Configure logging
 if not app.debug:
@@ -54,6 +55,54 @@ def employer():
 
 
 
+@app.route('/update_applicant_schedule', methods=['POST'])
+def update_applicant_schedule():
+    applicant_id = request.form['id']
+    new_schedule = request.form['schedule']
+    
+    # Check if the provided schedule has seconds
+    if len(new_schedule) == 16:  # Format 'YYYY-MM-DD HH:MM'
+        new_schedule += ':00'  # Append seconds if missing
+
+    # Establish a connection to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Get the current time in Philippine Time (UTC+8)
+    philippine_tz = pytz.timezone('Asia/Manila')
+    current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+    # Fetch the company associated with the applicant from application_status table
+    cursor.execute("SELECT company FROM application_status WHERE applicant_id = ?", (applicant_id,))
+    result = cursor.fetchone()
+
+    if result:
+        company = result[0]  # Extract the company name from the result
+
+        # Update the schedule in the application_status table
+        cursor.execute("""
+            UPDATE application_status 
+            SET scheduled = ?, status_type = 'Scheduled', status_description = ?, date_posted = ? 
+            WHERE applicant_id = ?
+        """, (
+            new_schedule, 
+            f"Your application at {company} is scheduled at {new_schedule}",
+            current_time_pht,
+            applicant_id
+        ))
+
+        # Now also update the schedule in the applicant table where Applicant_ID matches
+        cursor.execute("""
+            UPDATE applicant 
+            SET schedule = ?
+            WHERE Applicant_ID = ?
+        """, (new_schedule, applicant_id))
+    
+    # Commit the changes to both tables and close the connection
+    conn.commit()
+    conn.close()
+
+    return jsonify({'status': 'success'})
 
 
 
@@ -62,6 +111,179 @@ def employer():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/update_interview_status', methods=['POST'])
+def update_interview_status():
+    applicant_id = request.form['id']
+    interviewed = request.form['interviewed']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Update the interviewed field and status_type in the application_status table
+        cursor.execute('''
+            UPDATE application_status
+            SET interviewed = ?,
+                status_type = 'Interviewed'
+            WHERE applicant_id = ?
+        ''', (interviewed, applicant_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'status': 'success'})
+
+    except Exception as e:
+        print(f"Error updating interview status: {e}")
+        return jsonify({'error': 'An error occurred while updating interview status'}), 500
+
+
+@app.route('/update_interview_result', methods=['POST'])
+def update_interview_result():
+    applicant_id = request.form['id']
+    result = request.form['result']
+    date_posted = request.form['date_posted']
+
+    # Establish a connection to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get the current time in Philippine Time (UTC+8)
+    philippine_tz = pytz.timezone('Asia/Manila')
+    current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+    # Update the result and date_posted in the application_status table
+    cursor.execute("""
+        UPDATE application_status
+        SET status_type = ?, date_posted = ?
+        WHERE applicant_id = ?
+    """, (result, current_time_pht, applicant_id))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+    return jsonify({'status': 'success'})
+
+
+@app.route('/check_interview_availability', methods=['POST'])
+def check_interview_availability():
+    applicant_id = request.form['id']
+    
+    # Establish a connection to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get the current time in Philippine Time (UTC+8)
+    philippine_tz = pytz.timezone('Asia/Manila')
+    current_time_pht = datetime.now(philippine_tz)
+    
+    # Fetch the scheduled time for the applicant
+    cursor.execute('''
+        SELECT scheduled FROM application_status WHERE applicant_id = ?
+    ''', (applicant_id,))
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        scheduled_time_str = result[0]
+        try:
+            # Print the scheduled time string and current time
+            # print(f"Scheduled Time String: {scheduled_time_str}")
+            # print(f"Current Time PHT: {current_time_pht}")
+
+            # Parse the scheduled time
+            if len(scheduled_time_str) == 16:  # Format 'YYYY-MM-DD HH:MM'
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M')
+                scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
+            elif len(scheduled_time_str) == 19:  # Format 'YYYY-MM-DD HH:MM:SS'
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M:%S')
+                scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
+            else:
+                raise ValueError("Unexpected date format")
+
+            # Print the parsed scheduled time
+            # print(f"Parsed Scheduled Time: {scheduled_time}")
+
+            # Compare scheduled time with current time
+            if scheduled_time < current_time_pht:
+                return jsonify({'status': 'show'})
+            else:
+                return jsonify({'status': 'hide'})
+        except ValueError as e:
+            # Handle any parsing errors
+            print(f"Date parsing error: {e}")
+            return jsonify({'status': 'hide'})
+    else:
+        return jsonify({'status': 'hide'})
+    applicant_id = request.form['id']
+    
+    # Establish a connection to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get the current time in Philippine Time (UTC+8)
+    philippine_tz = pytz.timezone('Asia/Manila')
+    current_time_pht = datetime.now(philippine_tz)
+    
+    # Fetch the scheduled time for the applicant
+    cursor.execute('''
+        SELECT scheduled FROM application_status WHERE applicant_id = ?
+    ''', (applicant_id,))
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        scheduled_time_str = result[0]
+        try:
+            # Print the scheduled time string and current time
+            print(f"Scheduled Time String: {scheduled_time_str}")
+            print(f"Current Time PHT: {current_time_pht}")
+
+            # Parse the scheduled time
+            if len(scheduled_time_str) == 16:  # Format 'YYYY-MM-DD HH:MM'
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M')
+                scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
+            elif len(scheduled_time_str) == 19:  # Format 'YYYY-MM-DD HH:MM:SS'
+                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M:%S')
+                scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
+            else:
+                raise ValueError("Unexpected date format")
+
+            # Print the parsed scheduled time
+            print(f"Parsed Scheduled Time: {scheduled_time}")
+
+            # Compare scheduled time with current time
+            if scheduled_time < current_time_pht:
+                return jsonify({'status': 'show'})
+            else:
+                return jsonify({'status': 'hide'})
+        except ValueError as e:
+            # Handle any parsing errors
+            print(f"Date parsing error: {e}")
+            return jsonify({'status': 'hide'})
+    else:
+        return jsonify({'status': 'hide'})
 
 
 
@@ -114,7 +336,8 @@ def fetch_approved_applicants():
                 applicant.status, 
                 applicant.date_request, 
                 jobs.Company, -- Assuming "Company" is a field in the jobs table
-                users.profile
+                users.profile,
+                application_status.interviewed -- Add this line to fetch the interviewed status
             FROM 
                 applicant
             JOIN 
@@ -125,18 +348,22 @@ def fetch_approved_applicants():
                 users
             ON
                 applicant.jobseeker_id = users.User_ID
+            LEFT JOIN
+                application_status
+            ON
+                applicant.Applicant_ID = application_status.applicant_id
             WHERE 
                 applicant.status = ?
         ''', ('Approved',))
 
         applicants = cursor.fetchall()
-        print("Fetched applicants with Approve status and Company from DB:", applicants)  # Debug the SQL response
+        # print("Fetched applicants with Approve status and Company from DB:", applicants)  # Debug the SQL response
 
         conn.close()
 
         approved_applicant_list = []
         for row in applicants:
-            print(f"Processing row: {row}")  # Debug each row as it's processed
+            # print(f"Processing row: {row}")  # Debug each row as it's processed
             approved_applicant_list.append({
                 'Applicant_ID': row[0],
                 'job_id': row[1],
@@ -151,7 +378,7 @@ def fetch_approved_applicants():
                 'date_request': row[10],
                 'Company': row[11],  # Add the company information
                 'profile': row[12],
-
+                'interviewed': row[13]  # Add the interviewed information
             })
 
         return jsonify(approved_applicant_list)
@@ -159,6 +386,18 @@ def fetch_approved_applicants():
     except Exception as e:
         print(f"Error fetching applicants: {e}")
         return jsonify({'error': 'An error occurred while fetching applicants'}), 500
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -206,13 +445,13 @@ def fetch_applicants():
         ''', ('Pending',))
 
         applicants = cursor.fetchall()
-        print("Fetched applicants with Pending status and Company from DB:", applicants)  # Debug the SQL response
+        # print("Fetched applicants with Pending status and Company from DB:", applicants)  # Debug the SQL response
 
         conn.close()
 
         applicant_list = []
         for row in applicants:
-            print(f"Processing row: {row}")  # Debug each row as it's processed
+            # print(f"Processing row: {row}")  # Debug each row as it's processed
             applicant_list.append({
                 'Applicant_ID': row[0],
                 'job_id': row[1],
@@ -279,10 +518,10 @@ def update_applicant_status():
 
         # Define status description templates
         status_descriptions = [
-            f"Your application at {company} is now {status}.",
+            f"Your application at {company} is {status}.",
             f"Update: Your application status at {company} is {status}.",
             f"Notification: Your application for the position at {company} is {status}.",
-            f"Alert: The status of your application at {company} is now {status}.",
+            f"Alert: The status of your application at {company} is {status}.",
             f"Info: Your application status at {company} has changed to {status}."
         ]
 
@@ -321,6 +560,9 @@ def update_applicant_status():
     except Exception as e:
         print(f"Error updating applicant status: {e}")
         return jsonify({'error': 'An error occurred while updating applicant status'}), 500
+
+
+
 
 
 @app.route('/employer_profile_update', methods=['POST'])

@@ -41,7 +41,7 @@ function fetchApplicationStatus() {
     if (status.status_type === 'Approved') progressLevel = 25;
     else if (status.status_type === 'Scheduled') progressLevel = 50;
     else if (status.status_type === 'Interviewed') progressLevel = 75;
-    else if (status.status_type === 'Success') progressLevel = 100;
+    else if (status.status_type === 'Passed') progressLevel = 100;
 
     // Create a unique keyframe name using status.id and status_type to avoid conflicts
     const uniqueAnimationName = `animateBar_${status.id}_${status.status_type}`;
@@ -113,25 +113,6 @@ function updateRelativeTimes() {
     overflow: hidden;
 }
 
-/* .loading-bar span {
-    display: block;
-    height: 100%;
-    border-radius: 50px;
-    background-image: linear-gradient(to bottom, #fff, #2df364 30%);
-    overflow: hidden;
-} */
-/* .loading-bar span:after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.2) 75%, transparent 75%, transparent);
-    z-index: 1;
-    background-size: 50px 50px;
-    animation: waveEffect 1.5s linear infinite;
-} */
 
 @keyframes waveEffect {
     0% {
