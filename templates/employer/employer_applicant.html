@@ -1,3 +1,116 @@
-<div id="employer_applicant_container" class="employer_applicant_container flex center" style="display: none;">
-<h1>Employer Applicant</h1>
+<div id="employer_applicant_container" class="employer_applicant_container" style="display: none;">
+    <h2 style="padding: 20px;">APPROVED APPLICANT LIST</h2>
+    <input style="border: 1px solid; margin: 10px; padding-left: 10px; border-radius: 3px;" type="text" id="approved-search-input" placeholder="Search Name" oninput="approvedSearchApplicants()">
+    <div style="border: 1px solid; margin: 10px;"></div>
+    <!-- Container for both the header and the approved applicants list -->
+    <div class="approved_container">
+        <!-- Header Row for Approved Applicant List -->
+        <div class="a">Profile</div>
+        <div class="a">Name</div>
+        <div class="a">Email</div>
+        <div class="a">Contact No</div>
+        <div class="a">Form</div>
+        <div class="a">Schedule</div>
+
+        <!-- Approved applicants list -->
+        <div id="approved_jobseeker_list" class="approved_jobseeker_list" style="display: contents;">
+            <!-- Applicant data will be inserted here dynamically -->
+        </div>
+    </div>
+    
+    <!-- Pagination Controls -->
+    <div id="approved_pagination_controls" style="margin-top: 20px; text-align: center;">
+        <button id="approved_previous" disabled>Previous</button>
+        <span id="approved_page_info">Page 1</span>
+        <button id="approved_next">Next</button>
+    </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    let allApplicants = [];
+    let filteredApplicants = []; // This will hold the applicants after search filter
+    let currentPage = 1;
+    const itemsPerPage = 3;
+
+    function fetchApprovedApplicants() {
+        $.ajax({
+            url: '/fetch_approved_applicants',
+            method: 'GET',
+            success: function(data) {
+                allApplicants = data;
+                filteredApplicants = data; // Initially, filteredApplicants is the same as allApplicants
+                updateApplicantList();
+                updatePaginationControls();
+            },
+            error: function() {
+                alert('Error fetching approved applicants');
+            }
+        });
+    }
+
+    function updateApplicantList() {
+        let container = $('#approved_jobseeker_list');
+        container.empty(); // Clear previous entries
+
+        let start = (currentPage - 1) * itemsPerPage;
+        let end = start + itemsPerPage;
+        let paginatedApplicants = filteredApplicants.slice(start, end);
+
+        paginatedApplicants.forEach(function(applicant) {
+            let applicantCard = `
+                <div class="each_container_approved">
+                    <div style="text-align: center;">
+                        <img src="/static/${applicant.profile}" alt="${applicant.jobseeker_name}" style="width: 5vw; height: auto; border-radius: 50%;">
+                    </div>
+                    <div>${applicant.jobseeker_name}</div>
+                    <div>${applicant.email}</div>
+                    <div>${applicant.contact_no}</div>
+                    <div><a href="${applicant.form}" target="_blank" style="color: blue; text-decoration: underline;">View Form</a></div>
+                    <div>${applicant.schedule}</div>
+                </div>
+            `;
+            container.append(applicantCard);
+        });
+    }
+
+    function updatePaginationControls() {
+        $('#approved_previous').prop('disabled', currentPage === 1);
+        $('#approved_next').prop('disabled', currentPage * itemsPerPage >= filteredApplicants.length);
+        $('#approved_page_info').text(`Page ${currentPage}`);
+    }
+
+    $('#approved_previous').click(function() {
+        if (currentPage > 1) {
+            currentPage--;
+            updateApplicantList();
+            updatePaginationControls();
+        }
+    });
+
+    $('#approved_next').click(function() {
+        if (currentPage * itemsPerPage < filteredApplicants.length) {
+            currentPage++;
+            updateApplicantList();
+            updatePaginationControls();
+        }
+    });
+
+    // Search function to filter the applicants based on the input text
+    function approvedSearchApplicants() {
+        const searchTerm = $('#approved-search-input').val().toLowerCase();
+        filteredApplicants = allApplicants.filter(function(applicant) {
+            return applicant.jobseeker_name.toLowerCase().includes(searchTerm);
+        });
+        currentPage = 1; // Reset to the first page after searching
+        updateApplicantList();
+        updatePaginationControls();
+    }
+
+    // Fetch approved applicants when the container is shown
+    fetchApprovedApplicants();
+
+    // Attach the search function to the global scope for oninput
+    window.approvedSearchApplicants = approvedSearchApplicants;
+});
+</script>

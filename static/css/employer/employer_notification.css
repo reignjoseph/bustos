@@ -1,8 +1,8 @@
 #applicant-list {
     display: grid;
-    /* gap: 10px; */
     text-align: center;
-    margin: 0 10px;
+    padding: 10px;
+    width: -webkit-fill-available;
 }
 
 .notification_frame {

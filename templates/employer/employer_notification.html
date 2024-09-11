@@ -2,8 +2,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
 
 <div class="employernotification-container" style="display: none;">
-    <h2>NOTIFICATION</h2>
-    <input type="text" id="search-input" placeholder="Search Name" oninput="searchApplicants()">
+    <h2 style="padding: 10px; font-family: fantasy;">NOTIFICATION</h2>
+    <input style="border:1px solid;margin: 10px;" type="text" id="search-input" placeholder="Search Name" oninput="searchApplicants()">
     <div id="applicant-list" class="applicant-grid">
         <!-- Applicant data will be dynamically inserted here -->
     </div>
@@ -32,18 +32,18 @@ function fetchApplicants(page) {
         url: '/fetch_applicants',
         method: 'GET',
         success: function(data) {
-            console.log("Received data: ", data);
+            // console.log("Received data: ", data);
 
             if (Array.isArray(data)) {
                 allApplicants = data; // Store all applicants globally for searching
                 totalApplicants = data.length;
                 displayApplicants(page, data);
             } else {
-                console.error("Error: Expected an array, but received:", data);
+                // console.error("Error: Expected an array, but received:", data);
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error: " + error + " Status: " + status);
+            // console.error("Error: " + error + " Status: " + status);
             alert("An error occurred while fetching applicants. Please try again later.");
         }
     });
@@ -128,7 +128,7 @@ function approvedApplicant(applicantId) {
             fetchApplicants(currentPage); // Refresh the list after updating
         },
         error: function(xhr, status, error) {
-            console.error("Error approving applicant: " + error);
+            // console.error("Error approving applicant: " + error);
             alert("An error occurred while approving the applicant. Please try again.");
         }
     });
@@ -146,7 +146,7 @@ function deniedApplicant(applicantId) {
             fetchApplicants(currentPage); // Refresh the list after updating
         },
         error: function(xhr, status, error) {
-            console.error("Error denying applicant: " + error);
+            // console.error("Error denying applicant: " + error);
             alert("An error occurred while denying the applicant. Please try again.");
         }
     });
