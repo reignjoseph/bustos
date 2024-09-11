@@ -41,29 +41,57 @@ $(document).ready(function() {
     const itemsPerPage = 5;
 
     // Event handler for result radio buttons
-    $("input[name^='result-']").change(function() {
-        let applicantId = $(this).attr("name").split('-')[1];
-        let result = $(this).val();
-        let currentTime = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }); // Get current time in Philippine time
+    $(document).on('change', "input[name^='result-']", function() {
+    let selectedValue = $(this).val();
+    let applicantId = $(this).attr("name").split('-')[1];
 
-        $.ajax({
-            url: '/update_interview_result',
-            method: 'POST',
-            data: {
-                id: applicantId,
-                result: result,
-                date_posted: currentTime
-            },
-            success: function(response) {
-                alert('Interview result updated successfully');
-                // Disable the radio buttons after selection
-                $(`input[name='result-${applicantId}']`).prop('disabled', true);
-            },
-            error: function() {
-                alert('Error updating interview result');
-            }
-        });
+    $.ajax({
+        url: '/update_interview_result',
+        method: 'POST',
+        data: {
+            id: applicantId,
+            result: selectedValue,
+            date_posted: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
+        },
+        success: function(response) {
+            alert('Interview result updated successfully');
+
+            // Disable both radio buttons
+            $(`input[name='result-${applicantId}']`).prop('disabled', true);
+        },
+        error: function() {
+            alert('Error updating interview result');
+        }
     });
+});
+function fetchInterviewResult(applicantId) {
+    $.ajax({
+        url: '/fetch_interview_result',
+        method: 'POST',
+        data: { id: applicantId },
+        success: function(response) {
+            if (response.result) {
+                // Disable both radio buttons if there is a result
+                $(`input[name="result-${applicantId}"]`).prop('disabled', true);
+                // Optionally check the relevant radio button
+                $(`input[name="result-${applicantId}"][value="${response.result}"]`).prop('checked', true);
+            }
+        },
+        error: function() {
+            console.log('Error fetching interview result');
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+
 
     function checkInterviewAvailability() {
         $.ajax({
@@ -124,19 +152,20 @@ $(document).ready(function() {
                     <div>${applicant.contact_no}</div>
                     <div><a href="${applicant.form}" target="_blank" style="">View Resume</a></div>
                     <div style="text-align:center;">
-                        <input style="width: 115px;" type="text" class="flatpickr-schedule" value="${applicant.schedule || 'Select Date and Time'}" data-applicant-id="${applicant.Applicant_ID}" placeholder="Select date and time">
+                        <input style="width: 115px;" type="text" class="flatpickr-schedule" value="${applicant.schedule || 'Set a Schedule'}" data-applicant-id="${applicant.Applicant_ID}">
                     </div>
                     <div id="interview-checkbox-${applicant.Applicant_ID}" style="display: none;">
                         <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interviewed
                     </div>
-                    <div style="text-align:center;">
-                        <input type="radio" name="result-${applicant.Applicant_ID}" value="PASSED" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
-                        <input type="radio" name="result-${applicant.Applicant_ID}" value="FAILED" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
-                    </div>
+                    <div style="text-align:center;grid-column: 8;">
+    <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
+    <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
+</div>
+
                 </div>
             `;
             container.append(applicantCard);
-
+            fetchInterviewResult(applicant.Applicant_ID);
             // Check interview availability based on schedule
             $.ajax({
                 url: '/check_interview_availability',

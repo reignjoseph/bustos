@@ -10,7 +10,7 @@ def print_jobseeker_notifications():
         cursor = conn.cursor()
 
         # Execute a query to select all data from jobseeker_notifications
-        cursor.execute('SELECT * FROM applicant')
+        cursor.execute('SELECT * FROM application_status')
 
         # Fetch all rows
         rows = cursor.fetchall()

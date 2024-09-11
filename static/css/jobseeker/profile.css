@@ -1,5 +1,5 @@
 .modal-profile {display: none;}
-.modal-profile.active {display: block;overflow: auto;}
+.modal-profile.active {display: block;overflow: auto;z-index: 1;}
 .hidden-scroll { overflow: hidden; }
 .hidden-container { display: none; }
 .visible-container { display: grid; }

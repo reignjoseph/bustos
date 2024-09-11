@@ -51,15 +51,36 @@ def retrieve_application_status():
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
 
-        # Query to get application status and related information including date_posted
+        print("Database connection established.")
+
+        # Query to get application status and related information where 'popup' is empty or null
         cursor.execute('''
             SELECT a.status_id, a.applicant_id, a.job_id, a.jobseeker_id, a.employer_id, a.status_description, 
                    a.status_type, a.company, u.profile, u.fname, a.date_posted
             FROM application_status a
             JOIN users u ON a.employer_id = u.User_ID
+            WHERE a.popup IS NULL OR a.popup = ''
         ''')
 
         status_list = cursor.fetchall()
+
+        # Print the retrieved data
+        print(f"Fetched {len(status_list)} records from application_status.")
+
+        for row in status_list:
+            print("Record details:")
+            print(f"status_id: {row[0]}")
+            print(f"applicant_id: {row[1]}")
+            print(f"job_id: {row[2]}")
+            print(f"jobseeker_id: {row[3]}")
+            print(f"employer_id: {row[4]}")
+            print(f"status_description: {row[5]}")
+            print(f"status_type: {row[6]}")
+            print(f"company: {row[7]}")
+            print(f"profile_picture: {row[8]}")
+            print(f"employer_name: {row[9]}")
+            print(f"date_posted: {row[10]}")
+
         conn.close()
 
         # Prepare the status data with the profile picture URL and date_posted
@@ -115,8 +136,43 @@ def retrieve_application_status():
 
 
 
+@app.route('/update_popup_status', methods=['POST'])
+def update_popup_status():
+    try:
+        # Extract and print the parameters
+        applicant_id = request.form.get('id')
+        popup_value = request.form.get('popup')
 
+        print(f"Received parameters: applicant_id={applicant_id}, popup_value={popup_value}")
 
+        # Check if parameters are missing
+        if not applicant_id or not popup_value:
+            raise ValueError("Missing required parameters")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Print connection and cursor status
+        print("Database connection established.")
+
+        # Update the popup field in the application_status table
+        cursor.execute('''
+            UPDATE application_status
+            SET popup = ?
+            WHERE applicant_id = ?
+        ''', (popup_value, applicant_id))
+
+        # Commit and close
+        conn.commit()
+        conn.close()
+        
+        print(f"Successfully updated popup status for applicant_id={applicant_id} to {popup_value}")
+        retrieve_application_status()
+        return jsonify({'status': 'success'})
+    
+    except Exception as e:
+        print(f"Error updating pop-up status: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 

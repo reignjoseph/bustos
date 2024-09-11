@@ -7,7 +7,7 @@
 <div class="status-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
     <!-- Dynamic status cards will be injected here -->
 </div>
-
+<style>.close-img { cursor: pointer; width: 30px; float: right; transition: transform 0.3s ease; } .close-img:hover { transform: scale(1.2); }</style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
@@ -33,53 +33,54 @@ function fetchApplicationStatus() {
             document.head.appendChild(styleSheet);
 
             data.forEach(status => {
-    // Assuming status.date_posted contains the timestamp
-    const relativeTime = moment(status.date_posted).fromNow();
+                // Assuming status.date_posted contains the timestamp
+                const relativeTime = moment(status.date_posted).fromNow();
 
-    // Determine the progress level based on status_type
-    let progressLevel = 0;
-    if (status.status_type === 'Approved') progressLevel = 25;
-    else if (status.status_type === 'Scheduled') progressLevel = 50;
-    else if (status.status_type === 'Interviewed') progressLevel = 75;
-    else if (status.status_type === 'Passed') progressLevel = 100;
+                // Determine the progress level based on status_type
+                let progressLevel = 0;
+                if (status.status_type === 'Approved') progressLevel = 25;
+                else if (status.status_type === 'Scheduled') progressLevel = 50;
+                else if (status.status_type === 'Interviewed') progressLevel = 75;
+                else if (status.status_type === 'Passed') progressLevel = 100;
 
-    // Create a unique keyframe name using status.id and status_type to avoid conflicts
-    const uniqueAnimationName = `animateBar_${status.id}_${status.status_type}`;
+                // Create a unique keyframe name using status.id and status_type to avoid conflicts
+                const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
 
-    // Add keyframes rule to the style sheet
-    styleSheet.sheet.insertRule(`
-        @keyframes ${uniqueAnimationName} {
-            0% {
-                width: 0%;
-            }
-            100% {
-                width: ${progressLevel}%;
-            }
-        }
-    `, styleSheet.sheet.cssRules.length);
+                // Add keyframes rule to the style sheet
+                styleSheet.sheet.insertRule(`
+                    @keyframes ${uniqueAnimationName} {
+                        0% {
+                            width: 0%;
+                        }
+                        100% {
+                            width: ${progressLevel}%;
+                        }
+                    }
+                `, styleSheet.sheet.cssRules.length);
 
-    statusHtml += `
-        <div class="status-card" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-            <div style="display: flex; align-items: center;">
-                <div class="profile-picture" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
-                    <img src="${status.profile_picture}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-                <div class="status-info" style="margin-left: 20px;">
-                    <div class="employer-name" style="font-weight: bold; font-size: 18px;">${status.employer_name}</div>
-                    <div class="status-description" style="color: #666;">${status.status_description}</div>
-                    <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
-                </div>
-            </div>
-            <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
-                <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
-                    <span style="color: white; display: block; text-align: center; z-index: 2;">
-                        ${progressLevel}% ${status.status_type}
-                    </span>
-                </span>
-            </div>
-        </div>
-    `;
-});
+                statusHtml += `
+                    <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <div style="display: flex; align-items: center;">
+                            <div class="profile-picture" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
+                                <img src="${status.profile_picture}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div class="status-info" style="margin-left: 20px;">
+                                <div class="employer-name" style="font-weight: bold; font-size: 18px;">${status.employer_name} <img class="close-img"  src="/static/images/close.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close"></div>
+                                
+                                <div class="status-description" style="color: #666;">${status.status_description}</div>
+                                <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
+                            </div>
+                        </div>
+                        <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
+                            <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
+                                <span style="color: white; display: block; text-align: center; z-index: 2;transform:translate(0.1vw,-0.1vw);">
+                                    ${progressLevel}% ${status.status_type}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
 
             document.querySelector('.status-container').innerHTML = statusHtml;
             updateRelativeTimes(); // Update times after HTML is injected
@@ -96,7 +97,26 @@ function updateRelativeTimes() {
         const time = element.getAttribute('data-time');
         element.textContent = moment(time).fromNow();
     });
-}    
+}
+
+function hidePopUp(applicantId, statusId) {
+    $.ajax({
+        url: '/update_popup_status',
+        method: 'POST',
+        data: {
+            id: applicantId,
+            popup: 'false' // or 'true', depending on your requirement
+        },
+        success: function(response) {
+            console.log("Popup status updated:", response);
+            // Remove the status card from the DOM
+            $(`#status-card-${statusId}`).remove();
+        },
+        error: function(xhr, status, error) {
+            console.error("Error updating popup status:", error);
+        }
+    });
+}
 </script>
 
 <!-- CSS for the animated progress bar -->
@@ -113,7 +133,6 @@ function updateRelativeTimes() {
     overflow: hidden;
 }
 
-
 @keyframes waveEffect {
     0% {
         background-position: 0 0;
@@ -123,9 +142,8 @@ function updateRelativeTimes() {
     }
 }
 
-
 .status-card {
-    background-color: #cfe1ff;;
+    background-color: #cfe1ff;
     color: #fff;
     padding: 15px;
     border-radius: 10px;
@@ -135,7 +153,6 @@ function updateRelativeTimes() {
 .animate-bar {
     animation: animateBar 2s ease-in-out;
 }
-    
 </style>
 
 {% endblock %}

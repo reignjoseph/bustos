@@ -134,17 +134,26 @@ def update_interview_status():
     applicant_id = request.form['id']
     interviewed = request.form['interviewed']
 
+    # Get current time in Philippine Time (UTC+8)
+    philippine_tz = pytz.timezone('Asia/Manila')
+    current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Update the interviewed field and status_type in the application_status table
+        # Print the current time for debugging
+        print(f"Updating interview status for applicant_id={applicant_id}")
+        print(f"Current Philippine time (date_posted) to be updated: {current_time_pht}")
+
+        # Update the interviewed field, status_type, and date_posted in the application_status table
         cursor.execute('''
             UPDATE application_status
             SET interviewed = ?,
-                status_type = 'Interviewed'
+                status_type = 'Interviewed',
+                date_posted = ?
             WHERE applicant_id = ?
-        ''', (interviewed, applicant_id))
+        ''', (interviewed, current_time_pht, applicant_id))
 
         conn.commit()
         conn.close()
@@ -162,6 +171,9 @@ def update_interview_result():
     result = request.form['result']
     date_posted = request.form['date_posted']
 
+    # Debug print to see the 'result' value being received
+    print(f"Received result: {result} for applicant ID: {applicant_id}")
+
     # Establish a connection to the database
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -170,18 +182,58 @@ def update_interview_result():
     philippine_tz = pytz.timezone('Asia/Manila')
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-    # Update the result and date_posted in the application_status table
-    cursor.execute("""
-        UPDATE application_status
-        SET status_type = ?, date_posted = ?
-        WHERE applicant_id = ?
-    """, (result, current_time_pht, applicant_id))
+    try:
+        # Update the result, status_type, and date_posted in the application_status table
+        cursor.execute("""
+            UPDATE application_status
+            SET status_type = ?, date_posted = ?, result = ?
+            WHERE applicant_id = ?
+        """, (result, current_time_pht, result, applicant_id))
 
-    # Commit the changes and close the connection
-    conn.commit()
-    conn.close()
+        # Commit the changes
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'status': 'error', 'message': str(e)})
+    finally:
+        # Close the connection
+        conn.close()
 
     return jsonify({'status': 'success'})
+
+@app.route('/fetch_interview_result', methods=['POST'])
+def fetch_interview_result():
+    applicant_id = request.form['id']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT result
+            FROM application_status
+            WHERE applicant_id = ?
+        """, (applicant_id,))
+        
+        result = cursor.fetchone()
+
+        return jsonify({'result': result[0] if result else None})
+    except Exception as e:
+        print(f"Error fetching interview result: {e}")
+        return jsonify({'error': 'An error occurred while fetching interview result'}), 500
+    finally:
+        conn.close()
+
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/check_interview_availability', methods=['POST'])
