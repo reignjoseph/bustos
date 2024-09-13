@@ -55,60 +55,48 @@ def employer():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/get_notes', methods=['GET'])
 def get_notes():
     date = request.args.get('date')
-    if not date:
-        return jsonify({'error': 'Date is required'}), 400
-
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT notes FROM application_status WHERE date = ?', (date,))
+    cursor = conn.execute('SELECT note FROM calendar WHERE date = ?', (date,))
     row = cursor.fetchone()
     conn.close()
-
+    
     if row:
-        return jsonify({'notes': row['notes']})
+        return jsonify({'note': row['note']})
     else:
-        return jsonify({'notes': ''})
+        return jsonify({'note': ''})
 
+# Insert or update a note for a specific date
 @app.route('/save_note', methods=['POST'])
 def save_note():
-    data = request.json
-    date = data.get('date')
-    notes = data.get('notes')
-
-    if not date or notes is None:
-        return jsonify({'error': 'Date and notes are required'}), 400
-
+    data = request.get_json()
+    date = data['date']
+    note = data['note']
+    
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('UPDATE application_status SET notes = ? WHERE date = ?', (notes, date))
-    
-    if cursor.rowcount == 0:
-        cursor.execute('INSERT INTO application_status (date, notes) VALUES (?, ?)', (date, notes))
-    
+    # Insert or update the note
+    conn.execute('INSERT OR REPLACE INTO calendar (date, note) VALUES (?, ?)', (date, note))
     conn.commit()
     conn.close()
-
-    return jsonify({'status': 'Note saved successfully'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    return jsonify({'status': 'success'})
 
 
 

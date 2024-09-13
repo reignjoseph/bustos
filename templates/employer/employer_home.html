@@ -1,226 +1,180 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<style>
-    .home_calendar {
-        display: flex;
-        flex-wrap: wrap;
-        width: 100%;
-    }
-    .home_calendar div {
-        width: 14.28%; /* 7 days a week */
-        text-align: center;
-        padding: 10px;
-        box-sizing: border-box;
-        border: 1px solid #ddd;
-        position: relative;
-    }
-    .home_highlight {
-        background-color: red;
-        color: white;
-    }
-    .home_note {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: yellow;
-        font-size: 0.8em;
-        text-align: center;
-        display: none;
-    }
-    .home_calendar-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
-    .home_calendar-header button {
-        padding: 5px;
-        font-size: 1.2em;
-    }
-    .home_modal {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border: 1px solid #ccc;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-    }
-    .home_modal.show {
-        display: block;
-    }
-    .home_modal button {
-        margin-top: 10px;
-    }
-    .home_overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-    }
-    .home_overlay.show {
-        display: block;
-    }
-</style>
-<div id="employer_home_container" class="employer_home_container flex center" style="display: block;">
+<div id="employer_home_container" class="employer_home_container flex center">
     <h1>Home Page</h1>
-    <div id="home_calendar-container">
-        <div class="home_calendar-header">
-            <button id="home_prevMonth"><i class="fas fa-chevron-left"></i></button>
-            <span id="home_monthYear"></span>
-            <button id="home_nextMonth"><i class="fas fa-chevron-right"></i></button>
+
+    <div>
+        <div id="scheduled-container">
+            <div id="calendar">
+                <div id="calendar-header">
+                    <button id="prev-month">Prev</button>
+                    <h2 id="month-year"></h2>
+                    <button id="next-month">Next</button>
+                </div>
+                <div id="calendar-body"></div>
+            </div>
         </div>
-        <div id="home_calendar" class="home_calendar"></div>
-    </div>
-    <div id="home_overlay" class="home_overlay"></div>
-    <div id="home_modal" class="home_modal">
-        <h2>Add Note</h2>
-        <input type="text" id="home_note-input" placeholder="Enter your note here" />
-        <button id="home_save-note">Save</button>
-        <button id="home_close-modal">Close</button>
     </div>
 </div>
+
+<!-- Popup for adding notes -->
+<div id="note-popup" class="note-popup">
+    <h3>Add Note</h3>
+    <input type="hidden" id="selected-date">
+    <textarea id="note-text" rows="4" placeholder="Add your note here..."></textarea>
+    <button id="save-note">Save Note</button>
+</div>
+<style>
+            #calendar {
+            width: 350px;
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 10px;
+        }
+        #calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-gap: 5px;
+        }
+        .day {
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            background-color: #fafafa;
+        }
+        .day:hover {
+            background-color: #eee;
+        }
+        .note-popup {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .note-popup input, .note-popup textarea {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+</style>
+
+
+
+
+
+
+
+
+
 <script>
-$(document).ready(function() {
-    // Fetch and display notes
-    function loadNotes() {
-        $.ajax({
-            url: '/fetch_notes',
-            method: 'GET',
-            success: function(response) {
-                response.forEach(function(note) {
-                    $(`.home_calendar-day[data-date="${note[0]}"] .home_note`).text(note[1]).show();
-                });
-            },
-            error: function() {
-                console.log('Error fetching notes');
+    const calendarBody = document.getElementById('calendar-body');
+    const monthYear = document.getElementById('month-year');
+    const prevMonthBtn = document.getElementById('prev-month');
+    const nextMonthBtn = document.getElementById('next-month');
+    const notePopup = document.getElementById('note-popup');
+    const selectedDateInput = document.getElementById('selected-date');
+    const noteTextInput = document.getElementById('note-text');
+    const saveNoteBtn = document.getElementById('save-note');
+
+    let notes = {};
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+
+    function generateCalendar(month, year) {
+        calendarBody.innerHTML = '';
+        const firstDay = new Date(year, month).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        monthYear.textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
+
+        
+        // Empty cells before the first day of the month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('day');
+            calendarBody.appendChild(emptyCell);
+        }
+
+        // Generate calendar days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.classList.add('day');
+            dayCell.textContent = day;
+
+            const dateString = `${year}-${month + 1}-${day}`;
+            
+            // Display saved notes on the calendar
+            if (notes[dateString]) {
+                dayCell.style.backgroundColor = '#ffd700';
             }
-        });
+
+            dayCell.addEventListener('click', () => openNotePopup(dateString));
+            calendarBody.appendChild(dayCell);
+        }
+    }
+
+    function openNotePopup(dateString) {
+        selectedDateInput.value = dateString;
+        noteTextInput.value = notes[dateString] || '';
+        notePopup.style.display = 'block';
+        notePopup.style.top = `${event.clientY}px`;
+        notePopup.style.left = `${event.clientX}px`;
     }
 
     function saveNote() {
-        if (selectedDate) {
-            const noteText = noteInput.val();
-            $.ajax({
-                url: '/save_note',
-                method: 'POST',
-                data: {
-                    date: selectedDate,
-                    note: noteText
-                },
-                success: function() {
-                    $(`.home_calendar-day[data-date="${selectedDate}"] .home_note`).text(noteText).show();
-                    closeModal();
-                },
-                error: function() {
-                    console.log('Error saving note');
-                }
-            });
+        const date = selectedDateInput.value;
+        const noteText = noteTextInput.value;
+
+        if (noteText.trim()) {
+            notes[date] = noteText.trim();
+        } else {
+            delete notes[date];  // If note is empty, remove it
         }
+
+        generateCalendar(currentMonth, currentYear);
+        notePopup.style.display = 'none';
     }
 
-    
-    $(document).ready(function() {
-        const calendar = $('#home_calendar');
-        const monthYear = $('#home_monthYear');
-        const overlay = $('#home_overlay');
-        const modal = $('#home_modal');
-        const noteInput = $('#home_note-input');
-        const saveNoteButton = $('#home_save-note');
-        const closeModalButton = $('#home_close-modal');
-        let selectedDate = null;
-
-        let today = new Date();
-        let year = today.getFullYear();
-        let month = today.getMonth();
-
-        function populateCalendar(month, year) {
-            calendar.empty();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-
-            // Add days of the week headers
-            const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            daysOfWeek.forEach(day => {
-                calendar.append(`<div>${day}</div>`);
-            });
-
-            // Add empty cells for days before the 1st of the month
-            for (let i = 0; i < firstDay.getDay(); i++) {
-                calendar.append('<div></div>');
-            }
-
-            // Add days of the month
-            for (let i = 1; i <= daysInMonth; i++) {
-                const day = new Date(year, month, i);
-                calendar.append(`
-                    <div class="home_calendar-day" data-date="${day.toISOString().split('T')[0]}">
-                        ${i}
-                        <div class="home_note"></div>
-                    </div>
-                `);
-            }
-
-            monthYear.text(`${firstDay.toLocaleString('default', { month: 'long' })} ${year}`);
+    prevMonthBtn.addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
         }
-
-        function openModal(date) {
-            selectedDate = date;
-            modal.addClass('show');
-            overlay.addClass('show');
-            noteInput.val('');
-        }
-
-        function closeModal() {
-            modal.removeClass('show');
-            overlay.removeClass('show');
-            selectedDate = null;
-        }
-
-        function saveNote() {
-            if (selectedDate) {
-                const noteText = noteInput.val();
-                $(`.home_calendar-day[data-date="${selectedDate}"] .home_note`).text(noteText).show();
-            }
-            closeModal();
-        }
-
-        $('#home_prevMonth').click(function() {
-            month--;
-            if (month < 0) {
-                month = 11;
-                year--;
-            }
-            populateCalendar(month, year);
-        });
-
-        $('#home_nextMonth').click(function() {
-            month++;
-            if (month > 11) {
-                month = 0;
-                year++;
-            }
-            populateCalendar(month, year);
-        });
-
-        $(document).on('click', '.home_calendar-day', function() {
-            const date = $(this).data('date');
-            openModal(date);
-        });
-
-        saveNoteButton.click(saveNote);
-        closeModalButton.click(closeModal);
-        overlay.click(closeModal);
-
-        populateCalendar(month, year);
+        generateCalendar(currentMonth, currentYear);
     });
-    loadNotes();  // Load notes when the page is ready
-});
+
+    nextMonthBtn.addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        generateCalendar(currentMonth, currentYear);
+    });
+
+    saveNoteBtn.addEventListener('click', saveNote);
+
+    // Close note popup when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!notePopup.contains(e.target) && !e.target.classList.contains('day')) {
+            notePopup.style.display = 'none';
+        }
+    });
+
+    // Initialize calendar
+    generateCalendar(currentMonth, currentYear);
 </script>
+
+
+
+
+
