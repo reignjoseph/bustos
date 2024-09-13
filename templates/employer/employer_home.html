@@ -1,12 +1,11 @@
 <div id="employer_home_container" class="employer_home_container flex center">
     <h1>Home Page</h1>
-
     <div>
         <div id="scheduled-container">
             <div id="calendar">
                 <div id="calendar-header">
                     <button id="prev-month">Prev</button>
-                    <h2 id="month-year"></h2>
+                    <h2 style="font-size: 1vw;" id="month-year"></h2>
                     <button id="next-month">Next</button>
                 </div>
                 <div id="calendar-body"></div>
@@ -19,59 +18,53 @@
 <div id="note-popup" class="note-popup">
     <h3>Add Note</h3>
     <input type="hidden" id="selected-date">
+    <input type="hidden" id="calendar-id">
     <textarea id="note-text" rows="4" placeholder="Add your note here..."></textarea>
-    <button id="save-note">Save Note</button>
+    <button id="update-note">Update Note</button>
 </div>
+
 <style>
-            #calendar {
-            width: 350px;
-            border: 1px solid #ddd;
-            background: #fff;
-            padding: 10px;
-        }
-        #calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        #calendar-body {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            grid-gap: 5px;
-        }
-        .day {
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            border: 1px solid #ddd;
-            background-color: #fafafa;
-        }
-        .day:hover {
-            background-color: #eee;
-        }
-        .note-popup {
-            display: none;
-            position: absolute;
-            background: white;
-            border: 1px solid #ddd;
-            padding: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-        .note-popup input, .note-popup textarea {
-            width: 100%;
-            padding: 5px;
-            margin-bottom: 5px;
-        }
+    #calendar {
+        width: 350px;
+        border: 1px solid #ddd;
+        background: #fff;
+        padding: 10px;
+    }
+    #calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    #calendar-body {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-gap: 5px;
+    }
+    .day {
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        border: 1px solid #ddd;
+        background-color: #fafafa;
+    }
+    .day:hover {
+        background-color: #eee;
+    }
+    .note-popup {
+        display: none;
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        padding: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+    .note-popup input, .note-popup textarea {
+        width: 100%;
+        padding: 5px;
+        margin-bottom: 5px;
+    }
 </style>
-
-
-
-
-
-
-
-
 
 <script>
     const calendarBody = document.getElementById('calendar-body');
@@ -81,7 +74,8 @@
     const notePopup = document.getElementById('note-popup');
     const selectedDateInput = document.getElementById('selected-date');
     const noteTextInput = document.getElementById('note-text');
-    const saveNoteBtn = document.getElementById('save-note');
+    const updateNoteBtn = document.getElementById('update-note');
+    const calendarIdInput = document.getElementById('calendar-id');
 
     let notes = {};
     let currentDate = new Date();
@@ -89,13 +83,13 @@
     let currentYear = currentDate.getFullYear();
 
     function generateCalendar(month, year) {
+        console.log(`Generating calendar for ${month + 1}/${year}`);
         calendarBody.innerHTML = '';
         const firstDay = new Date(year, month).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
         monthYear.textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
 
-        
         // Empty cells before the first day of the month
         for (let i = 0; i < firstDay; i++) {
             const emptyCell = document.createElement('div');
@@ -109,39 +103,77 @@
             dayCell.classList.add('day');
             dayCell.textContent = day;
 
-            const dateString = `${year}-${month + 1}-${day}`;
+            const dateString = formatDate(`${year}-${month + 1}-${day}`);
             
             // Display saved notes on the calendar
             if (notes[dateString]) {
-                dayCell.style.backgroundColor = '#ffd700';
+                dayCell.style.backgroundColor = '#ffd700'; // Original color for notes
             }
 
-            dayCell.addEventListener('click', () => openNotePopup(dateString));
+            // Highlight dates with schedules
+            fetch(`/get_calendar_notes?date=${dateString}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.scheduled) {
+                        dayCell.style.backgroundColor = 'orange';
+                    }
+                })
+                .catch(error => console.error('Error fetching calendar data:', error));
+
+            dayCell.addEventListener('click', (event) => openNotePopup(event, dateString));
             calendarBody.appendChild(dayCell);
         }
     }
 
-    function openNotePopup(dateString) {
+    function openNotePopup(event, dateString) {
+        console.log(`Opening note popup for date: ${dateString}`);
         selectedDateInput.value = dateString;
-        noteTextInput.value = notes[dateString] || '';
-        notePopup.style.display = 'block';
-        notePopup.style.top = `${event.clientY}px`;
-        notePopup.style.left = `${event.clientX}px`;
+
+        // Get the note for the selected date from the backend
+        fetch(`/get_notes?date=${dateString}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Received note data: ${JSON.stringify(data)}`);
+                noteTextInput.value = data.note || '';
+                calendarIdInput.value = data.calendar_id || ''; // Set the calendar_id
+                notePopup.style.display = 'block';
+                notePopup.style.top = `${event.clientY + window.scrollY}px`;
+                notePopup.style.left = `${event.clientX + window.scrollX}px`;
+            })
+            .catch(error => console.error('Error fetching notes:', error));
     }
 
     function saveNote() {
         const date = selectedDateInput.value;
         const noteText = noteTextInput.value;
+        const calendarId = calendarIdInput.value;
 
-        if (noteText.trim()) {
-            notes[date] = noteText.trim();
-        } else {
-            delete notes[date];  // If note is empty, remove it
+        if (date && noteText) {
+            console.log(`Saving note for date: ${date}, Note: ${noteText}`);
+
+            fetch('/save_note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    calendar_id: calendarId || null,
+                    date: date,
+                    note: noteText.trim(),
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Save response: ${JSON.stringify(data)}`);
+            })
+            .catch(error => console.error('Error saving note:', error));
         }
-
-        generateCalendar(currentMonth, currentYear);
-        notePopup.style.display = 'none';
     }
+
+    updateNoteBtn.addEventListener('click', () => {
+        saveNote(); // Save the note when clicking the update button
+        notePopup.style.display = 'none';
+    });
 
     prevMonthBtn.addEventListener('click', () => {
         currentMonth--;
@@ -161,8 +193,6 @@
         generateCalendar(currentMonth, currentYear);
     });
 
-    saveNoteBtn.addEventListener('click', saveNote);
-
     // Close note popup when clicking outside
     document.addEventListener('click', (e) => {
         if (!notePopup.contains(e.target) && !e.target.classList.contains('day')) {
@@ -172,9 +202,9 @@
 
     // Initialize calendar
     generateCalendar(currentMonth, currentYear);
+
+    function formatDate(date) {
+        const [year, month, day] = date.split('-');
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
 </script>
-
-
-
-
-

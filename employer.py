@@ -56,48 +56,58 @@ def employer():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/get_notes', methods=['GET'])
 def get_notes():
     date = request.args.get('date')
+    print(f"Fetching notes for date: {date}")  # Debugging print statement
     conn = get_db_connection()
-    cursor = conn.execute('SELECT note FROM calendar WHERE date = ?', (date,))
+    cursor = conn.execute('SELECT calendar_id, note FROM calendar WHERE date = ?', (date,))
     row = cursor.fetchone()
     conn.close()
     
     if row:
-        return jsonify({'note': row['note']})
+        print(f"Found note: calendar_id={row['calendar_id']}, note={row['note']}")  # Debugging print statement
+        return jsonify({'calendar_id': row['calendar_id'], 'note': row['note']})
     else:
-        return jsonify({'note': ''})
+        print("No note found for the given date")  # Debugging print statement
+        return jsonify({'calendar_id': None, 'note': ''})
 
-# Insert or update a note for a specific date
 @app.route('/save_note', methods=['POST'])
 def save_note():
     data = request.get_json()
+    calendar_id = data.get('calendar_id')
     date = data['date']
     note = data['note']
     
+    print(f"Saving note: calendar_id={calendar_id}, date={date}, note={note}")  # Debugging print statement
+    
     conn = get_db_connection()
-    # Insert or update the note
-    conn.execute('INSERT OR REPLACE INTO calendar (date, note) VALUES (?, ?)', (date, note))
+    
+    if calendar_id is None:  # Insert new note
+        print("Inserting new note")  # Debugging print statement
+        conn.execute('INSERT INTO calendar (date, note) VALUES (?, ?)', (date, note))
+    else:  # Update existing note
+        print("Updating existing note")  # Debugging print statement
+        conn.execute('UPDATE calendar SET date = ?, note = ? WHERE calendar_id = ?', (date, note, calendar_id))
+    
     conn.commit()
     conn.close()
     
+    print("Note saved successfully")  # Debugging print statement
     return jsonify({'status': 'success'})
 
+@app.route('/get_calendar_notes', methods=['GET'])
+def get_calendar_notes():
+    date = request.args.get('date')
+    conn = get_db_connection()
+    cursor = conn.execute('SELECT * FROM calendar WHERE date = ?', (date,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return jsonify({'scheduled': True})
+    else:
+        return jsonify({'scheduled': False})
 
 
 
@@ -169,12 +179,15 @@ def update_applicant_schedule():
 
     if result:
         company = result[0]  # Extract the company name from the result
+        
+        # Extract date from the new_schedule
+        scheduled_date = new_schedule.split(' ')[0]  # Get 'YYYY-MM-DD'
 
         # Update the schedule in the application_status table
-        cursor.execute("""
+        cursor.execute(""" 
             UPDATE application_status 
             SET scheduled = ?, status_type = 'Scheduled', status_description = ?, date_posted = ? 
-            WHERE applicant_id = ?
+            WHERE applicant_id = ? 
         """, (
             new_schedule, 
             f"Your application at {company} is scheduled at {new_schedule}",
@@ -188,13 +201,18 @@ def update_applicant_schedule():
             SET schedule = ?
             WHERE Applicant_ID = ?
         """, (new_schedule, applicant_id))
-    
+
+        # Insert or update the schedule in the calendar table
+        cursor.execute("""
+            INSERT OR REPLACE INTO calendar (applicant_id, date, note) 
+            VALUES (?, ?, ?)
+        """, (applicant_id, scheduled_date, f"Scheduled for {company}"))
+
     # Commit the changes to both tables and close the connection
     conn.commit()
     conn.close()
 
     return jsonify({'status': 'success'})
-
 
 
 
@@ -407,55 +425,6 @@ def check_interview_availability():
 
             # Print the parsed scheduled time
             # print(f"Parsed Scheduled Time: {scheduled_time}")
-
-            # Compare scheduled time with current time
-            if scheduled_time < current_time_pht:
-                return jsonify({'status': 'show'})
-            else:
-                return jsonify({'status': 'hide'})
-        except ValueError as e:
-            # Handle any parsing errors
-            print(f"Date parsing error: {e}")
-            return jsonify({'status': 'hide'})
-    else:
-        return jsonify({'status': 'hide'})
-    applicant_id = request.form['id']
-    
-    # Establish a connection to the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Get the current time in Philippine Time (UTC+8)
-    philippine_tz = pytz.timezone('Asia/Manila')
-    current_time_pht = datetime.now(philippine_tz)
-    
-    # Fetch the scheduled time for the applicant
-    cursor.execute('''
-        SELECT scheduled FROM application_status WHERE applicant_id = ?
-    ''', (applicant_id,))
-    result = cursor.fetchone()
-
-    conn.close()
-
-    if result:
-        scheduled_time_str = result[0]
-        try:
-            # Print the scheduled time string and current time
-            print(f"Scheduled Time String: {scheduled_time_str}")
-            print(f"Current Time PHT: {current_time_pht}")
-
-            # Parse the scheduled time
-            if len(scheduled_time_str) == 16:  # Format 'YYYY-MM-DD HH:MM'
-                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M')
-                scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
-            elif len(scheduled_time_str) == 19:  # Format 'YYYY-MM-DD HH:MM:SS'
-                scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M:%S')
-                scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
-            else:
-                raise ValueError("Unexpected date format")
-
-            # Print the parsed scheduled time
-            print(f"Parsed Scheduled Time: {scheduled_time}")
 
             # Compare scheduled time with current time
             if scheduled_time < current_time_pht:
