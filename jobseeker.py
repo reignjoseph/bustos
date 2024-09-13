@@ -10,7 +10,7 @@ import random
 import logging
 from logging import FileHandler
 from main import app
-import pdfkit   # Import the pdfkit library
+# import pdfkit   # Import the pdfkit library
 
 
 # Configure logging

@@ -55,6 +55,109 @@ def employer():
 
 
 
+@app.route('/get_notes', methods=['GET'])
+def get_notes():
+    date = request.args.get('date')
+    if not date:
+        return jsonify({'error': 'Date is required'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT notes FROM application_status WHERE date = ?', (date,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return jsonify({'notes': row['notes']})
+    else:
+        return jsonify({'notes': ''})
+
+@app.route('/save_note', methods=['POST'])
+def save_note():
+    data = request.json
+    date = data.get('date')
+    notes = data.get('notes')
+
+    if not date or notes is None:
+        return jsonify({'error': 'Date and notes are required'}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE application_status SET notes = ? WHERE date = ?', (notes, date))
+    
+    if cursor.rowcount == 0:
+        cursor.execute('INSERT INTO application_status (date, notes) VALUES (?, ?)', (date, notes))
+    
+    conn.commit()
+    conn.close()
+
+    return jsonify({'status': 'Note saved successfully'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/update_applicant_schedule', methods=['POST'])
 def update_applicant_schedule():
     applicant_id = request.form['id']
@@ -138,6 +241,9 @@ def update_interview_status():
     philippine_tz = pytz.timezone('Asia/Manila')
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
+    # Define status description
+    status_description = "Your interview is now being processed, please wait for the result within a week."
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -146,14 +252,15 @@ def update_interview_status():
         print(f"Updating interview status for applicant_id={applicant_id}")
         print(f"Current Philippine time (date_posted) to be updated: {current_time_pht}")
 
-        # Update the interviewed field, status_type, and date_posted in the application_status table
+        # Update the interviewed field, status_type, date_posted, and status_description in the application_status table
         cursor.execute('''
             UPDATE application_status
             SET interviewed = ?,
                 status_type = 'Interviewed',
-                date_posted = ?
+                date_posted = ?,
+                status_description = ?
             WHERE applicant_id = ?
-        ''', (interviewed, current_time_pht, applicant_id))
+        ''', (interviewed, current_time_pht, status_description, applicant_id))
 
         conn.commit()
         conn.close()
@@ -169,31 +276,68 @@ def update_interview_status():
 def update_interview_result():
     applicant_id = request.form['id']
     result = request.form['result']
-    date_posted = request.form['date_posted']
 
-    # Debug print to see the 'result' value being received
-    print(f"Received result: {result} for applicant ID: {applicant_id}")
-
-    # Establish a connection to the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Get the current time in Philippine Time (UTC+8)
+    # Get current time in Philippine Time (UTC+8)
     philippine_tz = pytz.timezone('Asia/Manila')
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
     try:
-        # Update the result, status_type, and date_posted in the application_status table
-        cursor.execute("""
+        # Establish a connection to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Fetch job details from the applicant and jobs tables
+        cursor.execute('''
+            SELECT a.job_id, j.company, j.position
+            FROM applicant a
+            JOIN jobs j ON a.job_id = j.Job_ID
+            WHERE a.Applicant_ID = ?
+        ''', (applicant_id,))
+        job_details = cursor.fetchone()
+
+        if job_details is None:
+            print(f"Error: Job details not found for applicant ID {applicant_id}")
+            return jsonify({'status': 'error', 'message': 'Job details not found'}), 404
+
+        job_id, company, position = job_details
+        print(f"Fetched job details: job_id={job_id}, company={company}, position={position}")
+
+        # Determine the status_type based on the result
+        if result == "Passed":
+            status_type = "Passed"
+            status_descriptions = [
+                f"Congratulations! You are now hired!",
+                f"You are now hired at {company} as a {position}."
+            ]
+        elif result == "Failed":
+            status_type = "Failed"
+            status_descriptions = [
+                f"Your interview did not meet our expectations.",
+                f"Unfortunately, you were not selected for the position at {company}. Please feel free to apply for other opportunities."
+            ]
+        else:
+            status_type = result  # Use the result as status_type if it's neither Passed nor Failed
+            status_descriptions = [
+                f"Your interview status is {result}."
+            ]
+
+        # Choose a random status description
+        status_description = random.choice(status_descriptions)
+        print(f"Generated status description: {status_description}")
+
+        # Update the result, status_type, status_description, and date_posted in the application_status table
+        cursor.execute('''
             UPDATE application_status
-            SET status_type = ?, date_posted = ?, result = ?
+            SET status_type = ?, date_posted = ?, result = ?, status_description = ?
             WHERE applicant_id = ?
-        """, (result, current_time_pht, result, applicant_id))
+        ''', (status_type, current_time_pht, result, status_description, applicant_id))
 
         # Commit the changes
         conn.commit()
+
     except Exception as e:
         conn.rollback()
+        print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
     finally:
         # Close the connection
@@ -568,14 +712,26 @@ def update_applicant_status():
         company = job[0]
         print(f"Fetched company: {company}")
 
-        # Define status description templates
-        status_descriptions = [
-            f"Your application at {company} is {status}.",
-            f"Update: Your application status at {company} is {status}.",
-            f"Notification: Your application for the position at {company} is {status}.",
-            f"Alert: The status of your application at {company} is {status}.",
-            f"Info: Your application status at {company} has changed to {status}."
-        ]
+        # Define status descriptions based on the status
+        if status == "Approved":
+            status_descriptions = [
+                f"Your application at {company} is {status}.",
+                f"Update: Your application status at {company} is {status}.",
+                f"Notification: Your application for the position at {company} is {status}.",
+                f"Alert: The status of your application at {company} is {status}.",
+                f"Info: Your application status at {company} has changed to {status}."
+            ]
+        elif status == "Denied":
+            status_descriptions = [
+                f"Your application at {company} is {status} due to a mismatch of your resume.",
+                f"We're sad to inform you that your application is {status}.",
+                f"Alert: The status of your application at {company} is {status}."
+            ]
+        else:
+            status_descriptions = [
+                f"Your application at {company} is {status}.",
+                f"Alert: The status of your application at {company} has changed to {status}."
+            ]
 
         # Choose a random status description
         status_description = random.choice(status_descriptions)
@@ -595,7 +751,7 @@ def update_applicant_status():
 
         print(f"Updated applicant ID {applicant_id} status to {status}")
 
-        # Insert into the application_status table, including the applicant_id and date_posted
+        # Insert into the application_status table
         cursor.execute('''
             INSERT INTO application_status (applicant_id, job_id, jobseeker_id, employer_id, status_description, status_type, company, date_posted)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -612,7 +768,6 @@ def update_applicant_status():
     except Exception as e:
         print(f"Error updating applicant status: {e}")
         return jsonify({'error': 'An error occurred while updating applicant status'}), 500
-
 
 
 

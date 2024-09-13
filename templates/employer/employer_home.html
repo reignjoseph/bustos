@@ -1,3 +1,226 @@
-<div id="employer_home_container" class="employer_home_container flex center" style="display: none;">
-<h1>Welcome to the Employer Home Page</h1>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .home_calendar {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    .home_calendar div {
+        width: 14.28%; /* 7 days a week */
+        text-align: center;
+        padding: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        position: relative;
+    }
+    .home_highlight {
+        background-color: red;
+        color: white;
+    }
+    .home_note {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: yellow;
+        font-size: 0.8em;
+        text-align: center;
+        display: none;
+    }
+    .home_calendar-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    .home_calendar-header button {
+        padding: 5px;
+        font-size: 1.2em;
+    }
+    .home_modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border: 1px solid #ccc;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    .home_modal.show {
+        display: block;
+    }
+    .home_modal button {
+        margin-top: 10px;
+    }
+    .home_overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    .home_overlay.show {
+        display: block;
+    }
+</style>
+<div id="employer_home_container" class="employer_home_container flex center" style="display: block;">
+    <h1>Home Page</h1>
+    <div id="home_calendar-container">
+        <div class="home_calendar-header">
+            <button id="home_prevMonth"><i class="fas fa-chevron-left"></i></button>
+            <span id="home_monthYear"></span>
+            <button id="home_nextMonth"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div id="home_calendar" class="home_calendar"></div>
+    </div>
+    <div id="home_overlay" class="home_overlay"></div>
+    <div id="home_modal" class="home_modal">
+        <h2>Add Note</h2>
+        <input type="text" id="home_note-input" placeholder="Enter your note here" />
+        <button id="home_save-note">Save</button>
+        <button id="home_close-modal">Close</button>
+    </div>
 </div>
+<script>
+$(document).ready(function() {
+    // Fetch and display notes
+    function loadNotes() {
+        $.ajax({
+            url: '/fetch_notes',
+            method: 'GET',
+            success: function(response) {
+                response.forEach(function(note) {
+                    $(`.home_calendar-day[data-date="${note[0]}"] .home_note`).text(note[1]).show();
+                });
+            },
+            error: function() {
+                console.log('Error fetching notes');
+            }
+        });
+    }
+
+    function saveNote() {
+        if (selectedDate) {
+            const noteText = noteInput.val();
+            $.ajax({
+                url: '/save_note',
+                method: 'POST',
+                data: {
+                    date: selectedDate,
+                    note: noteText
+                },
+                success: function() {
+                    $(`.home_calendar-day[data-date="${selectedDate}"] .home_note`).text(noteText).show();
+                    closeModal();
+                },
+                error: function() {
+                    console.log('Error saving note');
+                }
+            });
+        }
+    }
+
+    
+    $(document).ready(function() {
+        const calendar = $('#home_calendar');
+        const monthYear = $('#home_monthYear');
+        const overlay = $('#home_overlay');
+        const modal = $('#home_modal');
+        const noteInput = $('#home_note-input');
+        const saveNoteButton = $('#home_save-note');
+        const closeModalButton = $('#home_close-modal');
+        let selectedDate = null;
+
+        let today = new Date();
+        let year = today.getFullYear();
+        let month = today.getMonth();
+
+        function populateCalendar(month, year) {
+            calendar.empty();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+
+            // Add days of the week headers
+            const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            daysOfWeek.forEach(day => {
+                calendar.append(`<div>${day}</div>`);
+            });
+
+            // Add empty cells for days before the 1st of the month
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                calendar.append('<div></div>');
+            }
+
+            // Add days of the month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = new Date(year, month, i);
+                calendar.append(`
+                    <div class="home_calendar-day" data-date="${day.toISOString().split('T')[0]}">
+                        ${i}
+                        <div class="home_note"></div>
+                    </div>
+                `);
+            }
+
+            monthYear.text(`${firstDay.toLocaleString('default', { month: 'long' })} ${year}`);
+        }
+
+        function openModal(date) {
+            selectedDate = date;
+            modal.addClass('show');
+            overlay.addClass('show');
+            noteInput.val('');
+        }
+
+        function closeModal() {
+            modal.removeClass('show');
+            overlay.removeClass('show');
+            selectedDate = null;
+        }
+
+        function saveNote() {
+            if (selectedDate) {
+                const noteText = noteInput.val();
+                $(`.home_calendar-day[data-date="${selectedDate}"] .home_note`).text(noteText).show();
+            }
+            closeModal();
+        }
+
+        $('#home_prevMonth').click(function() {
+            month--;
+            if (month < 0) {
+                month = 11;
+                year--;
+            }
+            populateCalendar(month, year);
+        });
+
+        $('#home_nextMonth').click(function() {
+            month++;
+            if (month > 11) {
+                month = 0;
+                year++;
+            }
+            populateCalendar(month, year);
+        });
+
+        $(document).on('click', '.home_calendar-day', function() {
+            const date = $(this).data('date');
+            openModal(date);
+        });
+
+        saveNoteButton.click(saveNote);
+        closeModalButton.click(closeModal);
+        overlay.click(closeModal);
+
+        populateCalendar(month, year);
+    });
+    loadNotes();  // Load notes when the page is ready
+});
+</script>
