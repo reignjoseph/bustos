@@ -1,12 +1,12 @@
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
+<!-- Include Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <div id="employer_applicant_container" class="employer_applicant_container" style="display: none;">
     <h2 style="padding: 10px; font-family: fantasy; margin: 0;">APPROVED APPLICANT LIST</h2>
     <input style="border: 1px solid; margin: 10px; padding-left: 10px; border-radius: 3px;" type="text" id="approved-search-input" placeholder="Search Name" oninput="approvedSearchApplicants()">
     <div style="border: 1px solid; margin: 10px;"></div>
+
     <!-- Container for both the header and the approved applicants list -->
     <div class="approved_container">
         <!-- Header Row for Approved Applicant List -->
@@ -39,84 +39,74 @@ $(document).ready(function() {
     let filteredApplicants = []; // This will hold the applicants after search filter
     let currentPage = 1;
     const itemsPerPage = 5;
-
+    
     // Event handler for result radio buttons
     $(document).on('change', "input[name^='result-']", function() {
-    let selectedValue = $(this).val();
-    let applicantId = $(this).attr("name").split('-')[1];
+        let selectedValue = $(this).val();
+        let applicantId = $(this).attr("name").split('-')[1];
 
-    $.ajax({
-        url: '/update_interview_result',
-        method: 'POST',
-        data: {
-            id: applicantId,
-            result: selectedValue,
-            date_posted: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
-        },
-        success: function(response) {
-            alert('Interview result updated successfully');
-
-            // Disable both radio buttons
-            $(`input[name='result-${applicantId}']`).prop('disabled', true);
-        },
-        error: function() {
-            alert('Error updating interview result');
-        }
-    });
-});
-function fetchInterviewResult(applicantId) {
-    $.ajax({
-        url: '/fetch_interview_result',
-        method: 'POST',
-        data: { id: applicantId },
-        success: function(response) {
-            if (response.result) {
-                // Disable both radio buttons if there is a result
-                $(`input[name="result-${applicantId}"]`).prop('disabled', true);
-                // Optionally check the relevant radio button
-                $(`input[name="result-${applicantId}"][value="${response.result}"]`).prop('checked', true);
-            }
-        },
-        error: function() {
-            console.log('Error fetching interview result');
-        }
-    });
-}
-
-
-
-
-
-
-
-
-
-
-
-    function checkInterviewAvailability() {
         $.ajax({
-            url: '/check_interview_availability', // Make sure this route is correctly set up
+            url: '/update_interview_result',
             method: 'POST',
-            data: { ids: filteredApplicants.map(applicant => applicant.Applicant_ID) },
+            data: {
+                id: applicantId,
+                result: selectedValue,
+                date_posted: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
+            },
             success: function(response) {
-                response.forEach(applicant => {
-                    let checkbox = $(`#interview-checkbox-${applicant.Applicant_ID}`);
-                    if (applicant.available) {
-                        checkbox.css('display', 'block');
-                    } else {
-                        checkbox.css('display', 'none');
-                    }
-                });
+                alert('Interview result updated successfully');
+                // Disable both radio buttons after updating
+                $(`input[name='result-${applicantId}']`).prop('disabled', true);
             },
             error: function() {
-                console.log('Error checking interview availability');
+                alert('Error updating interview result');
+            }
+        });
+    });
+
+    // Fetch interview results for an applicant
+    function fetchInterviewResult(applicantId) {
+        $.ajax({
+            url: '/fetch_interview_result',
+            method: 'POST',
+            data: { id: applicantId },
+            success: function(response) {
+                if (response.result) {
+                    // Disable both radio buttons if there is a result
+                    $(`input[name="result-${applicantId}"]`).prop('disabled', true);
+                    // Optionally check the relevant radio button
+                    $(`input[name="result-${applicantId}"][value="${response.result}"]`).prop('checked', true);
+                }
+            },
+            error: function() {
+                console.log('Error fetching interview result');
             }
         });
     }
 
-    // Fetch interview availability every 60 seconds
-    setInterval(checkInterviewAvailability, 60000);
+    // Check interview availability for each applicant
+    function checkInterviewAvailability() {
+        filteredApplicants.forEach(applicant => {
+            $.ajax({
+                url: '/check_interview_availability',
+                method: 'POST',
+                data: { id: applicant.Applicant_ID }, // Send one ID at a time
+                success: function(response) {
+                    let checkbox = $(`#interview-checkbox-${applicant.Applicant_ID}`);
+                    if (response.status === 'show') {
+                        checkbox.css('display', 'block');
+                    } else {
+                        checkbox.css('display', 'none');
+                    }
+                },
+                error: function() {
+                    console.log(`Error checking availability for applicant ID: ${applicant.Applicant_ID}`);
+                }
+            });
+        });
+    }
 
+    // Fetch approved applicants
     function fetchApprovedApplicants() {
         $.ajax({
             url: '/fetch_approved_applicants',
@@ -126,6 +116,8 @@ function fetchInterviewResult(applicantId) {
                 filteredApplicants = data; // Initially, filteredApplicants is the same as allApplicants
                 updateApplicantList();
                 updatePaginationControls();
+                // Fetch interview availability on page load
+                checkInterviewAvailability();
             },
             error: function() {
                 alert('Error fetching approved applicants');
@@ -133,6 +125,7 @@ function fetchInterviewResult(applicantId) {
         });
     }
 
+    // Update the list of applicants based on pagination
     function updateApplicantList() {
         let container = $('#approved_jobseeker_list');
         container.empty(); // Clear previous entries
@@ -158,32 +151,13 @@ function fetchInterviewResult(applicantId) {
                         <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interviewed
                     </div>
                     <div style="text-align:center;grid-column: 8;">
-    <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
-    <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
-</div>
-
+                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
+                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
+                    </div>
                 </div>
             `;
             container.append(applicantCard);
             fetchInterviewResult(applicant.Applicant_ID);
-            // Check interview availability based on schedule
-            $.ajax({
-                url: '/check_interview_availability',
-                method: 'POST',
-                data: { id: applicant.Applicant_ID },
-                success: function(response) {
-                    console.log(`Applicant ${applicant.Applicant_ID} availability status: `, response); // Debug log
-
-                    if (response.status === 'show') {
-                        $(`#interview-checkbox-${applicant.Applicant_ID}`).css('display', 'block');
-                    } else {
-                        console.log(`Interview not available for applicant ${applicant.Applicant_ID}`);
-                    }
-                },
-                error: function() {
-                    console.log('Error checking interview availability for applicant', applicant.Applicant_ID);
-                }
-            });
         });
 
         // Initialize flatpickr for each schedule input
@@ -203,6 +177,8 @@ function fetchInterviewResult(applicantId) {
                     },
                     success: function(response) {
                         alert('Schedule updated successfully');
+                        // Refresh interview availability after schedule change
+                        checkInterviewAvailability();
                     },
                     error: function() {
                         alert('Error updating schedule');
@@ -227,6 +203,7 @@ function fetchInterviewResult(applicantId) {
                     success: function(response) {
                         alert('Interview status updated successfully');
                         $(this).prop('disabled', true); // Disable the checkbox
+                        checkInterviewAvailability(); // Refresh interview availability after interview status update
                     }.bind(this), // Bind `this` to maintain context inside success
                     error: function() {
                         alert('Error updating interview status');
@@ -237,6 +214,7 @@ function fetchInterviewResult(applicantId) {
         });
     }
 
+    // Update pagination controls
     function updatePaginationControls() {
         $('#approved_previous').prop('disabled', currentPage === 1);
         $('#approved_next').prop('disabled', currentPage * itemsPerPage >= filteredApplicants.length);

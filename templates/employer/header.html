@@ -77,6 +77,7 @@
             const activeSection = document.querySelector(`.${sectionClassOrId}`) || document.getElementById(sectionClassOrId);
             if (activeSection) {
                 activeSection.style.display = 'block';
+                generateCalendar(currentMonth, currentYear);
             }
         }
     </script>

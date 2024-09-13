@@ -21,190 +21,187 @@
     <input type="hidden" id="calendar-id">
     <textarea id="note-text" rows="4" placeholder="Add your note here..."></textarea>
     <button id="update-note">Update Note</button>
+    <button style="margin-left: 10px;"id="remove-note">Remove Note</button>
 </div>
 
-<style>
-    #calendar {
-        width: 350px;
-        border: 1px solid #ddd;
-        background: #fff;
-        padding: 10px;
-    }
-    #calendar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    #calendar-body {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        grid-gap: 5px;
-    }
-    .day {
-        padding: 10px;
-        text-align: center;
-        cursor: pointer;
-        border: 1px solid #ddd;
-        background-color: #fafafa;
-    }
-    .day:hover {
-        background-color: #eee;
-    }
-    .note-popup {
-        display: none;
-        position: absolute;
-        background: white;
-        border: 1px solid #ddd;
-        padding: 10px;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    }
-    .note-popup input, .note-popup textarea {
-        width: 100%;
-        padding: 5px;
-        margin-bottom: 5px;
-    }
-</style>
+
 
 <script>
-    const calendarBody = document.getElementById('calendar-body');
-    const monthYear = document.getElementById('month-year');
-    const prevMonthBtn = document.getElementById('prev-month');
-    const nextMonthBtn = document.getElementById('next-month');
-    const notePopup = document.getElementById('note-popup');
-    const selectedDateInput = document.getElementById('selected-date');
-    const noteTextInput = document.getElementById('note-text');
-    const updateNoteBtn = document.getElementById('update-note');
-    const calendarIdInput = document.getElementById('calendar-id');
+const calendarBody = document.getElementById('calendar-body');
+const monthYear = document.getElementById('month-year');
+const prevMonthBtn = document.getElementById('prev-month');
+const nextMonthBtn = document.getElementById('next-month');
+const notePopup = document.getElementById('note-popup');
+const selectedDateInput = document.getElementById('selected-date');
+const noteTextInput = document.getElementById('note-text');
+const updateNoteBtn = document.getElementById('update-note');
+const calendarIdInput = document.getElementById('calendar-id');
+const removeNoteBtn = document.getElementById('remove-note');
 
-    let notes = {};
-    let currentDate = new Date();
-    let currentMonth = currentDate.getMonth();
-    let currentYear = currentDate.getFullYear();
 
-    function generateCalendar(month, year) {
-        console.log(`Generating calendar for ${month + 1}/${year}`);
-        calendarBody.innerHTML = '';
-        const firstDay = new Date(year, month).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+let notes = {};
+let currentDate = new Date();
+let currentMonth = currentDate.getMonth();
+let currentYear = currentDate.getFullYear();
+
+function generateCalendar(month, year) {
+    console.log(`Generating calendar for ${month + 1}/${year}`);
+    calendarBody.innerHTML = '';
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    monthYear.textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
+
+    // Empty cells before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('day');
+        calendarBody.appendChild(emptyCell);
+    }
+
+    // Generate calendar days
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.classList.add('day');
+        dayCell.textContent = day;
+
+        const dateString = formatDate(`${year}-${month + 1}-${day}`);
         
-        monthYear.textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
-
-        // Empty cells before the first day of the month
-        for (let i = 0; i < firstDay; i++) {
-            const emptyCell = document.createElement('div');
-            emptyCell.classList.add('day');
-            calendarBody.appendChild(emptyCell);
+        // Display saved notes on the calendar
+        if (notes[dateString]) {
+            dayCell.style.backgroundColor = '#ffd700'; // Original color for notes
         }
 
-        // Generate calendar days
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayCell = document.createElement('div');
-            dayCell.classList.add('day');
-            dayCell.textContent = day;
-
-            const dateString = formatDate(`${year}-${month + 1}-${day}`);
-            
-            // Display saved notes on the calendar
-            if (notes[dateString]) {
-                dayCell.style.backgroundColor = '#ffd700'; // Original color for notes
-            }
-
-            // Highlight dates with schedules
-            fetch(`/get_calendar_notes?date=${dateString}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.scheduled) {
-                        dayCell.style.backgroundColor = 'orange';
-                    }
-                })
-                .catch(error => console.error('Error fetching calendar data:', error));
-
-            dayCell.addEventListener('click', (event) => openNotePopup(event, dateString));
-            calendarBody.appendChild(dayCell);
-        }
-    }
-
-    function openNotePopup(event, dateString) {
-        console.log(`Opening note popup for date: ${dateString}`);
-        selectedDateInput.value = dateString;
-
-        // Get the note for the selected date from the backend
-        fetch(`/get_notes?date=${dateString}`)
+        // Highlight dates with schedules
+        fetch(`/get_calendar_notes?date=${dateString}`)
             .then(response => response.json())
             .then(data => {
-                console.log(`Received note data: ${JSON.stringify(data)}`);
-                noteTextInput.value = data.note || '';
-                calendarIdInput.value = data.calendar_id || ''; // Set the calendar_id
-                notePopup.style.display = 'block';
-                notePopup.style.top = `${event.clientY + window.scrollY}px`;
-                notePopup.style.left = `${event.clientX + window.scrollX}px`;
+                if (data.scheduled) {
+                    dayCell.style.backgroundColor = 'green'; // Highlight in green for scheduled dates
+                }
             })
-            .catch(error => console.error('Error fetching notes:', error));
+            .catch(error => console.error('Error fetching calendar data:', error));
+
+        dayCell.addEventListener('click', (event) => openNotePopup(event, dateString));
+        calendarBody.appendChild(dayCell);
     }
+}
 
-    function saveNote() {
-        const date = selectedDateInput.value;
-        const noteText = noteTextInput.value;
-        const calendarId = calendarIdInput.value;
+function openNotePopup(event, dateString) {
+    console.log(`Opening note popup for date: ${dateString}`);
+    selectedDateInput.value = dateString;
 
-        if (date && noteText) {
-            console.log(`Saving note for date: ${date}, Note: ${noteText}`);
+    // Get the note for the selected date from the backend
+    fetch(`/get_notes?date=${dateString}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Received note data: ${JSON.stringify(data)}`);
+            noteTextInput.value = data.note || '';
+            calendarIdInput.value = data.calendar_id || ''; // Set the calendar_id
+            notePopup.style.display = 'block';
+            notePopup.style.top = `${event.clientY + window.scrollY}px`;
+            notePopup.style.left = `${event.clientX + window.scrollX}px`;
+        })
+        .catch(error => console.error('Error fetching notes:', error));
+}
 
-            fetch('/save_note', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    calendar_id: calendarId || null,
-                    date: date,
-                    note: noteText.trim(),
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(`Save response: ${JSON.stringify(data)}`);
-            })
-            .catch(error => console.error('Error saving note:', error));
-        }
+function saveNote() {
+    const date = selectedDateInput.value;
+    const noteText = noteTextInput.value;
+    const calendarId = calendarIdInput.value;
+
+    if (date && noteText) {
+        console.log(`Saving note for date: ${date}, Note: ${noteText}`);
+
+        fetch('/save_note', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                calendar_id: calendarId || null,
+                date: date,
+                note: noteText.trim(),
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Save response: ${JSON.stringify(data)}`);
+        })
+        .catch(error => console.error('Error saving note:', error));
     }
+}
 
-    updateNoteBtn.addEventListener('click', () => {
-        saveNote(); // Save the note when clicking the update button
-        notePopup.style.display = 'none';
-    });
+updateNoteBtn.addEventListener('click', () => {
+    saveNote(); // Save the note when clicking the update button
+    notePopup.style.display = 'none';
+});
 
-    prevMonthBtn.addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    nextMonthBtn.addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-        generateCalendar(currentMonth, currentYear);
-    });
-
-    // Close note popup when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!notePopup.contains(e.target) && !e.target.classList.contains('day')) {
-            notePopup.style.display = 'none';
-        }
-    });
-
-    // Initialize calendar
+prevMonthBtn.addEventListener('click', () => {
+    currentMonth--;
+    if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
     generateCalendar(currentMonth, currentYear);
+});
 
-    function formatDate(date) {
-        const [year, month, day] = date.split('-');
-        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+nextMonthBtn.addEventListener('click', () => {
+    currentMonth++;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
     }
+    generateCalendar(currentMonth, currentYear);
+});
+
+// Close note popup when clicking outside
+document.addEventListener('click', (e) => {
+    if (!notePopup.contains(e.target) && !e.target.classList.contains('day')) {
+        notePopup.style.display = 'none';
+    }
+});
+
+// Initialize calendar
+generateCalendar(currentMonth, currentYear);
+
+function formatDate(date) {
+    const [year, month, day] = date.split('-');
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+function removeNote() {
+    const date = selectedDateInput.value;
+    const calendarId = calendarIdInput.value;
+
+    if (date && calendarId) {
+        console.log(`Removing note for date: ${date}, Calendar ID: ${calendarId}`);
+
+        fetch('/remove_note', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                calendar_id: calendarId,
+                date: date,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(`Remove response: ${JSON.stringify(data)}`);
+            // Clear the note from the popup
+            noteTextInput.value = '';
+            calendarIdInput.value = '';
+            // Optionally, refresh the calendar to reflect changes
+            generateCalendar(currentMonth, currentYear);
+        })
+        .catch(error => console.error('Error removing note:', error));
+    }
+}
+
+// Add event listener for the "Remove Note" button
+removeNoteBtn.addEventListener('click', () => {
+    removeNote(); // Remove the note when clicking the remove button
+    notePopup.style.display = 'none';
+});
 </script>

@@ -56,6 +56,52 @@ def employer():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/get_notes', methods=['GET'])
 def get_notes():
     date = request.args.get('date')
@@ -112,48 +158,27 @@ def get_calendar_notes():
 
 
 
+@app.route('/remove_note', methods=['POST'])
+def remove_note():
+    data = request.get_json()
+    calendar_id = data.get('calendar_id')
+    date = data.get('date')
 
+    if calendar_id:
+        # Establish a connection to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
+        # Delete the note entry from the calendar table
+        cursor.execute("DELETE FROM calendar WHERE calendar_id = ?", (calendar_id,))
 
+        # Commit the changes to the database and close the connection
+        conn.commit()
+        conn.close()
 
+        return jsonify({'status': 'success'})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return jsonify({'status': 'error', 'message': 'Invalid calendar_id'})
 
 
 @app.route('/update_applicant_schedule', methods=['POST'])
@@ -173,16 +198,40 @@ def update_applicant_schedule():
     philippine_tz = pytz.timezone('Asia/Manila')
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-    # Fetch the company associated with the applicant from application_status table
-    cursor.execute("SELECT company FROM application_status WHERE applicant_id = ?", (applicant_id,))
+    # Fetch the company and jobseeker_id associated with the applicant from application_status table
+    cursor.execute("SELECT company, jobseeker_id FROM application_status WHERE applicant_id = ?", (applicant_id,))
     result = cursor.fetchone()
 
     if result:
-        company = result[0]  # Extract the company name from the result
+        company, jobseeker_id = result  # Extract the company and jobseeker_id from the result
         
+        # Fetch the fname from the users table using jobseeker_id
+        cursor.execute("SELECT fname FROM users WHERE User_ID = ?", (jobseeker_id,))
+        user_result = cursor.fetchone()
+        fname = user_result[0] if user_result else 'Unknown'
+
         # Extract date from the new_schedule
         scheduled_date = new_schedule.split(' ')[0]  # Get 'YYYY-MM-DD'
 
+        # Check if an entry for the applicant_id already exists in the calendar table
+        cursor.execute("SELECT calendar_id FROM calendar WHERE applicant_id = ?", (applicant_id,))
+        calendar_result = cursor.fetchone()
+
+        if calendar_result:
+            calendar_id = calendar_result[0]
+            # Update the existing calendar entry
+            cursor.execute(""" 
+                UPDATE calendar 
+                SET date = ?, note = ? 
+                WHERE calendar_id = ?
+            """, (scheduled_date, f"Your applicant {fname} was scheduled for {company}", calendar_id))
+        else:
+            # Insert a new calendar entry
+            cursor.execute(""" 
+                INSERT INTO calendar (applicant_id, date, note) 
+                VALUES (?, ?, ?)
+            """, (applicant_id, scheduled_date, f"Your applicant {fname} was scheduled for {company}"))
+        
         # Update the schedule in the application_status table
         cursor.execute(""" 
             UPDATE application_status 
@@ -196,45 +245,17 @@ def update_applicant_schedule():
         ))
 
         # Now also update the schedule in the applicant table where Applicant_ID matches
-        cursor.execute("""
+        cursor.execute(""" 
             UPDATE applicant 
-            SET schedule = ?
+            SET schedule = ? 
             WHERE Applicant_ID = ?
         """, (new_schedule, applicant_id))
-
-        # Insert or update the schedule in the calendar table
-        cursor.execute("""
-            INSERT OR REPLACE INTO calendar (applicant_id, date, note) 
-            VALUES (?, ?, ?)
-        """, (applicant_id, scheduled_date, f"Scheduled for {company}"))
 
     # Commit the changes to both tables and close the connection
     conn.commit()
     conn.close()
 
     return jsonify({'status': 'success'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -374,18 +395,6 @@ def fetch_interview_result():
     finally:
         conn.close()
 
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/check_interview_availability', methods=['POST'])
 def check_interview_availability():
     applicant_id = request.form['id']
@@ -437,35 +446,6 @@ def check_interview_availability():
             return jsonify({'status': 'hide'})
     else:
         return jsonify({'status': 'hide'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @app.route('/fetch_approved_applicants', methods=['GET'])
@@ -539,26 +519,6 @@ def fetch_approved_applicants():
     except Exception as e:
         print(f"Error fetching applicants: {e}")
         return jsonify({'error': 'An error occurred while fetching applicants'}), 500
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @app.route('/fetch_applicants', methods=['GET'])
