@@ -12,7 +12,7 @@ app = Flask(__name__)
 from menu import *
 from employer import *
 from jobseeker import *
-
+from admin import *
 
 
 if __name__ == '__main__':

@@ -1,7 +1,9 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <div id="employer_home_container" class="employer_home_container flex center">
     <h1>Home Page</h1>
-    <div>
-        <div id="scheduled-container">
+    <div style="display: grid; row-gap: 30px; grid-template-columns: repeat(2, 50%); place-items: center; max-width: 1100px; grid-column-gap: 30px;">
+        <div style="grid-row: 2;width: -webkit-fill-available;"id="scheduled-container">
             <div id="calendar">
                 <div id="calendar-header">
                     <button id="prev-month">Prev</button>
@@ -11,8 +13,80 @@
                 <div id="calendar-body"></div>
             </div>
         </div>
+
+        <div style="width: -webkit-fill-available;height: -webkit-fill-available;"id="stats-container">
+            <canvas id="applicantStatsChart" width="400" height="200"></canvas>
+        </div>
+
+        <div id="educational-attainment-chart" style="width: -webkit-fill-available; height: -webkit-fill-available;">
+            <canvas id="attainmentChart"></canvas>
+        </div>
+
+        <div class="jobsandapplicant">
+            <div class="job-stat">
+                <h3>Job Posted</h3>
+                <p id="job-posted-count">0</p>
+            </div>
+            <div class="job-stat">
+                <h3>Got Hired</h3>
+                <p id="got-hired-count">0</p>
+            </div>
+            <div class="job-stat">
+                <h3>Job Closed</h3>
+                <p id="job-closed-count">0</p>
+            </div>
+            <div class="job-stat">
+                <h3>Applicants</h3>
+                <p id="applicant-count">0</p>
+            </div>
+        </div>
     </div>
 </div>
+
+
+
+
+<script>
+    $(document).ready(function() {
+    $.ajax({
+        url: '/count_applicant_and_jobs',
+        method: 'GET',
+        success: function(response) {
+            $('#job-posted-count').text(response.job_posted);
+            $('#got-hired-count').text(response.got_hired);
+            $('#job-closed-count').text(response.job_closed);
+            $('#applicant-count').text(response.applicants);
+        },
+        error: function() {
+            alert('Error fetching counts');
+        }
+    });
+});
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!-- Popup for adding notes -->
 <div id="note-popup" class="note-popup">
@@ -23,6 +97,98 @@
     <button id="update-note">Update Note</button>
     <button style="margin-left: 10px;"id="remove-note">Remove Note</button>
 </div>
+
+
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch educational attainment data from the backend
+        fetch('/fetch_educational_attainment')
+            .then(response => response.json())
+            .then(data => {
+                // Create a horizontal bar chart using Chart.js
+                const ctx = document.getElementById('attainmentChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            'Elementary', 
+                            'Senior High', 
+                            'Tertiary', 
+                            'Graduate Studies', 
+                            'Vocational Training'
+                        ],
+                        datasets: [{
+                            label: 'Educational Attainment',
+                            data: [
+                                data.elementary,
+                                data.senior_high,
+                                data.tertiary,
+                                data.graduate_studies,
+                                data.vocational_training
+                            ],
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Makes the chart horizontal
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching educational attainment data:', error));
+    });
+</script>
+
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/fetch_applicant_stats')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('applicantStatsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Total Applicants', 'Approved Applicants', 'Denied Applicants'],
+                        datasets: [{
+                            label: 'Number of Applicants',
+                            data: [data.total_applicants, data.approved_applicants, data.denied_applicants],
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching applicant stats:', error));
+    });
+    </script>
+
+
+
+
+
+
 
 
 

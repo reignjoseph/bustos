@@ -56,25 +56,122 @@ def employer():
 
 
 
+@app.route('/fetch_applicant_stats', methods=['GET'])
+def fetch_applicant_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Fetch total number of applicants
+    cursor.execute("SELECT COUNT(Applicant_ID) FROM applicant")
+    total_applicants = cursor.fetchone()[0]
+
+    # Fetch total number of approved applicants
+    cursor.execute("SELECT COUNT(Applicant_ID) FROM applicant WHERE status = 'Approved'")
+    approved_applicants = cursor.fetchone()[0]
+
+    # Fetch total number of denied applicants
+    cursor.execute("SELECT COUNT(Applicant_ID) FROM applicant WHERE status = 'Denied'")
+    denied_applicants = cursor.fetchone()[0]
+
+    conn.close()
+
+    return jsonify({
+        'total_applicants': total_applicants,
+        'approved_applicants': approved_applicants,
+        'denied_applicants': denied_applicants
+    })
+
+
+@app.route('/fetch_educational_attainment', methods=['GET'])
+def fetch_educational_attainment():
+    # Establish a connection to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fetch counts for each educational attainment level
+    cursor.execute("""
+        SELECT 
+            COUNT(CASE WHEN elementary IS NOT NULL THEN 1 END) AS elementary_count,
+            COUNT(CASE WHEN senior_high IS NOT NULL THEN 1 END) AS senior_high_count,
+            COUNT(CASE WHEN tertiary IS NOT NULL THEN 1 END) AS tertiary_count,
+            COUNT(CASE WHEN graduate_studies IS NOT NULL THEN 1 END) AS graduate_studies_count,
+            COUNT(CASE WHEN vocational_training IS NOT NULL THEN 1 END) AS vocational_training_count
+        FROM form101
+    """)
+    result = cursor.fetchone()
+
+    # Close the database connection
+    conn.close()
+
+    # Prepare the data for the frontend
+    data = {
+        'elementary': result[0],
+        'senior_high': result[1],
+        'tertiary': result[2],
+        'graduate_studies': result[3],
+        'vocational_training': result[4]
+    }
+    
+    return jsonify(data)
+
+
+
+
+@app.route('/check_interview_status/<int:applicant_id>', methods=['GET'])
+def check_interview_status(applicant_id):
+    # Establish a connection to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Fetch the "interviewed" status from the application_status table
+    cursor.execute("SELECT interviewed FROM application_status WHERE applicant_id = ?", (applicant_id,))
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        interviewed_status = result[0]
+        # Return whether the field should be disabled based on the "interviewed" status
+        return jsonify({'disabled': interviewed_status == 'YES'})
+    else:
+        return jsonify({'disabled': False})
+
+
+        
 
 
 
 
 
 
+@app.route('/count_applicant_and_jobs', methods=['GET'])
+def count_applicant_and_jobs():
+    connection = get_db_connection()
+    cursor = connection.cursor()
 
+    # Query counts from respective tables
+    cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Available' AND request='Approved'")
+    job_posted_count = cursor.fetchone()[0]
 
+    cursor.execute("SELECT COUNT(*) FROM application_status WHERE status_type='Passed'")
+    got_hired_count = cursor.fetchone()[0]
 
+    cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Unavailable'")
+    job_closed_count = cursor.fetchone()[0]
 
+    cursor.execute("SELECT COUNT(*) FROM applicant")
+    applicant_count = cursor.fetchone()[0]
 
+    # Close connection
+    cursor.close()
+    connection.close()
 
-
-
-
-
-
-
-
+    return jsonify({
+        "job_posted": job_posted_count,
+        "got_hired": got_hired_count,
+        "job_closed": job_closed_count,
+        "applicants": applicant_count
+    })
 
 
 

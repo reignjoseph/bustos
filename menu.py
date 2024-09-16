@@ -77,6 +77,8 @@ def signin():
                 return redirect(url_for('jobseeker'))
             elif user[4] == 'Employer':
                 return redirect(url_for('employer'))
+            elif user[4] == 'Admin':
+                return redirect(url_for('admin'))
             else:
                 return render_template('/menu/signin.html', error_message='Invalid user type.')
         else:

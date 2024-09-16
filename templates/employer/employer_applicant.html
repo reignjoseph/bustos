@@ -135,6 +135,7 @@ $(document).ready(function() {
         let paginatedApplicants = filteredApplicants.slice(start, end);
 
         paginatedApplicants.forEach(function(applicant) {
+            let displayResultSection = applicant.interviewed === 'YES' ? 'block' : 'none';
             let applicantCard = `
                 <div class="each_container_approved">
                     <div style="text-align: center;">
@@ -145,12 +146,12 @@ $(document).ready(function() {
                     <div>${applicant.contact_no}</div>
                     <div><a href="${applicant.form}" target="_blank" style="">View Resume</a></div>
                     <div style="text-align:center;">
-                        <input style="width: 115px;" type="text" class="flatpickr-schedule" value="${applicant.schedule || 'Set a Schedule'}" data-applicant-id="${applicant.Applicant_ID}">
+                        <input style="width: 115px;" type="text" class="flatpickr-schedule" value="${applicant.schedule || 'Set a Schedule'}" data-applicant-id="${applicant.Applicant_ID}"  id="schedule-${applicant.Applicant_ID}">
                     </div>
                     <div id="interview-checkbox-${applicant.Applicant_ID}" style="display: none;">
                         <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interviewed
                     </div>
-                    <div style="text-align:center;grid-column: 8;">
+                    <div id="result-section-${applicant.Applicant_ID}" style="text-align:center; grid-column: 8; display: ${displayResultSection};">
                         <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
                         <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
                     </div>
@@ -158,7 +159,10 @@ $(document).ready(function() {
             `;
             container.append(applicantCard);
             fetchInterviewResult(applicant.Applicant_ID);
+            
         });
+        
+        
 
         // Initialize flatpickr for each schedule input
         $(".flatpickr-schedule").flatpickr({
@@ -189,31 +193,59 @@ $(document).ready(function() {
 
         // Event handler for interview checkbox
         $(document).on('change', ".interview-checkbox", function() {
-            let isChecked = $(this).is(':checked');
-            let applicantId = $(this).data("applicant-id");
+    let isChecked = $(this).is(':checked');
+    let applicantId = $(this).data("applicant-id");
 
-            if (isChecked) {
-                $.ajax({
-                    url: '/update_interview_status',
-                    method: 'POST',
-                    data: {
-                        id: applicantId,
-                        interviewed: 'YES'
-                    },
-                    success: function(response) {
-                        alert('Interview status updated successfully');
-                        $(this).prop('disabled', true); // Disable the checkbox
-                        checkInterviewAvailability(); // Refresh interview availability after interview status update
-                    }.bind(this), // Bind `this` to maintain context inside success
-                    error: function() {
-                        alert('Error updating interview status');
-                        $(this).prop('checked', false); // Revert the checkbox state on error
-                    }.bind(this) // Bind `this` to maintain context inside error
-                });
-            }
+    if (isChecked) {
+        $.ajax({
+            url: '/update_interview_status',
+            method: 'POST',
+            data: {
+                id: applicantId,
+                interviewed: 'YES'
+            },
+            success: function(response) {
+                alert('Interview status updated successfully');
+                $(this).prop('disabled', true); // Disable the checkbox
+
+                // Automatically display the result section when the interview status is updated to YES
+                $(`#result-section-${applicantId}`).css('display', 'block');
+                
+                // Optionally, refresh interview availability
+                checkInterviewAvailability();
+            }.bind(this), // Bind `this` to maintain context inside success
+            error: function() {
+                alert('Error updating interview status');
+                $(this).prop('checked', false); // Revert the checkbox state on error
+            }.bind(this) // Bind `this` to maintain context inside error
         });
     }
+});
 
+
+                // Disable schedule input if interviewed is YES
+                $(".flatpickr-schedule").each(function() {
+            let applicantId = $(this).data("applicant-id");
+            $.ajax({
+                url: `/check_interview_status/${applicantId}`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.disabled) {
+                        $(`#schedule-${applicantId}`).prop('disabled', true);
+                    }
+                },
+                error: function() {
+                    console.log(`Error checking interview status for applicant ID: ${applicantId}`);
+                }
+            });
+        });
+    }
+    
+
+
+
+
+    
     // Update pagination controls
     function updatePaginationControls() {
         $('#approved_previous').prop('disabled', currentPage === 1);
