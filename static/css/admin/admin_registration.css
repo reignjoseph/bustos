@@ -1,0 +1,65 @@
+.users_table {
+    width: -webkit-fill-available;
+    border-collapse: collapse;
+    background-color: #f9f9f9;
+}
+
+.users_table th, .users_table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.users_table th {
+    background-color: #c4e7ff82;
+    color: #000000;
+    font-weight: bold;
+}
+
+.users_table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.users_table tbody tr:hover {
+    background-color: #ddd;
+}
+.approvebtn {
+    width: -webkit-fill-available;
+    margin-bottom: 10px;
+    background-color: lightgreen;
+    border: none;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.approvebtn:hover {
+    background-color: darkgreen;
+}
+
+/* Deny button styles */
+.denybtn {
+    width: -webkit-fill-available;
+    margin-bottom: 10px;
+    background-color: lightcoral;
+    border: none;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.denybtn:hover {
+    background-color: darkred;
+}

@@ -1,0 +1,135 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_jobseekers.css') }}">
+<div class="jobseekers" style="display: none; background-color: #0042c97d; width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; margin: 20px;">Jobseekers</h1>
+    <div class="jobseekers_frame" style="display: flex; flex-direction: column; padding: 20px; background-color: white; border-radius: 10px; margin: 20px;">
+        <!-- Filter Section -->
+        <div class="filter_jobseekers" style="display: flex; gap: 10px; text-align: center; margin-bottom: 20px;">
+            <input type="text" id="jobseekers_filter_user_id" placeholder="Filter by User ID" class="filter_input" oninput="restrictNumericInput(this)">
+            <input type="text" id="jobseekers_filter_fname" placeholder="Filter by First Name" class="filter_input">
+            <input type="text" id="jobseekers_filter_date_range" placeholder="Select Date Range" class="filter_input">
+            
+            <button onclick="applyJobseekerFilters()" class="filter_button">Apply Filters</button>
+        </div>
+    
+        <!-- Jobseeker List with Table -->
+        <div class="fetched_jobseekers" style="overflow-x: auto;">
+            <table class="jobseekers_table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Contact Number</th>
+                        <th>Address</th>
+                        <th>Date Registered</th>
+                    </tr>
+                </thead>
+                <tbody id="jobseekers_container">
+                    <!-- Jobseekers will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    
+        <!-- Pagination Section -->
+        <div class="jobseekers_pagination" style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button class="jobseekers_prev pagination_button" onclick="prevJobseekersPage()">Previous</button>
+            <button class="jobseekers_next pagination_button" onclick="nextJobseekersPage()">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let jobseekers_currentPage = 1;
+    const jobseekers_itemsPerPage = 7;
+
+    // Initialize Flatpickr for date range filter
+
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#jobseekers_filter_date_range", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+    });
+    });
+
+
+
+
+
+
+
+
+
+    function fetchJobseekers(page = 1, filters = {}) {
+        const { user_id, fname, date_range } = filters;
+        const [date_from, date_to] = date_range || [];
+
+        fetch(`/fetch_all_jobseekers?page=${page}&user_id=${user_id || ''}&fname=${fname || ''}&date_from=${date_from || ''}&date_to=${date_to || ''}`)
+            .then(response => response.json())
+            .then(data => {
+                const jobseekersContainer = document.getElementById('jobseekers_container');
+                jobseekersContainer.innerHTML = ''; // Clear existing data
+                
+                // Iterate over fetched jobseekers and add them to the table
+                data.jobseekers.forEach(jobseeker => {
+                    const formattedDate = formatDate(jobseeker.dateRegister);
+                    const row = document.createElement('tr');
+                    row.classList.add('jobseeker_item');
+                    row.innerHTML = `
+                        <td>${jobseeker.User_ID}</td>
+                        <td>${jobseeker.email}</td>
+                        <td>${jobseeker.fname}</td>
+                        <td>${jobseeker.contactnum}</td>
+                        <td>${jobseeker.address}</td>
+                        <td>${formattedDate}</td>
+                    `;
+                    jobseekersContainer.appendChild(row);
+                });
+
+                // Disable "Next" button if fewer than jobseekers_itemsPerPage jobseekers are returned (no more data)
+                const nextButton = document.querySelector('.jobseekers_next');
+                nextButton.disabled = data.jobseekers.length < jobseekers_itemsPerPage;
+
+                // Disable "Previous" button if on the first page
+                const prevButton = document.querySelector('.jobseekers_prev');
+                prevButton.disabled = page === 1;
+            });
+    }
+
+    // Function to format the date using Moment.js
+    function formatDate(dateString) {
+        return moment(dateString).format('MMMM D, YYYY');
+    }
+
+    // Apply filters and fetch the first page of jobseekers based on filters
+    function applyJobseekerFilters() {
+        const user_id = document.getElementById('jobseekers_filter_user_id').value;
+        const fname = document.getElementById('jobseekers_filter_fname').value;
+        const date_range = document.getElementById('jobseekers_filter_date_range').value.split(' to ');
+        jobseekers_currentPage = 1; // Reset to the first page when applying filters
+        fetchJobseekers(jobseekers_currentPage, { user_id, fname, date_range });
+    }
+
+    // Go to the previous page of jobseekers
+    function prevJobseekersPage() {
+        if (jobseekers_currentPage > 1) {
+            jobseekers_currentPage--;
+            fetchJobseekers(jobseekers_currentPage);
+        }
+    }
+
+    // Go to the next page of jobseekers
+    function nextJobseekersPage() {
+        jobseekers_currentPage++;
+        fetchJobseekers(jobseekers_currentPage);
+    }
+
+    // Fetch the initial page of jobseekers on page load
+    window.onload = function() {
+        fetchJobseekers();
+    }
+</script>

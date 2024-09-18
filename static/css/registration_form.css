@@ -1,4 +1,4 @@
-.modal {background-color: #000000b0;padding: 17px;}
+.modal {background-color: #000000b0;padding: 17px;text-align: -webkit-center;}
 .modal-backdrop {
     z-index: 1040;
     display: none;
@@ -8,6 +8,7 @@
     }
 .modal-content{
     top: 5rem;
+    width: 70% !important;
 }
 
 .form-container_registration {
@@ -30,7 +31,7 @@
     width: -webkit-fill-available;
     grid-column: 1/span 4;
     outline: none;
-    font-size: 1vw;
+    font-size: 0.8vw;
     margin: 0;
 }
 .radio-label {
@@ -87,17 +88,18 @@
     white-space: nowrap;
     grid-row: 1;
     grid-column: 1/span 4;
-    font-size: 1.3vw;
+    font-size: 1vw;
     background: lightblue;
     border: 1px solid;
     padding: 3px;
+    text-align: left;
 } .form-group_registration1 .row2a{
     text-align: center;
     font-size: 1.1vw;
     padding: 3px;
     outline: none;
 }
-.form-group_registration1  .row3a{text-align: center;border: 1px solid;margin: 0px;height: min-content;font-size: 1.1vw;font-weight: bold;padding: 3px;outline: none;} 
+.form-group_registration1  .row3a{text-align: center;border: 1px solid;margin: 0px;height: min-content;font-size: 0.9vw;font-weight: bold;padding: 3px;outline: none;} 
 
 
 .form-group_registration1 .row4a{
@@ -105,7 +107,7 @@
     white-space: nowrap;
     border: 1px solid;
     margin: 0px;
-    font-size: 1vw;
+    font-size: 0.8vw;
     grid-column: 1/span 1;
     padding-left: 3px;
     align-content: center;
@@ -182,7 +184,7 @@
 .form-group_registration1 .row7b{
     font-size: 1vw;
     border: none;
-    grid-column: 2;
+    grid-column: 1;
     width: -webkit-fill-available;
     outline: none;
     }
@@ -211,6 +213,7 @@
     outline: none;
     grid-column: 2;
     border: none;
+    width: 5rem;
 }
 
 .form-group_registration1 .row11a{
@@ -252,7 +255,7 @@
     width: -webkit-fill-available;
     position: relative;
   }
-.form-group_registration1 .row12a{border: 1px solid;margin: 0;display: grid;font-weight: bold;/* padding: 3px; */padding-left: 3px;}.contact_no{grid-column: 2;align-content: center;padding: 3px;border-left: 1px solid;}
+.form-group_registration1 .row12a{border: 1px solid;margin: 0;display: grid;font-weight: bold;/* padding: 3px; */padding-left: 3px;font-size: 0.6vw;}.contact_no{grid-column: 2;align-content: center;padding: 3px;border-left: 1px solid;}
 .form-group_registration1 .row13a{border: 1px solid;margin: 0;font-weight: bold;grid-row: 11;grid-column: 4;width: -webkit-fill-available;padding: 3px;display: grid;}.emailaddress{outline: none;align-items: center;width: -webkit-fill-available;/* border: 1px solid; */grid-column: 2;}
 .form-group_registration1 .row14a{border: 1px solid;margin: 0;font-weight: bold;/* padding-left: 3px; */grid-column: 1/span 4;display: grid;grid-template-columns: repeat(2, 50%);}
 
@@ -375,83 +378,60 @@ input[type="checkbox"]:checked ~ .hidden {
 .form-group_registration2 {
     margin-bottom: 15px;
     display: grid;
-    grid-template-rows: min-content;
-    grid-template-columns: 30% 70%;
-    width: -webkit-fill-available;
+    /* grid-template-rows: min-content; */
+    grid-template-columns: 25% 75%;
+    /* width: -webkit-fill-available; */
     grid-column: 1/span 4;
     outline: none;
     font-size: 1vw;
     margin: 0;
 }
 
-.form-group_registration2 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}
-.form-group_registration2 .row2a{
-white-space: nowrap;
-grid-row: 2;
-font-size: 1.3vw;
-/* background: lightblue; */
-border: 1px solid;
-/* padding: 3px; */
-text-align: center;
-font-weight: bold;
-}
-.form-group_registration2 .row2b{
-white-space: nowrap;
-grid-row: 1;
-grid-column: 2/span 4;
-font-size: 1vw;
-/* background: lightblue; */
-border: 1px solid;
-padding: 3px;
-display: flex;
-justify-content: center;
-column-gap: 1rem;
-}
-.form-group_registration2 .row2c{
-font-size: 1.3vw;
-border: 1px solid;
-padding: 3px;
-display: flex;
-flex-direction: column;
-row-gap: 3px;
-}        
-.form-group_registration2 .row3a{font-size: 1.3vw;display: grid;border: none;text-align: center;font-weight: bold;}     
+.form-group_registration2 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}
+.form-group_registration2 .row2a{white-space: nowrap;grid-row: 2;font-size: 0.9vw;/* background: lightblue; */border: 1px solid;/* padding: 3px; */text-align: center;font-weight: bold;}
+.form-group_registration2 .row2b{white-space: nowrap;grid-row: 1;grid-column: 2/span 4;font-size: 0.9vw;/* background: lightblue; */border: 1px solid;padding: 3px;display: flex;justify-content: center;column-gap: 0.2rem;}
+.form-group_registration2 .row2c{font-size: large;/* border: 1px solid; */padding: 5px;display: flex;flex-direction: column;}        
+.form-group_registration2 .row3a{font-size: 1.1vw;display: grid;border: none;text-align: center;font-weight: bold;}     
 .form-group_registration2 .row3b{font-size: 1vw;border: 1px solid;padding: 3px;display: grid;row-gap: 3px;grid-row: 2;}                           
-.form-group_registration2 .row3c{font-size: 1vw;border: 1px solid;padding: 1px;display: grid;row-gap: 3px;grid-row: 2;}   
+.form-group_registration2 .row3c{font-size: 1vw;border: 1px solid;/* padding: 1px; */display: grid;grid-row: 2;}   
 .form-group_registration3 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
-.form-group_registration3 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}                        
+.form-group_registration3 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}                        
 
 .form-group_registration3 .row2a{white-space: nowrap;/* grid-row: 2; */grid-column: 1/span 1;font-size: 1vw;/* background: lightblue; */border: 1px solid;/* padding: 3px; */margin: 0;display: flex;flex-direction: column;font-weight: bold;align-items: center;}                        
-.form-group_registration3 .row2a label{align-self: baseline;font-size: 1vw;width: -webkit-fill-available;border: 1px solid;margin: 0;padding: 3px;}
+.form-group_registration3 .row2a label{align-self: baseline;font-size: 1vw;width: -webkit-fill-available;border-bottom: 1px solid;margin: 0;padding: 3px;}
 .form-group_registration3 .row2b, .form-group_registration3 .row2c, .form-group_registration3 .row2d, .form-group_registration3 .row2e {white-space: nowrap;/* grid-row: 2; *//* grid-column: 1/span 1; *//* font-size: 1vw; *//* background: lightblue; */border: 1px solid;/* padding: 3px; */margin: 0;display: flex;flex-direction: column;font-weight: bold;align-items: center;justify-content: space-between;flex-wrap: wrap;}
 .form-group_registration3 .row2b span, .form-group_registration3 .row2c span, .form-group_registration3 .row2d span, .form-group_registration3 .row2e span{
-    border: 1px solid;
+    border-bottom: 1px solid;
     width: -webkit-fill-available;
     text-align: -webkit-center;
     padding: 3px;
 }
-.form-group_registration4 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
-.form-group_registration4 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}                        
+.form-group_registration4 {display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
+.form-group_registration4 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}                        
 .form-group_registration4 .currently_school {align-self: baseline;font-size: 1vw;width: -webkit-fill-available;border: 1px solid;margin: 0px;padding: 3px;display: flex;font-weight: bold;grid-column: 1/span 5;}
 .form-group_registration4 .row2b{font-size: 1vw;display: grid;grid-column: 1/span 5;margin: 0px;font-weight: bold;grid-template-columns: 14.8% repeat(4, 21.3%);grid-template-rows: auto;}                           
-.form-group_registration4 .row2c{font-size: 1vw;border: 1px solid;padding: 0px;display: grid;/* row-gap: 3px; *//* grid-row: 2; */grid-column: 1/span 5;grid-template-columns: 14.8%;text-align: center;}   
+.form-group_registration4 .row2c{font-size: 1vw;border: 1px solid;padding: 0px;display: grid;row-gap: 3px;grid-row: 3;grid-column: 1/span 5;text-align: center;grid-template: inherit;}   
 
 .form-group_registration4 .elementary_school {
     grid-column: 2;
     outline: none;
     border: 1px solid;
+    /* width: -webkit-fill-available; */
 }
 .form-group_registration4 .elementary_graduated {
     grid-column: 3;
     outline: none;
     border: 1px solid;
+    width: -webkit-fill-available;
 }
 .form-group_registration4 .elementary_reached {
+    width: -webkit-fill-available;
     grid-column: 4;
     outline: none;
     border: 1px solid;
 }
 .form-group_registration4 .elementary_last_attended {
+    width: -webkit-fill-available;
     grid-column: 5;
     outline: none;
     border: 1px solid;
@@ -459,7 +439,7 @@ row-gap: 3px;
 
 .form-group_registration4 .row2d{font-size: 1vw;border: 1px solid;padding: 0px;display: grid;/* row-gap: 3px; *//* grid-row: 2; */grid-column: 1/span 5;grid-template-columns: 14.8% 10.7% 10.7% repeat(3, 21.25%);text-align: center;}   
 
-.form-group_registration4 .row2e{font-size: 1vw;border: 1px solid;padding: 0px;display: grid;grid-column: 1/span 5;text-align: center;grid-template-columns: 14.8%;margin: 0;}   
+.form-group_registration4 .row2e{font-size: 1vw;border: 1px solid;padding: 0px;display: grid;grid-column: 1/span 5;text-align: center;grid-template-columns: 14.8%;margin: 0;grid-template: inherit;}   
 .form-group_registration4 .tertiary_school {
     grid-column: 2;
     outline: none;
@@ -481,7 +461,7 @@ row-gap: 3px;
     border: 1px solid;
 }
 
-.form-group_registration4 .row2f{font-size: 1vw;border: 1px solid;padding: 0px;display: grid;grid-column: 1/span 5;text-align: center;grid-template-columns: 14.8%;margin: 0;}   
+.form-group_registration4 .row2f{font-size: 0.8vw;border: 1px solid;padding: 0px;display: grid;grid-column: 1/span 5;text-align: center;grid-template-columns: 14.8%;margin: 0;grid-template: inherit;}   
 .form-group_registration4 .graduate_studies_school {
     grid-column: 2;
     outline: none;
@@ -504,19 +484,19 @@ row-gap: 3px;
 }
 
 
-.form-group_registration5 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
-.form-group_registration5 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}                        
+.form-group_registration5 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 0.8vw;margin: 0;grid-template: inherit;}
+.form-group_registration5 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 4;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}                        
 .form-group_registration5 .row2a{white-space: nowrap;grid-row: 2;grid-column: 1/span 5;/* font-size: 1.3vw; *//* background: lightblue; *//* border: 1px solid; *//* padding: 3px; */margin: 0;display: grid;text-align: center;font-weight: bold;}                        
 
 .form-group_registration6 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(4, auto);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
-.form-group_registration6 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 4;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}                        
+.form-group_registration6 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 4;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}                        
 .form-group_registration6 .row2a{white-space: nowrap;grid-row: 2;grid-column: 1/span 4;/* font-size: 1.3vw; *//* background: lightblue; *//* border: 1px solid; *//* padding: 3px; */margin: 0;display: grid;text-align: center;font-weight: bold;}                        
 
 .form-group_registration7 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
-.form-group_registration7 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}                        
-.form-group_registration7 .row2a{white-space: nowrap;grid-row: 2;grid-column: 1/span 5;/* font-size: 1.3vw; *//* background: lightblue; *//* border: 1px solid; *//* padding: 3px; */margin: 0;display: grid;text-align: center;font-weight: bold;}                        
+.form-group_registration7 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}                        
+.form-group_registration7 .row2a{white-space: nowrap;grid-row: 2;grid-column: 1/span 5;/* font-size: 1.3vw; *//* background: lightblue; *//* border: 1px solid; *//* padding: 3px; */margin: 0;display: grid;text-align: center;font-weight: bold;grid-template: inherit;}                        
 .form-group_registration8 {margin-bottom: 15px;display: grid;grid-template-rows: min-content;grid-template-columns:repeat(5, 20%);width: -webkit-fill-available;grid-column: 1/span 4;outline: none;font-size: 1vw;margin: 0;}
-.form-group_registration8 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1.3vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;}                        
+.form-group_registration8 .row1a{white-space: nowrap;grid-row: 1;grid-column: 1/span 5;font-size: 1vw;background: lightblue;border: 1px solid;padding: 3px;margin: 0;text-align: left;}                        
 .form-group_registration8 .skills-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

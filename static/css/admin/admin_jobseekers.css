@@ -1,0 +1,25 @@
+.jobseekers_table {
+    width: -webkit-fill-available;
+    border-collapse: collapse;
+    background-color: #f9f9f9;
+}
+
+.jobseekers_table th, .jobseekers_table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.jobseekers_table th {
+    background-color: #c4e7ff82;
+    color: #000000;
+    font-weight: bold;
+}
+
+.jobseekers_table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.jobseekers_table tbody tr:hover {
+    background-color: #ddd;
+}

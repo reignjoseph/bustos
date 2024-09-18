@@ -1,134 +1,86 @@
-<style>
-    .container {
-    display: flex;
-    height: 100vh;
-}
+<div style="width: 16em;">
+<div class="navigation_container">
+    <aside class="navigation_sidebar">
+        <div class="navigation_logo">
+            <img src="/static/images/peso_logo.png" alt="PESO Logo">
+        </div>
+        
+        <div class="navigation_admin-header">
+            <img src="static/images/admin-images/admin.png" alt="Admin Icon">
+            <h2>Admin</h2>
+        </div>
+        
+        <ul class="navigation_nav">
+            <li class="active" onclick="showSection('dashboard', this)">
+                <img src="static/images/admin-images/dashboard.png" alt="Dashboard Icon"> 
+                <span>Dashboard</span>
+            </li>
+            <li onclick="showSection('employers', this)">
+                <img src="static/images/admin-images/employee.png" alt="Employers Icon"> 
+                <span>Employers</span>
+            </li>
+            <li onclick="showSection('jobseekers', this)">
+                <img src="static/images/admin-images/jobseeker_search.png" alt="Job Seekers Icon"> 
+                <span>Job Seekers</span>
+            </li>
+            <li onclick="showSection('jobs', this)">
+                <img src="static/images/admin-images/find_jobs.png" alt="Jobs Icon"> 
+                <span>Jobs</span>
+            </li>
+            <li onclick="showSection('announcements', this)">
+                <img src="static/images/admin-images/announcement.png" alt="Announcement Icon"> 
+                <span>Announcement</span>
+            </li>
+            <li onclick="showSection('notifications', this)">
+                <img src="static/images/admin-images/notification.png" alt="Notifications Icon"> 
+                <span>Notifications</span>
+            </li>
+            <li onclick="showSection('reports', this)">
+                <img src="static/images/admin-images/reports.png" alt="Reports Icon"> 
+                <span>Reports</span>
+            </li>
+            <li onclick="showSection('registration', this)">
+                <img src="static/images/admin-images/registration_control.png" alt="Registration Control Icon"> 
+                <span>Registration Control</span>
+            </li>
+            <li onclick="showSection('ratings', this)">
+                <img src="static/images/admin-images/rating.png" alt="Rating Icon"> 
+                <span>Rating</span>
+            </li>
+        </ul>
 
-/* Sidebar Styles */
-.sidebar {
-    width: 250px;
-    background-color: white;
-    color: black;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 900px;
-}
+        <a href="/logout" class="navigation_sign-out">
+            Sign Out
+            <img src="static/images/logout.png" alt="Sign Out Icon" class="navigation_sign-out-icon">
+        </a>
+    </aside>
+</div>
+</div>
+<!-- JavaScript to handle section display -->
+<script>
+    function showSection(section, element) {
+        const sections = ['dashboard', 'announcements', 'employers', 'jobs', 'jobseekers', 'notifications', 'ratings', 'registration', 'reports'];
+        
+        // Hide all sections
+        sections.forEach(sec => {
+            document.querySelector(`.${sec}`).style.display = 'none';
+        });
+        
+        // Show the selected section
+        document.querySelector(`.${section}`).style.display = 'block';
 
-.logo img {
-    width: 185px;
-    display: block;
-    margin: 0 auto 20px auto;
-}
+        // Remove 'active' class from all nav items
+        const navItems = document.querySelectorAll('.navigation_nav li');
+        navItems.forEach(item => {
+            item.classList.remove('active');
+        });
 
-.admin-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
+        // Add 'active' class to clicked item
+        element.classList.add('active');
+    }
 
-.admin-header img {
-    width: 50px;
-    border-radius: 50%;
-}
-
-.admin-header h2 {
-    margin-top: 10px;
-    font-size: 18px;
-}
-
-/* Navigation Styles */
-.nav {
-    list-style-type: none;
-    padding: 0;
-}
-
-.nav li {
-    display: flex;
-    align-items: center;
-    padding: 12px 10px;
-    margin: 8px 0;
-    border-radius: 8px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    cursor: pointer;
-}
-
-.nav li:hover {
-    background-color: #34495E;
-    transform: translateX(10px); /* Moves the button slightly to the right */
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow effect */
-}
-
-.nav li img {
-    width: 24px;
-    height: 24px;
-    margin-right: 10px;
-}
-
-.nav li span {
-    font-size: 16px;
-}
-
-/* Active state (if needed) */
-.nav li.active {
-    background-color: #2980B9;
-    font-weight: bold;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-/* Styling the Sign Out Button */
-.sign-out {
-    display: inline-flex;
-    align-items: center;
-    padding: 10px 60px;
-    background-color: #c5c1c1;
-    color: black;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
-
-/* Hover Effect */
-.sign-out:hover {
-    background-color: #C0392B;
-}
-
-/* Styling the Sign Out Icon */
-.sign-out-icon {
-    margin-left: 10px; /* Space between text and icon */
-    width: 20px;       /* Adjust the size of the icon */
-    height: 20px;
-}
-</style>
-    <div class="container">
-        <aside class="sidebar">
-            <div class="logo">
-                <img src="pesologo.png" alt="PESO Logo">
-            </div>
-            
-            <div class="admin-header">
-                <img src="admin.png" alt="Admin Icon">
-                <h2>Admin</h2>
-            </div>
-            
-            <ul class="nav">
-                <li class="active"><img src="dashboard.png" alt="Dashboard Icon"> <span>Dashboard</span></li>
-                <li><img src="employer.png" alt="Employers Icon"> <span>Employers</span></li>
-                <li><img src="jobseeker-removebg-preview.png" alt="Job Seekers Icon"> <span>Job Seekers</span></li>
-                <li><img src="job-removebg-preview.png" alt="Jobs Icon"> <span>Jobs</span></li>
-                <li><img src="announcement-removebg-preview.png" alt="Announcement Icon"> <span>Announcement</span></li>
-                <li><img src="notification-removebg-preview.png" alt="Notifications Icon"> <span>Notifications</span></li>
-                <li><img src="report-removebg-preview.png" alt="Reports Icon"> <span>Reports</span></li>
-                <li><img src="registration-removebg-preview.png" alt="Registration Control Icon"> <span>Registration Control</span></li>
-                <li><img src="rating-removebg-preview.png" alt="Rating Icon"> <span>Rating</span></li>
-            </ul>
-
-            <button class="sign-out">
-                Sign Out
-                <img src="icons8-logout-50.png" alt="Sign Out Icon" class="sign-out-icon">
-            </button>
-
-        </aside>
-    </div>
+    // Optionally: Set the dashboard as the default section on load
+    window.onload = function() {
+        showSection('dashboard', document.querySelector('.navigation_nav li.active'));
+    }
+</script>

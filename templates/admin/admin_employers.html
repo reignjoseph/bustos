@@ -1,0 +1,127 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_employers.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<div class="employers" style="display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; margin: 20px;">Employers</h1>
+    <div class="employers_frame" style="display: flex; flex-direction: column; padding: 20px; background-color: white; border-radius: 10px; margin: 20px;">
+        <!-- Filter Section -->
+        <div class="filter_employers" style="display: flex; gap: 10px; text-align: center; margin-bottom: 20px;">
+            <input type="text" id="employers_filter_user_id" placeholder="Filter by User ID" class="filter_input" oninput="restrictNumericInput(this)">
+            <input type="text" id="employers_filter_fname" placeholder="Filter by First Name" class="filter_input">
+            <!-- New date filter -->
+            <input type="text" id="employers_filter_date_range" placeholder="Select Date Range" class="filter_input">
+            <button onclick="applyEmployerFilters()" class="filter_button">Apply Filters</button>
+        </div>
+    
+        <!-- Employer List with Table -->
+        <div class="fetched_employers" style="overflow-x: auto;">
+            <table class="employers_table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Contact Number</th>
+                        <th>Address</th>
+                        <th>Date Registered</th>
+                    </tr>
+                </thead>
+                <tbody id="employers_container">
+                    <!-- Employers will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    
+        <!-- Pagination Section -->
+        <div class="employers_pagination" style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button class="employers_prev pagination_button" onclick="prevEmployersPage()">Previous</button>
+            <button class="employers_next pagination_button" onclick="nextEmployersPage()">Next</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#employers_filter_date_range", {
+            mode: "range", // Enables date range selection
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr, instance) {
+                console.log(`Selected dates: ${dateStr}`); // Debug
+            }
+        });
+    });
+
+    let employers_currentPage = 1;
+    const employers_itemsPerPage = 7;
+
+    function fetchEmployers(page = 1, filters = {}) {
+        console.log("Fetching employers for page:", page, "with filters:", filters); // Debug
+
+        fetch(`/fetch_all_employers?page=${page}&user_id=${filters.user_id || ''}&fname=${filters.fname || ''}&startDate=${filters.startDate || ''}&endDate=${filters.endDate || ''}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Received employers data:", data); // Debug
+
+                const employersContainer = document.getElementById('employers_container');
+                employersContainer.innerHTML = ''; // Clear existing data
+                
+                data.employers.forEach(employer => {
+                    const formattedDate = formatDate(employer.dateRegister);
+                    console.log("Formatted date:", formattedDate); // Debug
+                    const row = document.createElement('tr');
+                    row.classList.add('employer_item');
+                    row.innerHTML = `
+                        <td>${employer.User_ID}</td>
+                        <td>${employer.email}</td>
+                        <td>${employer.fname}</td>
+                        <td>${employer.contactnum}</td>
+                        <td>${employer.address}</td>
+                        <td>${formattedDate}</td>
+                    `;
+                    employersContainer.appendChild(row);
+                });
+
+                const nextButton = document.querySelector('.employers_next');
+                nextButton.disabled = data.employers.length < employers_itemsPerPage;
+
+                const prevButton = document.querySelector('.employers_prev');
+                prevButton.disabled = page === 1;
+            });
+    }
+
+    function formatDate(dateString) {
+        return moment(dateString).format('MMMM D, YYYY');
+    }
+
+    function applyEmployerFilters() {
+        const user_id = document.getElementById('employers_filter_user_id').value;
+        const fname = document.getElementById('employers_filter_fname').value;
+        const dateRange = document.getElementById('employers_filter_date_range').value.split(' to '); // Split the date range
+        const startDate = dateRange[0] || ''; // First date
+        const endDate = dateRange[1] || ''; // Second date
+        employers_currentPage = 1; // Reset to the first page when applying filters
+        fetchEmployers(employers_currentPage, { user_id, fname, startDate, endDate });
+    }
+
+    function prevEmployersPage() {
+        if (employers_currentPage > 1) {
+            employers_currentPage--;
+            fetchEmployers(employers_currentPage);
+        }
+    }
+
+    function nextEmployersPage() {
+        employers_currentPage++;
+        fetchEmployers(employers_currentPage);
+    }
+
+    window.onload = function() {
+        fetchEmployers();
+    }
+
+    function restrictNumericInput(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+    }
+</script>

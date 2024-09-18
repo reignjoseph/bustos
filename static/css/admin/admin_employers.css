@@ -1,0 +1,25 @@
+.employers_table {
+    width: -webkit-fill-available;
+    border-collapse: collapse;
+    background-color: #f9f9f9;
+}
+
+.employers_table th, .employers_table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.employers_table th {
+    background-color: #ffddcc; /* Change color for employers table header */
+    color: #000000;
+    font-weight: bold;
+}
+
+.employers_table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.employers_table tbody tr:hover {
+    background-color: #ddd;
+}

@@ -5,10 +5,27 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin</title>
-    <!-- <link rel="stylesheet" href="URL_ADDRESS"> -->
+    <link rel="stylesheet" href="static/css/admin/admin_navigation.css">
     <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
 </head>
-<body>
+<body style="margin: 0; display: flex;">
     {% include 'admin/admin_navigation.html' %}
+    {% include 'admin/admin_dashboard.html' %}
+    {% include 'admin/admin_employers.html' %}
+    {% include 'admin/admin_jobseekers.html' %}
+    {% include 'admin/admin_jobs.html' %}
+    {% include 'admin/admin_announcements.html' %}
+    {% include 'admin/admin_notifications.html' %}
+    {% include 'admin/admin_reports.html' %}
+    {% include 'admin/admin_registration.html' %}
+    {% include 'admin/admin_ratings.html' %}
 </body>
+<script>
+    window.onload = function() {
+        fetchJobseekers();
+        fetchUsers();
+        fetchRatings(rating_currentPage);
+        fetchEmployers();
+    }
+</script>
 </html>

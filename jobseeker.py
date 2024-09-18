@@ -45,6 +45,107 @@ def get_db_connection():
 
 
 
+@app.route('/insert_html2pdf_jobseeker', methods=['POST'])
+def insert_html2pdf_jobseeker():
+    if 'pdf' not in request.files:
+        print("No file part")
+        return redirect('/signin')
+
+    file = request.files['pdf']
+
+    if file.filename == '':
+        print("No selected file")
+        return redirect('/signin')
+
+    if file:
+        # Secure the filename and prepare for saving
+        filename = secure_filename('form-content.pdf')
+        file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
+        
+        # Check if file already exists and rename if necessary
+        base, extension = os.path.splitext(filename)
+        counter = 1
+        new_filename = filename  # Initialize new_filename
+
+        while os.path.exists(file_path):
+            new_filename = f"{base}({counter}){extension}"
+            file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], new_filename)
+            counter += 1
+        
+        # Save the file using the unique filename
+        file.save(file_path)
+        print(f"PDF saved to {file_path}")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        philippine_tz = timezone(timedelta(hours=8))
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Insert into the `pdf` table with the unique filename
+        cursor.execute('''
+            INSERT INTO pdf (pdf_form)
+            VALUES (?)
+        ''', (new_filename,))
+
+        conn.commit()
+        conn.close()
+
+        print(f"PDF filename '{new_filename}' inserted into the database.")
+
+    return redirect('/signin')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/retrieve_application_status', methods=['GET'])
 def retrieve_application_status():
     try:
@@ -667,6 +768,12 @@ def create_account():
     # print(f"Received data - User_ID: {user_id}, Surname: {surname}, Firstname: {firstname}, Middlename: {middlename}, Suffix: {suffix}, Birthdate: {birthdate}, Sex: {sex}, Address: {address}, Barangay: {barangay}, Municipality: {municipality}, Province: {province}, Religion: {religion}, Civil Status: {civilstatus}, TIN: {tin}, Height: {height}, Disability: {', '.join(disability)}, Contact No: {contact_no}, Email Address: {emailaddress}, Employment Status: {employment_status}, OFW: {ofw}, Specify Country: {specify_country}, Former OFW: {former_ofw}, Latest Country: {latest_country}, Return Date: {return_date}, 4Ps: {four_ps}, Household ID: {household_id}")
 
     return redirect('/signin')
+
+
+
+
+
+
 
 
 @app.route('/check_email', methods=['POST'])

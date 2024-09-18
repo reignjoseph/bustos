@@ -1,0 +1,108 @@
+.navigation_container {
+    display: flex;
+    height: 100vh;
+    position: fixed;
+    width: min-content;
+}
+
+/* Sidebar Styles */
+.navigation_sidebar {
+    width: 200px;
+    background-color: white;
+    color: black;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.navigation_logo {
+    display: flex;
+}
+
+.navigation_logo img {
+    width: 40%;
+    display: block;
+}
+
+.navigation_admin-header {
+    text-align: center;
+}
+
+.navigation_admin-header img {
+    width: 50px;
+    border-radius: 50%;
+}
+
+.navigation_admin-header h2 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Navigation Styles */
+.navigation_nav {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.navigation_nav li {
+    display: flex;
+    align-items: center;
+    padding: 6px 15px;
+    margin: 8px 0;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+}
+
+.navigation_nav li:hover {
+    background-color: #34495E;
+    transform: translateX(10px); /* Moves the button slightly to the right */
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow effect */
+}
+
+.navigation_nav li img {
+    width: 22px;
+    margin-right: 10px;
+}
+
+.navigation_nav li span {
+    font-size: 15px;
+}
+
+/* Active state */
+.navigation_nav li.active {
+    background-color: #2980B9;
+    font-weight: bold;
+    color: white; /* Text color for active state */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling the Sign Out Button */
+.navigation_sign-out {
+    display: inline-flex;
+    background-color: #c5c1c1;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    width: min-content;
+    white-space: nowrap;
+    padding: 10px;
+    align-self: center;
+    text-decoration: none;
+}
+
+/* Hover Effect */
+.navigation_sign-out:hover {
+    background-color: #C0392B;
+}
+
+/* Styling the Sign Out Icon */
+.navigation_sign-out-icon {
+    margin-left: 10px; /* Space between text and icon */
+    width: 20px;       /* Adjust the size of the icon */
+}

@@ -61,7 +61,7 @@
             </div>
 
             
-                <div class="form-group-1 form-group-radio"> <label> <input type="radio" name="role" value="jobseeker" checked> Jobseeker </label> <label> <input type="radio" name="role" value="employer"> Employer </label> </div> <div class="form-group-2 abc"> <label for="name">Name:</label> <input type="text" id="name" name="name" required> </div> <div class="form-group-3 abc"> <label for="email">Email:</label> <input type="email" id="email" name="email" required> </div> <div class="form-group-4 abc password-group"> <label for="password">Password:</label> <input type="password" id="password" name="password" required> <span class="toggle-password" onclick="togglePasswordVisibility()"> <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password"> </span> </div> <div class="form-group-5"> <label> <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a> </label> </div>
+                <div class="form-group-1 form-group-radio"> <label> <input type="radio" name="role" value="Jobseeker" checked> Jobseeker </label> <label> <input type="radio" name="role" value="Employer"> Employer </label> </div> <div class="form-group-2 abc"> <label for="name">Name:</label> <input type="text" id="name" name="name" required> </div> <div class="form-group-3 abc"> <label for="email">Email:</label> <input type="email" id="email" name="email" required> </div> <div class="form-group-4 abc password-group"> <label for="password">Password:</label> <input type="password" id="password" name="password" required> <span class="toggle-password" onclick="togglePasswordVisibility()"> <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password"> </span> </div> <div class="form-group-5"> <label> <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a> </label> </div>
                 <div class="form-group-6">
                     <button type="button" onclick="displayDetails()" class="btn-signup">Additional Details</button>
                 </div> 
@@ -78,7 +78,7 @@
                                 {% include 'menu/registration_form.html' %}
                             </div>
                             <div class="modal-footer">
-                                <button style="width: 20%;" type="button" onclick="validateAndSubmit()" class="btn-signup">Submit</button>
+                                <button style="width: 20%;" type="button" onclick="validateAndSubmit()" id="generate-pdf" class="btn-signup">Submit</button>
                             </div>
                         </div>
                     </div>
@@ -91,6 +91,14 @@
     </form>
 </main>
 
+
+
+<!-- <script>
+    document.getElementById('generate-pdf').addEventListener('click', () => {
+        const element = document.querySelector('.form-container_registration'); // Adjust the selector to your form container class or ID
+        html2pdf().from(element).save('form-content.pdf');
+    });
+    </script> -->
 
 
 
@@ -141,45 +149,91 @@ function displayDetails() {
 </script>
 
 <script>
-        function togglePasswordVisibility() {
-            var passwordField = document.getElementById("password");
-            var eyeIcon = document.querySelector(".eye");
+    function togglePasswordVisibility() {
+        var passwordField = document.getElementById("password");
+        var eyeIcon = document.querySelector(".eye");
 
-            if (passwordField.type === "password") {
-                passwordField.type = "text";
-                eyeIcon.src = "/static/images/eye-close.png";
-            } else {
-                passwordField.type = "password";
-                eyeIcon.src = "/static/images/eye-open.png";
-            }
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            eyeIcon.src = "/static/images/eye-close.png";
+        } else {
+            passwordField.type = "password";
+            eyeIcon.src = "/static/images/eye-open.png";
         }
-        function validateAndSubmit() {
-    var form = document.getElementById("signupForm");
-    var email = form.querySelector("input[name='email']").value; // Adjust selector if needed
+    }
 
-    // Perform AJAX request to check email
-    $.ajax({
-        url: "/check_email",
-        method: "POST",
-        data: { email: email },
-        success: function(response) {
-            if (response.email_exists) {
-                alert("Email is already registered. Please use a different email.");
-            } else {
-                // Proceed with form submission if email does not exist
-                if (form.checkValidity()) {
-                    form.submit(); // Only submit the form here, after validation
+    function validateAndSubmit() {
+        var form = document.getElementById("signupForm");
+        var email = form.querySelector("input[name='email']").value; // Adjust selector if needed
+
+        // Perform AJAX request to check email
+        $.ajax({
+            url: "/check_email",
+            method: "POST",
+            data: { email: email },
+            success: function(response) {
+                if (response.email_exists) {
+                    alert("Email is already registered. Please use a different email.");
                 } else {
-                    form.reportValidity();
+                    // Proceed with form submission if email does not exist
+                    if (form.checkValidity()) {
+                        // Generate and upload PDF
+                        generateAndUploadPDF().then(() => {
+                            form.submit(); // Submit the form only after PDF operations are complete
+                        });
+                    } else {
+                        form.reportValidity();
+                    }
                 }
+            },
+            error: function() {
+                alert("An error occurred while checking the email.");
             }
-        },
-        error: function() {
-            alert("An error occurred while checking the email.");
-        }
+        });
+    }
+
+    function generateAndUploadPDF() {
+    return new Promise((resolve, reject) => {
+        const element = document.querySelector('.form-container_registration'); // Adjust the selector to your form container class or ID
+
+        html2pdf().from(element).output('blob').then(blob => {
+            if (!blob.size) {
+                alert('No content to generate PDF.');
+                return reject(); // Reject the promise if no content is available
+            }
+
+            // Save PDF locally
+            // html2pdf().from(element).save('form-content.pdf');
+
+            // Upload PDF to server
+            const formData = new FormData();
+            formData.append('pdf', blob, 'form-content.pdf');
+
+            fetch('/insert_html2pdf_jobseeker', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    // alert('PDF uploaded successfully!');
+                    resolve(); // Resolve the promise to indicate completion
+                } else {
+                    alert('Failed to upload PDF.');
+                    reject(); // Reject the promise if upload fails
+                }
+            }).catch(() => {
+                alert('An error occurred while uploading the PDF.');
+                reject(); // Reject the promise if an error occurs
+            });
+        }).catch(() => {
+            alert('An error occurred while generating the PDF.');
+            reject(); // Reject the promise if PDF generation fails
+        });
     });
 }
 
+
+
 </script>
+
 </body>
 </html>

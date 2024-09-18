@@ -1,0 +1,136 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_ratings.css') }}">
+
+<div class="ratings" style="display: none; background-color: #0042c97d; width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; margin: 20px;">Rating</h1>
+    <div class="rating_frame" style="display: flex; flex-direction: column; padding: 20px; background-color: white; border-radius: 10px; margin: 20px;">
+        <!-- Filter Section -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+        <div class="rating_filter" style="display: flex; gap: 10px; text-align: center; margin-bottom: 20px;">
+            <input type="text" id="rating_filter_user_id" placeholder="Filter by User ID" class="filter_input" oninput="restrictNumericInput(this)">
+            <input type="text" id="rating_filter_star" placeholder="Filter by Star Rating" minlength="1" maxlength="1" class="filter_input" oninput="restrictNumericInput(this)">
+            <!-- New date range filters -->
+            <input type="text" id="rating_filter_date_range" placeholder="Select Date Range" class="filter_input">
+
+            <button onclick="applyRatingFilters()" class="filter_button">Apply Filters</button>
+        </div>
+        
+    
+        <!-- Rating List with Table -->
+        <div class="rating_list" style="overflow-x: auto;">
+            <table class="rating_table">
+                <thead>
+                    <tr>
+                        <th>Rating ID</th>
+                        <th>Star</th>
+                        <th>Comments</th>
+                        <th>User ID</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="rating_container">
+                    <!-- Ratings will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    
+        <!-- Pagination Section -->
+        <div class="rating_pagination" style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button class="rating_prev pagination_button" onclick="prevRatingPage()">Previous</button>
+            <button class="rating_next pagination_button" onclick="nextRatingPage()">Next</button>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr("#rating_filter_date_range", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        onChange: function(selectedDates, dateStr, instance) {
+            console.log(`Selected dates: ${dateStr}`); // Debug
+        }
+    });
+});
+let rating_currentPage = 1;
+const rating_itemsPerPage = 7;
+
+function fetchRatings(page = 1, filters = {}) {
+    console.log("Fetching ratings for page:", page, "with filters:", filters); // Debug
+
+    const { user_id, star, startDate, endDate } = filters;
+
+    // Construct query parameters
+    const queryParams = new URLSearchParams({
+        page,
+        user_id: user_id || '',
+        star: star || '',
+        startDate: startDate || '',
+        endDate: endDate || ''
+    }).toString();
+
+    fetch(`/fetch_all_ratings?${queryParams}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Received ratings data:", data); // Debug
+
+            const ratingContainer = document.getElementById('rating_container');
+            ratingContainer.innerHTML = ''; // Clear existing ratings
+
+            data.ratings.forEach(rating => {
+                const formattedDate = formatDate(rating.date_created);
+                console.log("Formatted date:", formattedDate); // Debug
+                const row = document.createElement('tr');
+                row.classList.add('rating_item');
+                row.innerHTML = `
+                    <td>${rating.RatingID}</td>
+                    <td>${rating.star}</td>
+                    <td>${rating.comments}</td>
+                    <td>${rating.User_ID}</td>
+                    <td>${formattedDate}</td>
+                `;
+                ratingContainer.appendChild(row);
+            });
+
+            const nextButton = document.querySelector('.rating_next');
+            nextButton.disabled = data.ratings.length < rating_itemsPerPage;
+
+            const prevButton = document.querySelector('.rating_prev');
+            prevButton.disabled = page === 1;
+        });
+}
+
+// Function to format the date using Moment.js
+function formatDate(dateString) {
+    return moment(dateString).format('MMMM D, YYYY');
+}
+
+function applyRatingFilters() {
+    const user_id = document.getElementById('rating_filter_user_id').value;
+    const star = document.getElementById('rating_filter_star').value;
+    const dateRange = document.getElementById('rating_filter_date_range').value.split(' to '); // Split the date range
+    const startDate = dateRange[0] || ''; // First date
+    const endDate = dateRange[1] || ''; // Second date
+    rating_currentPage = 1; // Reset to the first page when applying filters
+    fetchRatings(rating_currentPage, { user_id, star, startDate, endDate });
+}
+
+function prevRatingPage() {
+    if (rating_currentPage > 1) {
+        rating_currentPage--;
+        fetchRatings(rating_currentPage);
+    }
+}
+
+function nextRatingPage() {
+    rating_currentPage++;
+    fetchRatings(rating_currentPage);
+}
+
+// Fetch the initial page of ratings on page load
+
+</script>
+<script> function restrictNumericInput(input) { input.value = input.value.replace(/[^0-9]/g, ''); } </script>

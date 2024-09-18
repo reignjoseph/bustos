@@ -1,0 +1,136 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_registration.css') }}">
+<!-- Control Registration Container -->
+<div class="registration" style="display: none; background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; margin: 20px;">Registration</h1>
+    <div style="display: flex; flex-direction: column; padding: 20px; background-color: white; border-radius: 10px; margin: 20px;">
+        <!-- Control Filter Section -->
+        <div class="control_filter">
+            <h2>Filter Users</h2>
+            <input type="text" id="control_filter_user_id" placeholder="Filter by User ID" class="filter_input" oninput="restrictNumericInput(this)">
+            <input type="text" id="control_filter_fname" placeholder="Filter by First Name" class="filter_input">
+            <input type="text" id="control_filter_email" placeholder="Filter by Email" class="filter_input">
+            <select id="control_filter_userType" class="filter_input">
+                <option value="">User Types</option>
+                <option value="Jobseeker">Jobseeker</option>
+                <option value="Employer">Employer</option>
+            </select>
+            <select id="control_filter_status" class="filter_input">
+                <option value="">Statuses</option>
+                <option value="Approved">Approved</option>
+                <option value="Denied">Denied</option>
+                <option value="Pending">Pending</option>
+            </select>
+            <input type="text" id="control_filter_date" placeholder="Select Date Range" class="filter_input">
+            <button onclick="applyControlFilters()" class="filter_button">Apply Filters</button>
+        </div>
+
+        <!-- Control Fetch All Users Section -->
+        <div class="control_fetch_all_users">
+            <div class="users_container" style="overflow-x: auto;">
+                <table class="users_table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Email</th>
+                            <th>First Name</th>
+                            <th>User Type</th>
+                            <th>Status</th>
+                            <th>Form</th> <!-- Added Form header -->
+                            <th>Date Registered</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users_container">
+                        <!-- Users will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Include scripts for Flatpickr and Moment.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script>
+    // Initialize Flatpickr for date range filter
+    flatpickr("#control_filter_date", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+    });
+
+    // Fetch users based on filters
+    function fetchUsers(filters = {}) {
+        fetch(`/fetch_all_users?user_id=${filters.user_id || ''}&fname=${filters.fname || ''}&email=${filters.email || ''}&userType=${filters.userType || ''}&status=${filters.status || ''}&date=${filters.date || ''}`)
+            .then(response => response.json())
+            .then(data => {
+                const usersContainer = document.getElementById('users_container');
+                usersContainer.innerHTML = ''; // Clear existing data
+                
+                // Iterate over fetched users and add them to the container
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="text-align: center;">${user.User_ID}</td>
+                        <td>${user.email}</td>
+                        <td>${user.fname}</td>
+                        <td>${user.userType}</td>
+                        <td>${user.status}</td>
+                        <td>
+                            ${user.pdf_form ? `
+                                <a href="/static/images/jobseeker-uploads/${user.pdf_form}" target="_blank"><img src="/static/images/admin-images/view_file.png" alt="View PDF" style="width: 24px; height: 24px;"></a>
+                            ` : 'No Form'}
+                        </td>
+                        <td>${formatDate(user.dateRegister)}</td>
+                        <td>
+                            ${user.status === 'Pending' ? `
+                                <button class="approvebtn" onclick="updateUserStatus(${user.User_ID}, 'Approved')">Approve</button>
+                                <button class="denybtn" onclick="updateUserStatus(${user.User_ID}, 'Denied')">Deny</button>
+                            ` : ''}
+                        </td>
+                    `;
+                    usersContainer.appendChild(row);
+                });
+            });
+    }
+
+    // Format date using Moment.js
+    function formatDate(dateString) {
+        return moment(dateString).format('MMMM D, YYYY');
+    }
+
+    // Apply filters and fetch users
+    function applyControlFilters() {
+        const user_id = document.getElementById('control_filter_user_id').value;
+        const fname = document.getElementById('control_filter_fname').value;
+        const email = document.getElementById('control_filter_email').value;
+        const userType = document.getElementById('control_filter_userType').value;
+        const status = document.getElementById('control_filter_status').value;
+        const date = document.getElementById('control_filter_date').value;
+        fetchUsers({ user_id, fname, email, userType, status, date });
+    }
+
+    // Update user status
+    function updateUserStatus(userId, status) {
+        fetch(`/update_user_status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId, status })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Refresh the user list after updating status
+                applyControlFilters();
+            } else {
+                alert('Failed to update status');
+            }
+        });
+    }
+
+    // Fetch initial user data on page load
+</script>
