@@ -10,6 +10,8 @@ from main import app
 import random
 import pytz
 
+timezone = pytz.timezone('Asia/Manila')
+
 # Configure logging
 if not app.debug:
     file_handler = FileHandler('error.log')
@@ -22,6 +24,8 @@ def internal_error(error):
     return "Internal Server Error", 500
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
+app.permanent_session_lifetime = timedelta(minutes=3)
+
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
 app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
@@ -45,10 +49,30 @@ def get_db_connection():
 # This is Employer
 @app.route('/employer', methods=['GET', 'POST'])
 def employer():
-    # Check if user is authenticated
+    # Check if user is authenticated and is an Employer
     if 'user_id' not in session or session.get('user_type') != 'Employer':
         return redirect(url_for('signin'))
-    
+
+    # Set session start time if it doesn't exist
+    if 'session_start' not in session:
+        session['session_start'] = datetime.now(timezone)  # Make this aware with timezone
+
+    # Retrieve session start time and check for timeout (e.g., 3 minutes)
+    session_start = session['session_start']
+    if datetime.now(timezone) - session_start > timedelta(minutes=3):
+        # Update currentState to Inactive in the database
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+        cursor.execute('''UPDATE users SET currentState = 'Inactive' WHERE User_ID = ?''', (session['user_id'],))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Clear session data and redirect to sign-in page
+        session.clear()
+        return redirect(url_for('signin'))
+
+    # If session is still active, render the employer page
     return render_template('employer/employer.html')
 
 

@@ -25,6 +25,7 @@
                         <th>First Name</th>
                         <th>Contact Number</th>
                         <th>Address</th>
+                        <th>Status</th>
                         <th>Date Registered</th>
                     </tr>
                 </thead>
@@ -71,6 +72,14 @@
                     const formattedDate = formatDate(employer.dateRegister);
                     console.log("Formatted date:", formattedDate); // Debug
                     const row = document.createElement('tr');
+
+                    let employer_stateColor = '';
+                        if (employer.currentState === 'Active') {
+                            employer_stateColor = 'background-color: green; color: white;';
+                        } else if (employer.currentState === 'Inactive') {
+                            employer_stateColor = 'background-color: red; color: white;';
+                        }
+
                     row.classList.add('employer_item');
                     row.innerHTML = `
                         <td>${employer.User_ID}</td>
@@ -78,6 +87,7 @@
                         <td>${employer.fname}</td>
                         <td>${employer.contactnum}</td>
                         <td>${employer.address}</td>
+                        <td style="${employer_stateColor}">${employer.currentState}</td>
                         <td>${formattedDate}</td>
                     `;
                     employersContainer.appendChild(row);

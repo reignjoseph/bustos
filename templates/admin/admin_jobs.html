@@ -1,3 +1,244 @@
-<div class="jobs" style="display: none; background-color: yellow; width: 50px; border: 1px solid; height: 50px;">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_jobs.css') }}">
 
+<div class="jobs" style="display: none; background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <!-- Jobs Section -->
+    <h1 style="color: white; margin: 20px;">Jobs</h1>
+    <div class="jobs_frame" style="display: flex; flex-direction: column; padding: 20px; background-color: white; border-radius: 10px; margin: 20px; font-size: 1vw;">
+
+<!-- Settings Icon for Filter Popup -->
+<div id="filter_icon" style="position: relative; width: min-content;">
+    <img src="{{ url_for('static', filename='images/setting.png') }}" alt="Settings" style="width: 32px; height: 32px; cursor: pointer;">
 </div>
+
+<!-- Filter Popup Container (Initially Hidden) -->
+<div id="filter_popup" style="position: absolute; z-index: 999; background-color: white; padding: 20px; border: 1px solid black; border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 10px; transform: translate(0%, 0%); width: min-content; display: none; margin-top: 2.5em;">
+    <h3>Filter Jobs</h3>
+    <div class="jobs_filter">
+        <label for="job_id">Job ID:</label>
+        <input  class="filter_input" type="text" id="job_id" name="job_id">
+
+        <label for="title">Title:</label>
+        <input class="filter_input" type="text" id="title" name="title">
+
+        <label for="position">Position:</label>
+        <input class="filter_input" type="text" id="position" name="position">
+
+        <label for="location">Location:</label>
+        <input class="filter_input" type="text" id="location" name="location">
+
+        <label for="skills">Skills:</label>
+        <input class="filter_input" type="text" id="skills" name="skills">
+
+        <label for="request">Request:</label>
+        <select class="filter_input" id="request" name="request" style="width: -webkit-fill-available;">
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Deny">Deny</option>
+        </select>
+
+        <label for="date">Date Range:</label>
+        <input class="filter_input" type="text" id="date" name="date"> <!-- Flatpickr for Date Range -->
+
+        <button id="filter_jobs" style="margin-top: 20px;" class="filter_button" onclick="fetchJobs()">Apply Filters</button>
+    </div>
+</div>
+
+        <!-- Fetched Jobs Section -->
+        <div class="jobs_fetched">
+            <table id="jobs_table" class="jobs_fetched_table">
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Title</th>
+                        <th>Position</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Request</th>
+                        <th>Skills</th>
+                        <th>Action</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Jobs data will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+
+        <div id="jobspagination_controls" style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <!-- Pagination buttons will be dynamically inserted here -->
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterIcon = document.getElementById('filter_icon');
+    const filterPopup = document.getElementById('filter_popup');
+
+    // Initialize Flatpickr for date range selection
+    flatpickr('#date', {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+    });
+
+    // Event listener to toggle filter popup and rotate icon on click
+    filterIcon.addEventListener('click', function () {
+        // Rotate the settings icon
+        filterIcon.classList.toggle('rotate');
+
+        // Toggle filter popup with animation
+        if (filterPopup.classList.contains('show')) {
+            filterPopup.classList.remove('show');
+            filterPopup.classList.add('hide');
+            setTimeout(() => {
+                filterPopup.style.display = 'none'; // Ensure it's hidden after animation
+            }, 500);
+        } else {
+            filterPopup.classList.remove('hide');
+            filterPopup.classList.add('show');
+            filterPopup.style.display = 'block'; // Ensure it's visible before animation
+        }
+    });
+
+    // Close filter popup when clicking outside the container
+    document.addEventListener('click', function (event) {
+        if (!filterPopup.contains(event.target) && !filterIcon.contains(event.target)) {
+            if (filterPopup.classList.contains('show')) {
+                filterPopup.classList.remove('show');
+                filterPopup.classList.add('hide');
+                filterIcon.classList.remove('rotate');
+                setTimeout(() => {
+                    filterPopup.style.display = 'none'; // Hide after animation
+                }, 500);
+            }
+        }
+    });
+});
+
+let jobcurrentPage = 1; // Keep track of the current page for jobs
+const jobsitemsPerPage = 4; // Set items per page for jobs
+
+// Function to fetch jobs with pagination
+function fetchJobs(page = 1) {
+    // Get filter values
+    const jobId = document.getElementById('job_id').value;
+    const title = document.getElementById('title').value;
+    const position = document.getElementById('position').value;
+    const location = document.getElementById('location').value;
+    const skills = document.getElementById('skills').value;
+    const request = document.getElementById('request').value;
+    const dateRange = document.getElementById('date').value;
+
+    // Build query string based on filters
+    const queryParams = new URLSearchParams({
+        job_id: jobId,
+        title: title,
+        position: position,
+        location: location,
+        skills: skills,
+        request: request !== 'All' ? request : '',
+        date_range: dateRange,
+        page: page // Add the current page to the query
+    }).toString();
+
+    // Fetch jobs from server
+    fetch(`/admin_fetched_jobs?${queryParams}`)
+        .then(response => response.json())
+        .then(data => {
+            const jobsTableBody = document.querySelector('#jobs_table tbody');
+            jobsTableBody.innerHTML = ''; // Clear previous results
+
+            // Populate table with fetched jobs
+            data.jobs.forEach(job => {
+                const formattedDate = moment(job.date_posted).format('MMMM D, YYYY'); // Format the date
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${job.Job_ID}</td>
+                    <td>${job.title}</td>
+                    <td>${job.position}</td>
+                    <td>${job.description}</td>
+                    <td>${job.location}</td>
+                    <td>${job.request}</td>
+                    <td>${job.skills}</td>
+                    <td>
+                        ${job.request === 'Pending' ? `
+                        <button class="approvebtn" onclick="approveJob(${job.Job_ID})">Approve</button>
+                        <button class="denybtn" onclick="denyJob(${job.Job_ID})">Deny</button>
+                        ` : ''}
+                    </td>
+                    <td>${formattedDate}</td>
+                `;
+                jobsTableBody.appendChild(row);
+            });
+
+            // Update pagination controls
+            updateJobsPaginationControls(data.current_page, data.total_pages);
+        })
+        .catch(error => {
+            console.error('Error fetching jobs:', error);
+        });
+}
+
+// Update the pagination controls (Previous and Next buttons)
+// Update the pagination controls (Previous and Next buttons)
+function updateJobsPaginationControls(jobcurrentPage, totalPages) {
+    const paginationControls = document.getElementById('jobspagination_controls');
+    paginationControls.innerHTML = ''; // Clear current controls
+
+    // Previous Button
+    const prevButton = document.createElement('button');
+    prevButton.textContent = 'Previous';
+    prevButton.classList.add('pagination_button'); // Add pagination_button class
+    prevButton.disabled = jobcurrentPage === 1;
+    prevButton.onclick = () => fetchJobs(jobcurrentPage - 1);
+    paginationControls.appendChild(prevButton);
+
+    // Next Button
+    const nextButton = document.createElement('button');
+    nextButton.textContent = 'Next';
+    nextButton.classList.add('pagination_button'); // Add pagination_button class
+    nextButton.disabled = jobcurrentPage === totalPages;
+    nextButton.onclick = () => fetchJobs(jobcurrentPage + 1);
+    paginationControls.appendChild(nextButton);
+}
+
+
+
+function approveJob(jobId) {
+    fetch(`/admin_fetched_jobs/approve/${jobId}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            alert(`Job ID ${jobId} approved successfully!`);
+            fetchJobs(); // Refresh the jobs list
+        })
+        .catch(error => console.error('Error approving job:', error));
+}
+
+function denyJob(jobId) {
+    fetch(`/admin_fetched_jobs/deny/${jobId}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            alert(`Job ID ${jobId} denied successfully!`);
+            fetchJobs(); // Refresh the jobs list
+        })
+        .catch(error => console.error('Error denying job:', error));
+}
+</script>

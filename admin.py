@@ -10,6 +10,9 @@ from logging import FileHandler
 from main import app
 import random
 import pytz
+timezone = pytz.timezone('Asia/Manila')
+
+
 
 # Configure logging
 if not app.debug:
@@ -23,6 +26,8 @@ def internal_error(error):
     return "Internal Server Error", 500
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
+app.permanent_session_lifetime = timedelta(minutes=3)
+
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
 app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
@@ -42,10 +47,289 @@ def get_db_connection():
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    if 'user_id' not in session or session.get ('user_type') != 'Admin':
+    if 'user_id' not in session or session.get('user_type') != 'Admin':
+        return redirect(url_for('signin'))
+
+    # Set session start time if it doesn't exist
+    if 'session_start' not in session:
+        session['session_start'] = datetime.now(timezone)  # Make this aware
+
+    # Check for session timeout (e.g., 3 minutes)
+    session_start = session['session_start']
+    if datetime.now(timezone) - session_start > timedelta(minutes=3):
+        # Update currentState to Inactive
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+        cursor.execute('''UPDATE users SET currentState = 'Inactive' WHERE User_ID = ?''', (session['user_id'],))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # Clear session data
+        session.clear()
         return redirect(url_for('signin'))
 
     return render_template('admin/admin.html')
+
+
+
+@app.route('/insert_announcement', methods=['POST'])
+def insert_announcement():
+    try:
+        # Get the form data
+        image = request.files['image']
+        what = request.form['what']
+        when = request.form['when']
+        where = request.form['location']
+        requirement = request.form['requirement']
+        description = request.form['description']
+
+        # Save image to the static folder
+        image_path = ''
+        if image:
+            image_path = f'static/images/admin-uploads/{image.filename}'
+            image.save(image_path)
+
+        # Insert data into the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Escape the SQL keywords with double quotes
+        cursor.execute('''
+            INSERT INTO announcement ("image", "What", "When", "Where", "Requirement", "Description")
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (image_path, what, when, where, requirement, description))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify(success=True)
+
+    except Exception as e:
+        print(f"Error inserting announcement: {e}")
+        return jsonify(success=False), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/admin_fetched_jobs', methods=['GET'])
+def admin_fetched_jobs():
+    job_id = request.args.get('job_id', '')
+    title = request.args.get('title', '')
+    position = request.args.get('position', '')
+    location = request.args.get('location', '')
+    skills = request.args.get('skills', '')
+    request_filter = request.args.get('request', '')
+    date_range = request.args.get('date_range', '').split(' to ')
+    page = int(request.args.get('page', 1))  # Get the current page, default is 1
+    items_per_page = 4  # We limit the jobs to 4 per page
+
+    conn = get_db_connection()
+
+    # Base query
+    query = "SELECT * FROM jobs WHERE 1=1"
+    count_query = "SELECT COUNT(*) FROM jobs WHERE 1=1"
+    params = []
+
+    # Add filters to the query
+    if job_id:
+        query += " AND Job_ID LIKE ?"
+        count_query += " AND Job_ID LIKE ?"
+        params.append(f'%{job_id}%')
+    if title:
+        query += " AND title LIKE ?"
+        count_query += " AND title LIKE ?"
+        params.append(f'%{title}%')
+    if position:
+        query += " AND position LIKE ?"
+        count_query += " AND position LIKE ?"
+        params.append(f'%{position}%')
+    if location:
+        query += " AND location LIKE ?"
+        count_query += " AND location LIKE ?"
+        params.append(f'%{location}%')
+    if skills:
+        query += " AND skills LIKE ?"
+        count_query += " AND skills LIKE ?"
+        params.append(f'%{skills}%')
+    if request_filter and request_filter != 'All':
+        query += " AND request = ?"
+        count_query += " AND request = ?"
+        params.append(request_filter)
+    if len(date_range) == 2:
+        query += " AND date_posted BETWEEN ? AND ?"
+        count_query += " AND date_posted BETWEEN ? AND ?"
+        params.append(date_range[0])
+        params.append(date_range[1])
+
+    # Pagination Logic: Add LIMIT and OFFSET to the query
+    offset = (page - 1) * items_per_page
+    query += " LIMIT ? OFFSET ?"
+    params.append(items_per_page)
+    params.append(offset)
+
+    # Fetch jobs and total job count
+    jobs = conn.execute(query, params).fetchall()
+    total_jobs = conn.execute(count_query, params[:-2]).fetchone()[0]  # Get total job count
+
+    conn.close()
+
+    # Calculate total pages
+    total_pages = (total_jobs + items_per_page - 1) // items_per_page
+
+    # Convert jobs to a list of dictionaries
+    jobs_list = [{
+        'Job_ID': job['Job_ID'],
+        'title': job['title'],
+        'position': job['position'],
+        'description': job['description'],
+        'location': job['location'],
+        'request': job['request'],
+        'skills': job['skills'],
+        'date_posted': job['date_posted']
+    } for job in jobs]
+
+    return jsonify({
+        'jobs': jobs_list,
+        'total_pages': total_pages,
+        'current_page': page
+    })
+
+
+
+
+
+@app.route('/admin_fetched_jobs/approve/<int:job_id>', methods=['POST'])
+def approve_job(job_id):
+    conn = get_db_connection()
+    conn.execute("UPDATE jobs SET request = 'Approved' WHERE Job_ID = ?", (job_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Job approved successfully'})
+
+@app.route('/admin_fetched_jobs/deny/<int:job_id>', methods=['POST'])
+def deny_job(job_id):
+    conn = get_db_connection()
+    conn.execute("UPDATE jobs SET request = 'Denied' WHERE Job_ID = ?", (job_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Job denied successfully'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -108,9 +392,6 @@ def fetch_all_users():
     return jsonify({"users": users_list})
 
 
-
-
-
 @app.route('/update_user_status', methods=['POST'])
 def update_user_status():
     data = request.json
@@ -124,43 +405,6 @@ def update_user_status():
     conn.close()
 
     return jsonify({"success": True})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -181,7 +425,7 @@ def fetch_all_jobseekers():
 
     # Base SQL query to fetch jobseekers
     query = """
-        SELECT User_ID, email, fname, contactnum, address, dateRegister
+        SELECT User_ID, email, fname, contactnum, address,currentState, dateRegister
         FROM users
         WHERE userType = 'Jobseeker'
     """
@@ -221,6 +465,7 @@ def fetch_all_jobseekers():
             "fname": row["fname"],
             "contactnum": row["contactnum"] if row["contactnum"] is not None else "",
             "address": row["address"] if row["address"] is not None else "",
+            "currentState": row["currentState"],
             "dateRegister": row["dateRegister"]
         }
         for row in jobseekers
@@ -250,7 +495,7 @@ def fetch_all_employers():
 
     # Base SQL query to fetch employers
     query = """
-        SELECT User_ID, email, fname, contactnum, address, dateRegister
+        SELECT User_ID, email, fname, contactnum, address, currentState, dateRegister
         FROM users
         WHERE userType = 'Employer'
     """
@@ -284,6 +529,7 @@ def fetch_all_employers():
             "fname": row["fname"],
             "contactnum": row["contactnum"] if row["contactnum"] is not None else "",
             "address": row["address"] if row["address"] is not None else "",
+            "currentState": row["currentState"] if row["currentState"] is not None else "",
             "dateRegister": row["dateRegister"]
         }
         for row in employers

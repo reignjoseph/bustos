@@ -1,0 +1,98 @@
+/* Scrollable Container */
+.jobs_fetched_container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* CSS for jobs_fetched table */
+.jobs_fetched_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.jobs_fetched_table th, .jobs_fetched_table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.jobs_fetched_table th {
+    background-color: #c4e7ff82;
+    color: #000000;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.jobs_fetched_table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.jobs_fetched_table tbody tr:hover {
+    background-color: #ddd;
+    
+}
+
+.jobs_fetched_table th, .jobs_fetched_table td {
+    transition: background-color 0.2s ease;
+}
+
+/* Style for buttons in Action column */
+
+
+/* Animation for Settings Icon */
+@keyframes rotate360 {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#filter_icon img {
+    transition: transform 0.5s ease-in-out;
+}
+
+#filter_icon.rotate img {
+    animation: rotate360 0.5s ease-in-out;
+}
+
+/* Animation for Filter Popup Expansion */
+@keyframes expandHeight {
+    0% {
+        height: 0;
+        opacity: 0;
+    }
+    100% {
+        height: min-content;
+        opacity: 1;
+    }
+}
+
+@keyframes collapseHeight {
+    0% {
+        height: min-content;
+        opacity: 1;
+    }
+    100% {
+        height: 0;
+        opacity: 0;
+    }
+}
+
+#filter_popup.show {
+    animation: expandHeight 0.5s ease-in-out forwards;
+    display: block;
+    overflow: hidden;
+}
+
+#filter_popup.hide {
+    animation: collapseHeight 0.5s ease-in-out forwards;
+}

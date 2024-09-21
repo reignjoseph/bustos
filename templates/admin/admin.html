@@ -26,6 +26,16 @@
         fetchUsers();
         fetchRatings(rating_currentPage);
         fetchEmployers();
+        fetchJobs();
+
+        // Refresh data every 60 seconds
+        setInterval(function() {
+            fetchJobseekers();
+            fetchUsers();
+            fetchRatings(rating_currentPage);
+            fetchEmployers();
+            fetchJobs();
+        }, 60000); // 60 seconds = 60,000 milliseconds
     }
 </script>
 </html>

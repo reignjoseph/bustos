@@ -11,7 +11,8 @@ import logging
 from logging import FileHandler
 from main import app
 # import pdfkit   # Import the pdfkit library
-
+import pytz
+timezone = pytz.timezone('Asia/Manila')
 
 # Configure logging
 if not app.debug:
@@ -26,6 +27,7 @@ def internal_error(error):
 
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
+app.permanent_session_lifetime = timedelta(minutes=3)
 
 app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','pdf'}
@@ -297,6 +299,12 @@ def advance_filter():
 
     conn = get_db_connection()
 
+    # First, retrieve jobs where Request is "Approved" and jobStatus is "Available"
+    initial_query = "SELECT * FROM jobs WHERE LOWER(request) = 'approved' AND LOWER(jobStatus) = 'available'"
+    initial_jobs = conn.execute(initial_query).fetchall()
+
+    print("Initial Filtered Jobs (Approved & Available):", [job['Job_ID'] for job in initial_jobs])  # Debugging line
+
     # Skill filter logic
     if skill_filter == 'Default':
         jobseeker_id = session['user_id']
@@ -310,74 +318,49 @@ def advance_filter():
             print("Extracted Skills:", skills)  # Debugging line
 
             # Prepare the query to match jobs with any of these skills
-            skill_query = "SELECT * FROM jobs WHERE " + " OR ".join(["LOWER(skills) LIKE ?"] * len(skills))
-            skill_params = [f"%{skill}%" for skill in skills]
-
-            print("Skill Query Parameters:", skill_params)  # Debugging line
-
-            skill_jobs = conn.execute(skill_query, skill_params).fetchall()
+            skill_jobs = [job for job in initial_jobs if any(skill in job['skills'].lower() for skill in skills)]
         else:
             skill_jobs = []  # No skills found, return empty result
     else:
-        skill_query = "SELECT * FROM jobs WHERE LOWER(skills) LIKE ?"
-        skill_jobs = conn.execute(skill_query, (f'%{skill_filter.lower()}%',)).fetchall()
+        skill_jobs = [job for job in initial_jobs if skill_filter.lower() in job['skills'].lower()]
 
     print("Skill Jobs:", [job['Job_ID'] for job in skill_jobs])  # Print Job_IDs
 
     # Location filter logic
-    if location_filter == 'Default':
-        location_jobs = skill_jobs
+    if location_filter != 'Default':
+        location_jobs = [job for job in skill_jobs if location_filter.lower() in job['location'].lower()]
     else:
-        location_query = "SELECT * FROM jobs WHERE LOWER(location) LIKE ?"
-        location_jobs = conn.execute(location_query, (f'%{location_filter.lower()}%',)).fetchall()
-
-        # Intersection of location filtered jobs with skill filtered jobs
-        location_jobs = [job for job in skill_jobs if job in location_jobs]
+        location_jobs = skill_jobs
 
     print("Location Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
 
     # Company filter logic
     if company_filter != 'Default':
-        company_query = "SELECT * FROM jobs WHERE LOWER(company) LIKE ?"
-        company_jobs = conn.execute(company_query, (f'%{company_filter.lower()}%',)).fetchall()
-
-        # Intersection of company filtered jobs with location and skill filtered jobs
+        company_jobs = [job for job in location_jobs if company_filter.lower() in job['company'].lower()]
         location_jobs = [job for job in location_jobs if job in company_jobs]
 
     print("Company Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
 
     # Position filter logic
     if position_filter != 'Default':
-        position_query = "SELECT * FROM jobs WHERE LOWER(position) LIKE ?"
-        position_jobs = conn.execute(position_query, (f'%{position_filter.lower()}%',)).fetchall()
-
-        # Intersection of position filtered jobs with company, location, and skill filtered jobs
+        position_jobs = [job for job in location_jobs if position_filter.lower() in job['position'].lower()]
         location_jobs = [job for job in location_jobs if job in position_jobs]
 
     print("Position Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
 
     # Nature of Work filter logic
     if natureOfWork_filter != 'Default':
-        natureOfWork_query = "SELECT * FROM jobs WHERE LOWER(natureOfWork) LIKE ?"
-        natureOfWork_jobs = conn.execute(natureOfWork_query, (f'%{natureOfWork_filter.lower()}%',)).fetchall()
-
-        # Intersection of natureOfWork filtered jobs with company, location, skill, and position filtered jobs
+        natureOfWork_jobs = [job for job in location_jobs if natureOfWork_filter.lower() in job['natureOfWork'].lower()]
         location_jobs = [job for job in location_jobs if job in natureOfWork_jobs]
 
     print("Nature of Work Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
 
     # Job filter logic
     if job_filter != 'Default':
-        job_query = "SELECT * FROM jobs WHERE LOWER(title) LIKE ?"
-        job_jobs = conn.execute(job_query, (f'%{job_filter.lower()}%',)).fetchall()
-
-        # Intersection of job filtered jobs with company, location, skill, position, and natureOfWork filtered jobs
+        job_jobs = [job for job in location_jobs if job_filter.lower() in job['title'].lower()]
         location_jobs = [job for job in location_jobs if job in job_jobs]
 
     print("Job Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
-
-
-
 
     conn.close()
 
@@ -975,6 +958,9 @@ def update_job_statuses():
     finally:
         conn.close()
 
+
+
+
 @app.route('/jobseeker')
 def jobseeker():
     update_job_statuses()
@@ -1004,6 +990,17 @@ def jobseeker():
         return render_template('/jobseeker/jobseeker.html', jobs=jobs, user_data=user_data)
     
     return redirect(url_for('signin'))
+
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/jobseeker_update_profile', methods=['POST'])

@@ -1,3 +1,73 @@
-<div class="announcements" style="display: none; background-color: aqua; width: 50px; border: 1px solid; height: 50px;">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_announcements.css') }}">
 
+<div class="announcements" style="display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; margin: 20px;">Post Announce</h1>
+    
+    <form id="announcement_form" enctype="multipart/form-data">
+        <!-- Image -->
+        <label for="announcement_image">Image:</label>
+        <input type="file" id="announcement_image" name="image" accept="image/*" onchange="previewImage(event)">
+        <img id="image_preview" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;" />
+        
+        <!-- What -->
+        <label for="what">What:</label>
+        <input type="text" id="what" name="what" required>
+
+        <!-- Where -->
+        <label for="where">Where:</label>
+        <input type="text" id="location" name="location" placeholder="Enter a specific location" required>
+        
+        <!-- When (Date Range) -->
+        <label for="when">When:</label>
+        <input type="text" id="when" name="when" required>
+
+        <!-- Requirement -->
+        <label for="requirement">Requirement:</label>
+        <input type="text" id="requirement" name="requirement">
+
+        <!-- Description -->
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description">
+
+        <!-- Submit Button -->
+        <button type="submit">Submit</button>
+    </form>
 </div>
+
+<!-- Flatpickr for Date Range -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    // Preview uploaded image
+    function previewImage(event) {
+        const imagePreview = document.getElementById('image_preview');
+        imagePreview.src = URL.createObjectURL(event.target.files[0]);
+        imagePreview.style.display = 'block';
+    }
+
+    // Initialize Flatpickr
+    flatpickr('#when', {
+        mode: 'range',
+        dateFormat: 'Y-m-d',
+    });
+
+    // Submit form via fetch
+    document.getElementById('announcement_form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/insert_announcement', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Announcement submitted successfully!");
+            } else {
+                alert("Failed to submit announcement.");
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>

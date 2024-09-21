@@ -24,6 +24,7 @@
                         <th>First Name</th>
                         <th>Contact Number</th>
                         <th>Address</th>
+                        <th>Status</th>
                         <th>Date Registered</th>
                     </tr>
                 </thead>
@@ -79,12 +80,19 @@
                     const formattedDate = formatDate(jobseeker.dateRegister);
                     const row = document.createElement('tr');
                     row.classList.add('jobseeker_item');
+                    let jobseeker_stateColor = '';
+                        if (jobseeker.currentState === 'Active') {
+                            jobseeker_stateColor = 'background-color: green; color: white;';
+                        } else if (jobseeker.currentState === 'Inactive') {
+                            jobseeker_stateColor = 'background-color: red; color: white;';
+                        }
                     row.innerHTML = `
                         <td>${jobseeker.User_ID}</td>
                         <td>${jobseeker.email}</td>
                         <td>${jobseeker.fname}</td>
                         <td>${jobseeker.contactnum}</td>
                         <td>${jobseeker.address}</td>
+                        <td style="${jobseeker_stateColor}">${jobseeker.currentState}</td>
                         <td>${formattedDate}</td>
                     `;
                     jobseekersContainer.appendChild(row);

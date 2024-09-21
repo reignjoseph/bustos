@@ -11,7 +11,7 @@ def print_jobseeker_notifications():
 
         # Execute a query to select all data from jobseeker_notifications
         # cursor.execute('SELECT * FROM application_status')
-        cursor.execute('SELECT * FROM applicant')
+        cursor.execute('SELECT * FROM users')
         # Fetch all rows
         rows = cursor.fetchall()
 
