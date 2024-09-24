@@ -1,41 +1,181 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_announcements.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
-<div class="announcements" style="display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
-    <h1 style="color: white; margin: 20px;">Post Announce</h1>
-    
+<div class="announcements" style="flex-direction: column;display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <div class="mainframe_announcements">
+        <h1 style="color: whitesmoke; text-align: -webkit-left;" for="announcementID">Filter by Announcement ID:</h1>
+        <div class="filter_announcement" style="display: flex; gap: 10px; text-align: center; margin-bottom: 20px;">
+            
+            <input class="filter_input" type="number" id="announcementID" name="announcementID" placeholder="Enter Announcement ID">
+            <select class="filter_input" id="announcementStatus" name="announcementStatus">
+                <option value="">Select Status</option>
+                <option value="Available">Available</option>
+                <option value="Unavailable">Unavailable</option>
+            </select>
+            <button class="filter_button" id="announcement_applyFilter" onclick="announcement_applyFilter()">Apply Filter</button>
+            <button class="filter_button openmakeannounce" style="background: white; padding: 4px 16px 4px 16px;" onclick="toggleMakeAnnounce(event)">
+                <img src="{{ url_for('static', filename='images/create.png') }}" alt="Create Announcement" style="width: 20px;">
+            </button>
+        </div>
+
+<!-- Hidden form initially -->
+<div id="makeanannounce" style="position: absolute; display: none; text-align: -webkit-center; border: 1px solid; padding: 20px; border-radius: 5px; background-color: rgba(115, 155, 255, 0.9); top: 58%; left: 50%; transform: translate(-50%, -50%);">
+    <h1 style="color: white; margin: 10px;">Make an Announcement</h1>
     <form id="announcement_form" enctype="multipart/form-data">
         <!-- Image -->
         <label for="announcement_image">Image:</label>
-        <input type="file" id="announcement_image" name="image" accept="image/*" onchange="previewImage(event)">
-        <img id="image_preview" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;" />
+        <input style="grid-row: 2;" type="file" id="announcement_image" name="image" accept="image/*" onchange="previewImage(event)">
+        <img id="image_preview" style="display:none; max-width: 100px; max-height: 100px;">
         
         <!-- What -->
-        <label for="what">What:</label>
-        <input type="text" id="what" name="what" required>
+        <label style="grid-column: 2;" for="what">What:</label>
+        <input style="grid-column: 2;" type="text" id="what" name="what" placeholder="Write the purpose..." required>
 
         <!-- Where -->
-        <label for="where">Where:</label>
-        <input type="text" id="location" name="location" placeholder="Enter a specific location" required>
-        
+        <label style="grid-column: 2;" for="where">Where:</label>
+        <input style="grid-column: 2;" type="text" id="location" name="location" placeholder="Write a specific location" required>
+
         <!-- When (Date Range) -->
-        <label for="when">When:</label>
-        <input type="text" id="when" name="when" required>
+        <label style="grid-column: 2;" for="when">When:</label>
+        <input style="grid-column: 2;" type="text" id="when" name="when" placeholder="Set A Schedule" required>
 
         <!-- Requirement -->
-        <label for="requirement">Requirement:</label>
-        <input type="text" id="requirement" name="requirement">
+        <label style="grid-column: 2;" for="requirement">Requirement:</label>
+        <input style="grid-column: 2;" type="text" id="requirement" name="requirement" placeholder="Write the requirements">
 
         <!-- Description -->
-        <label for="description">Description:</label>
-        <input type="text" id="description" name="description">
+        <label style="grid-column: 2;" for="description">Description:</label>
+        <input style="grid-column: 2;" type="text" id="description" name="description" placeholder="Describe the purpose">
 
         <!-- Submit Button -->
-        <button type="submit">Submit</button>
+        <button style="width: min-content; grid-column: 2 / span 2; place-self: center; margin-top: 20px;" type="submit">Submit</button>
     </form>
 </div>
 
+
+
+
+
+
+
+
+
+
+
+        <div class="announcement_header">
+            <div class="header_item">ID</div>
+            <div class="header_item">What</div>
+            <div class="header_item">Where</div>
+            <div class="header_item">When</div>
+            <div class="header_item">Requirement</div>
+            <div class="header_item">Description</div>
+            <div class="header_item">Date</div>
+            <div class="header_item">Status</div>
+        </div>
+
+        <div class="fetched_announcement">
+            <!-- Fetched announcements will be inserted here using AJAX -->
+        </div>
+
+        <div class="announcement_pagination" style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <button  class="announcement_prev pagination_button" id="announcement_backpage" onclick="announcement_changePage('back')">Previous</button>
+            <button  class="announcement_next pagination_button" id="announcement_nextpage" onclick="announcement_changePage('next')">Next</button>
+        </div>
+    </div>
+</div>
+
+
 <!-- Flatpickr for Date Range -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let announcement_currentPage = 1;
+    const announcement_itemsPerPage = 5;
+    let totalAnnouncements = 0; // To track the total number of announcements
+
+    function announcement_applyFilter() {
+        const announcementID = $('#announcementID').val();
+        const announcementStatus = $('#announcementStatus').val();
+        
+        $.ajax({
+            url: '/fetch_admin_announcements',  // Your API endpoint
+            type: 'GET',
+            data: {
+                announcementID: announcementID,
+                status: announcementStatus,
+                page: announcement_currentPage,
+                itemsPerPage: announcement_itemsPerPage
+            },
+            success: function(data) {
+    // Clear previous announcements
+    $('.fetched_announcement').empty();
+
+    // Log the response for debugging
+    console.log('Response data:', data);
+    
+    // Check if data is an array
+    if (Array.isArray(data)) {
+        // Update total announcements based on the fetched data
+        totalAnnouncements = data.length;
+
+        // Iterate through the fetched data and append it to the div
+        data.forEach(announcement => {
+            const statusClass = announcement.status === "Available" ? "Available" : "Unavailable";
+            // Format the date using moment.js
+            const formattedDate = moment(announcement.date_posted).format('MMMM DD, YYYY HH:mm');
+            $('.fetched_announcement').append(`
+                <div class="announcement_item ${statusClass}">
+                    <div>${announcement.announcementID}</div>
+                    <div>${announcement.What}</div>
+                    <div>${announcement.Where}</div>
+                    <div>${announcement.When}</div>
+                    <div>${announcement.Requirement}</div>
+                    <div>${announcement.Description}</div>
+                    <div>${formattedDate}</div> <!-- Use formatted date -->
+                    <div>${announcement.status}</div>
+                </div>
+            `);
+        });
+    } else {
+        console.error('Unexpected data format:', data);
+        $('.fetched_announcement').append('<p>No announcements found.</p>');
+    }
+
+    // Update button states based on the current page and total announcements
+    updatePaginationButtons();
+},
+            error: function(err) {
+                console.error('Error fetching announcements:', err);
+            }
+        });
+    }
+
+    function announcement_changePage(direction) {
+        if (direction === 'back') {
+            announcement_currentPage = Math.max(1, announcement_currentPage - 1);
+        } else if (direction === 'next') {
+            announcement_currentPage++;
+        }
+        announcement_applyFilter();  // Re-fetch data with the new page
+    }
+
+    function updatePaginationButtons() {
+        // Disable "Back" button if on the first page
+        if (announcement_currentPage === 1) {
+            $('#announcement_backpage').prop('disabled', true);
+        } else {
+            $('#announcement_backpage').prop('disabled', false);
+        }
+
+        // Disable "Next" button if there are less than itemsPerPage fetched (implying no more items)
+        if (totalAnnouncements < announcement_itemsPerPage) {
+            $('#announcement_nextpage').prop('disabled', true);
+        } else {
+            $('#announcement_nextpage').prop('disabled', false);
+        }
+    }
+</script>
+
 
 <script>
     // Preview uploaded image
@@ -51,6 +191,29 @@
         dateFormat: 'Y-m-d',
     });
 
+
+    // Toggle display of announcement form
+    function toggleMakeAnnounce(event) {
+        event.stopPropagation();  // Prevent click from propagating to document
+        const formContainer = document.getElementById('makeanannounce');
+        if (formContainer.style.display === 'none') {
+            formContainer.style.display = 'block';
+        } else {
+            formContainer.style.display = 'none';
+        }
+    }
+
+    // Hide the form when clicking outside of it
+    $(document).click(function(event) {
+        const formContainer = $('#makeanannounce');
+        if (!formContainer.is(event.target) && formContainer.has(event.target).length === 0) {
+            formContainer.hide();
+        }
+    });
+
+
+
+
     // Submit form via fetch
     document.getElementById('announcement_form').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -64,10 +227,12 @@
         .then(data => {
             if (data.success) {
                 alert("Announcement submitted successfully!");
+                document.getElementById('announcement_form').reset();
             } else {
                 alert("Failed to submit announcement.");
             }
         })
         .catch(error => console.error('Error:', error));
+        announcement_applyFilter();
     });
 </script>

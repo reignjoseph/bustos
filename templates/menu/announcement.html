@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/css/announcement.css">
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     
@@ -45,7 +46,79 @@
         </div>
     </header>
     <main>
+        <div class="container" id="announcements-container" style="display: grid;     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); margin-top: 4em;">
+            <!-- Announcements will be dynamically loaded here -->
+        </div>
 
+
+
+
+        
     </main>
 </body>
 </html>
+<script>
+    $(document).ready(function() {
+    // Function to fetch announcements
+    function fetchAnnouncements() {
+        $.ajax({
+            url: '/fetch_announcements',
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+    $('#announcements-container').empty(); // Clear previous data
+
+    if (Array.isArray(response.announcements)) {
+        response.announcements.forEach(function(announcement) {
+            // Create card structure for each announcement
+            var card = `
+            <div class="card_announce">
+                <img src="${announcement.image}" alt="Announcement Image" class="card-img">
+                <div class="card-content">
+                    <h2>${announcement.what}</h2>
+                    <p><strong>Where:</strong> ${announcement.where}</p>
+                    <p><strong>When:</strong> ${announcement.when}</p>
+                    <p><strong>Requirement:</strong> ${announcement.requirement}</p>
+                    <p><strong>Description:</strong> ${announcement.description}</p>
+                    <button style="margin: 10px 0px 10px 0px; width:max-content" class="btn btn-primary" onclick="redirectToLearnMore(${announcement.id})">Learn More</button>
+                </div>
+            </div>`;
+            
+            $('#announcements-container').append(card);
+        });
+    } else {
+        console.error('Expected an array for announcements, but got:', response);
+    }
+},
+          error: function(err) {
+                console.error('Error fetching announcements:', err);
+            }
+        });
+    }
+
+    // Fetch announcements on page load
+    fetchAnnouncements();
+});
+</script>
+
+<script>
+    function redirectToLearnMore(announcementId) {
+    $.ajax({
+        url: '/check_session',
+        method: 'GET',
+        success: function(response) {
+            if (response.logged_in) {
+                // If the user is logged in, redirect to /jobseeker
+                window.location.href = `/jobseeker`;
+            } else {
+                // If not logged in, redirect to the sign-in page
+                window.location.href = '/signin';
+            }
+        },
+        error: function() {
+            console.error('Error checking session status.');
+            window.location.href = '/signin';
+        }
+    });
+}
+</script>

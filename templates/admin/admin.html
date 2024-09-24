@@ -22,19 +22,23 @@
 </body>
 <script>
     window.onload = function() {
+        const announcementID = document.getElementById('announcementID').value; 
         fetchJobseekers();
-        fetchUsers();
+        registrationFetchUsers();
         fetchRatings(rating_currentPage);
         fetchEmployers();
         fetchJobs();
+        announcement_applyFilter();
 
         // Refresh data every 60 seconds
         setInterval(function() {
             fetchJobseekers();
-            fetchUsers();
+            registrationFetchUsers();
             fetchRatings(rating_currentPage);
             fetchEmployers();
             fetchJobs();
+            announcement_applyFilter();
+            
         }, 60000); // 60 seconds = 60,000 milliseconds
     }
 </script>

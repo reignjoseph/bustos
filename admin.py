@@ -73,77 +73,156 @@ def admin():
 
 
 
+
+@app.route('/fetch_admin_announcements', methods=['GET'])
+def fetch_admin_announcements():
+    announcementID = request.args.get('announcementID', default=None, type=int)
+    status = request.args.get('status', default=None, type=str)
+    page = request.args.get('page', default=1, type=int)
+    itemsPerPage = request.args.get('itemsPerPage', default=5, type=int)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Specify the columns to select, excluding "image"
+    query = """SELECT announcementID, "What", "When", "Where", "Requirement", "Description", "date_posted", "status" 
+               FROM announcement WHERE 1=1"""
+    params = []
+
+    if announcementID is not None:
+        query += " AND announcementID = ?"
+        params.append(announcementID)
+    
+    if status and status != "Both":
+        query += " AND status = ?"
+        params.append(status)
+
+    query += " LIMIT ? OFFSET ?"
+    params.append(itemsPerPage)
+    params.append((page - 1) * itemsPerPage)
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Convert to JSON format
+    announcements = [{'announcementID': row[0], 'What': row[1], 'When': row[2], 'Where': row[3],
+                     'Requirement': row[4], 'Description': row[5], 'date_posted': row[6], 'status': row[7]} 
+                     for row in rows]
+
+    return jsonify(announcements)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/insert_announcement', methods=['POST'])
 def insert_announcement():
     try:
-        # Get the form data
+        # Get the form data and print them for debugging
         image = request.files['image']
         what = request.form['what']
-        when = request.form['when']
+        when = request.form['when']  # e.g., '2024-09-21 to 2024-09-27'
         where = request.form['location']
         requirement = request.form['requirement']
         description = request.form['description']
+
+        print(f"Received form data: what={what}, when={when}, where={where}, requirement={requirement}, description={description}")
 
         # Save image to the static folder
         image_path = ''
         if image:
             image_path = f'static/images/admin-uploads/{image.filename}'
             image.save(image_path)
+            print(f"Image saved to: {image_path}")
+        else:
+            print("No image uploaded")
+
+        # Get current date in the Philippines timezone
+        timezone = pytz.timezone('Asia/Manila')
+        current_date_ph = datetime.now(timezone)
+        print(f"Current date in PH timezone: {current_date_ph}")
+
+        # Calculate status based on 'when' field
+        # Split the 'when' field to get the start and end dates
+        date_range = when.split(' to ')
+        start_date = datetime.strptime(date_range[0], '%Y-%m-%d')
+        end_date = datetime.strptime(date_range[1], '%Y-%m-%d') if len(date_range) > 1 else start_date
+
+        # Make start_date and end_date timezone-aware
+        start_date = timezone.localize(start_date)
+        end_date = timezone.localize(end_date)
+        print(f"Parsed and localized date range: start_date={start_date}, end_date={end_date}")
+
+        # Determine status: "Available" if today is in the range, otherwise "Unavailable"
+        if start_date <= current_date_ph <= end_date:
+            status = "Available"
+        else:
+            status = "Unavailable"
+        print(f"Calculated status: {status}")
 
         # Insert data into the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Escape the SQL keywords with double quotes
+        # Insert into the "announcement" table, including date_posted and status
         cursor.execute('''
-            INSERT INTO announcement ("image", "What", "When", "Where", "Requirement", "Description")
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (image_path, what, when, where, requirement, description))
+            INSERT INTO announcement ("image", "What", "When", "Where", "Requirement", "Description", "date_posted", "status")
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (image_path, what, when, where, requirement, description, current_date_ph.strftime('%Y-%m-%d %H:%M:%S'), status))
 
         conn.commit()
         conn.close()
+
+        print("Announcement successfully inserted into the database")
 
         return jsonify(success=True)
 
     except Exception as e:
         print(f"Error inserting announcement: {e}")
         return jsonify(success=False), 500
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -270,69 +349,6 @@ def deny_job(job_id):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/fetch_all_users', methods=['GET'])
 def fetch_all_users():
     user_id = request.args.get('user_id', '')
@@ -341,6 +357,7 @@ def fetch_all_users():
     userType = request.args.get('userType', '')
     status = request.args.get('status', '')
     date = request.args.get('date', '')
+    page = int(request.args.get('page', 1))  # Default to 1
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -369,11 +386,61 @@ def fetch_all_users():
         query += " AND u.status = ?"
         filters.append(status)
     if date:
-        start_date, end_date = date.split(' to ')
-        query += " AND date(u.dateRegister) BETWEEN ? AND ?"
-        filters.extend([start_date, end_date])
+        try:
+            start_date, end_date = date.split(' to ')
+            query += " AND date(u.dateRegister) BETWEEN ? AND ?"
+            filters.extend([start_date, end_date])
+        except ValueError:
+            return jsonify({"error": "Invalid date range format"}), 400
 
-    users = cursor.execute(query, filters).fetchall()
+    # Pagination logic
+    itemsPerPage = 5  # Set max items per page
+    offset = (page - 1) * itemsPerPage  # Calculate offset
+    query += " LIMIT ? OFFSET ?"
+    filters.extend([itemsPerPage, offset])  # Add limit and offset to filters
+
+    # Debug output
+    print("Final Query:", query)
+    print("Filters for users:", filters)
+
+    try:
+        users = cursor.execute(query, filters).fetchall()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Count total users without pagination limits
+    total_users_query = """
+        SELECT COUNT(*) FROM users u
+        LEFT JOIN pdf p ON u.User_ID = p.User_ID
+        WHERE 1=1
+    """
+    
+    count_filters = []
+    if user_id:
+        total_users_query += " AND u.User_ID = ?"
+        count_filters.append(user_id)
+    if fname:
+        total_users_query += " AND u.fname LIKE ?"
+        count_filters.append(f"%{fname}%")
+    if email:
+        total_users_query += " AND u.email LIKE ?"
+        count_filters.append(f"%{email}%")
+    if userType:
+        total_users_query += " AND u.userType = ?"
+        count_filters.append(userType)
+    if status:
+        total_users_query += " AND u.status = ?"
+        count_filters.append(status)
+    if date:
+        try:
+            start_date, end_date = date.split(' to ')
+            total_users_query += " AND date(u.dateRegister) BETWEEN ? AND ?"
+            count_filters.extend([start_date, end_date])
+        except ValueError:
+            return jsonify({"error": "Invalid date range format"}), 400
+
+    total_users = cursor.execute(total_users_query, count_filters).fetchone()[0]
+
     conn.close()
 
     users_list = [
@@ -384,12 +451,22 @@ def fetch_all_users():
             "userType": row["userType"],
             "status": row["status"],
             "dateRegister": row["dateRegister"],
-            "pdf_form": row["pdf_form"]  # Add PDF information to the response
+            "pdf_form": row["pdf_form"]
         }
         for row in users
     ]
 
-    return jsonify({"users": users_list})
+    return jsonify({"users": users_list, "total": total_users})
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/update_user_status', methods=['POST'])

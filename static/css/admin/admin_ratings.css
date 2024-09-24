@@ -6,6 +6,7 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     width: 8rem;
+    height: -webkit-fill-available;
 }
 
 .filter_button {
@@ -16,6 +17,7 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    height: min-content;
 }
 
 .filter_button:hover {

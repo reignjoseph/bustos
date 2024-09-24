@@ -1,4 +1,4 @@
-import re
+# import re
 from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
 import sqlite3
 import os
@@ -13,6 +13,8 @@ from main import app
 # import pdfkit   # Import the pdfkit library
 import pytz
 timezone = pytz.timezone('Asia/Manila')
+philippine_tz = pytz.timezone('Asia/Manila')
+
 
 # Configure logging
 if not app.debug:
@@ -940,7 +942,7 @@ def update_job_statuses():
     conn = get_db_connection()
 
     # Get current time in Philippine Time (PHT)
-    philippine_tz = timezone(timedelta(hours=8))
+    # philippine_tz = timezone(timedelta(hours=8))
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
     # Print current time in PHT for debugging purposes
