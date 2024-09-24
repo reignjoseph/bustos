@@ -1,14 +1,13 @@
-/* admin_announcements.css */
-
 /* Container Styling */
 .announcements {
+    display: flex;
     justify-content: center;
-    display: none;
-    background-color: rgb(148 166 206 / 49%);
+    background-color: rgba(148, 166, 206, 0.49);
     width: -webkit-fill-available;
     height: -webkit-fill-available;
     border-radius: 5px;
-    padding: 20px 20px 4px 20px;
+    padding: 20px;
+    margin-top: 20px;
 }
 
 .announcements h1 {
@@ -22,19 +21,18 @@
 /* Form Styling */
 #announcement_form {
     display: grid;
-    gap: 3px 10px;
+    gap: 7px 20px;
     width: 40em;
     background-color: #ffffff;
     border-radius: 5px;
     align-items: flex-start;
-    padding: 20px;
-    grid-template-columns: 50% 50%;
-    grid-template-rows: repeat(10, 2em);
+    padding: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(10, auto);
 }
 
 #announcement_form label {
     font-size: 1.1rem;
-    /* color: #fff; */
     margin-bottom: 5px;
     font-weight: bold;
     text-align: left;
@@ -59,20 +57,17 @@
 
 #announcement_form #announcement_image {
     font-size: 0.9rem;
-    /* color: #fff; */
     margin-bottom: 10px;
-    width: -webkit-fill-available;
+    width: 100%;
     background: antiquewhite;
 }
 
 #announcement_form #image_preview {
     display: none;
-    /* border: 2px solid #ccc; */
     border-radius: 5px;
-    grid-row: 3/span 7;
     margin: 20px;
-    width: -webkit-fill-available;
-    height: -webkit-fill-available;
+    width: 100%;
+    height: auto;
 }
 
 /* Submit Button Styling */
@@ -108,49 +103,101 @@
     .announcements h1 {
         font-size: 1.5rem;
     }
+
+    #announcement_form {
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
 }
 
-
-.mainframe_announcements{position: relative; width: -webkit-fill-available;}
-/* admin_announcements.css */
-.announcement_header {
-    display: flex;
-    font-weight: bold;
-    border-bottom: 2px solid #000;
+/* Mainframe Styling */
+.mainframe_announcements {
+    position: relative;
+    width: -webkit-fill-available;
 }
 
-.header_item {
-    flex: 1; /* Equal width for each header item */
-    padding: 10px;
+/* Table Styling */
+#announcement_table {
+    width: 100%;
+    border-collapse: collapse;
+    color: black;
+    margin-top: 20px;
+}
+
+#announcement_table th, 
+#announcement_table td {
+    padding: 12px 8px;
     text-align: left;
+    font-size: 16px;
+    border: 1px solid #ddd;
 }
 
-.fetched_announcement {
-    display: flex;
-    flex-direction: column; /* Stacking the announcement items vertically */
+#announcement_table td {
+    padding: 10px 8px;
+    font-size: 14px;
+    border-bottom: 1px solid #ddd;
 }
 
-.announcement_item {
-    display: flex;
-    flex-direction: row; /* Display items in a row */
-    border: 1px solid #ccc;
+/* Alternating row colors */
+#announcement_table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Light color for even rows */
+}
+
+#announcement_table tbody tr:nth-child(odd) {
+    background-color: #f2f2f2; /* Slightly darker for odd rows */
+}
+
+/* Hover effect for table rows */
+#announcement_table tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Pagination Button Styling */
+.pagination_button {
+    padding: 8px 16px;
+    background-color: #0042c9;
+    color: white;
+    border: none;
     border-radius: 5px;
-    padding: 10px;
-    margin: 5px 0;
-    transition: background-color 0.3s;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.announcement_item.Available {
-    background-color: #d4edda; /* Light green background for Available */
+.pagination_button:disabled {
+    background-color: #999;
+    cursor: not-allowed;
 }
 
-.announcement_item.Unavailable {
-    background-color: #f8d7da; /* Light red background for Unavailable */
+.pagination_button:hover:not(:disabled) {
+    background-color: #0053e0;
 }
 
-.announcement_item > div {
-    flex: 1; /* Equal width for each item */
-    padding: 5px;
+/* Responsive Table for small screens */
+@media (max-width: 768px) {
+    #announcement_table, 
+    #announcement_table thead, 
+    #announcement_table tbody, 
+    #announcement_table th, 
+    #announcement_table td, 
+    #announcement_table tr {
+        display: block;
+    }
+
+    #announcement_table tr {
+        margin-bottom: 10px;
+    }
+
+    #announcement_table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    #announcement_table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        text-align: left;
+        font-weight: bold;
+    }
 }
-
-

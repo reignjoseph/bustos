@@ -2,8 +2,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
 <div class="announcements" style="flex-direction: column;display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
-    <div class="mainframe_announcements">
-        <h1 style="color: whitesmoke; text-align: -webkit-left;" for="announcementID">Filter by Announcement ID:</h1>
+    <h1 style="color: white; text-align: -webkit-left;" for="announcementID">Filter by Announcement ID:</h1>
+    <div class="mainframe_announcements" style="display: flex;flex-direction: column;padding: 20px;background-color: white;border-radius: 10px;">
         <div class="filter_announcement" style="display: flex; gap: 10px; text-align: center; margin-bottom: 20px;">
             
             <input class="filter_input" type="number" id="announcementID" name="announcementID" placeholder="Enter Announcement ID">
@@ -19,63 +19,64 @@
         </div>
 
 <!-- Hidden form initially -->
-<div id="makeanannounce" style="position: absolute; display: none; text-align: -webkit-center; border: 1px solid; padding: 20px; border-radius: 5px; background-color: rgba(115, 155, 255, 0.9); top: 58%; left: 50%; transform: translate(-50%, -50%);">
-    <h1 style="color: white; margin: 10px;">Make an Announcement</h1>
-    <form id="announcement_form" enctype="multipart/form-data">
-        <!-- Image -->
-        <label for="announcement_image">Image:</label>
-        <input style="grid-row: 2;" type="file" id="announcement_image" name="image" accept="image/*" onchange="previewImage(event)">
-        <img id="image_preview" style="display:none; max-width: 100px; max-height: 100px;">
-        
-        <!-- What -->
-        <label style="grid-column: 2;" for="what">What:</label>
-        <input style="grid-column: 2;" type="text" id="what" name="what" placeholder="Write the purpose..." required>
+<!-- Background overlay and form container -->
+<div id="announce_container" style=" display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; z-index: 9999; display: flex;" onclick="this.style.display='none';">
+    
+    <!-- Form in the center -->
+    <div id="makeanannounce" style="display: block; position: relative; text-align: -webkit-center; border: 1px solid; padding: 20px; border-radius: 5px; background-color: rgba(115, 155, 255, 0.9);width: min-content;" onclick="event.stopPropagation();">
+        <h1 style="color: white; margin: 10px;">Make an Announcement</h1>
+        <form id="announcement_form" enctype="multipart/form-data">
+            <!-- Image -->
+            <label for="announcement_image">Image:</label>
+            <input style="grid-row: 2;" type="file" id="announcement_image" name="image" accept="image/*" onchange="previewImage(event)">
+            <img id="image_preview" style="display: block; max-width: min-content; max-height: 300px; grid-row: 3 / span 9; margin: 0px; justify-self: center;">
+            
+            <!-- What -->
+            <label style="grid-column: 2;" for="what">What:</label>
+            <input style="grid-column: 2;" type="text" id="what" name="what" placeholder="Write the purpose..." required>
 
-        <!-- Where -->
-        <label style="grid-column: 2;" for="where">Where:</label>
-        <input style="grid-column: 2;" type="text" id="location" name="location" placeholder="Write a specific location" required>
+            <!-- Where -->
+            <label style="grid-column: 2;" for="where">Where:</label>
+            <input style="grid-column: 2;" type="text" id="location" name="location" placeholder="Write a specific location" required>
 
-        <!-- When (Date Range) -->
-        <label style="grid-column: 2;" for="when">When:</label>
-        <input style="grid-column: 2;" type="text" id="when" name="when" placeholder="Set A Schedule" required>
+            <!-- When (Date Range) -->
+            <label style="grid-column: 2;" for="when">When:</label>
+            <input style="grid-column: 2;" type="text" id="when" name="when" placeholder="Set A Schedule" required>
 
-        <!-- Requirement -->
-        <label style="grid-column: 2;" for="requirement">Requirement:</label>
-        <input style="grid-column: 2;" type="text" id="requirement" name="requirement" placeholder="Write the requirements">
+            <!-- Requirement -->
+            <label style="grid-column: 2;" for="requirement">Requirement:</label>
+            <input style="grid-column: 2;" type="text" id="requirement" name="requirement" placeholder="Write the requirements">
 
-        <!-- Description -->
-        <label style="grid-column: 2;" for="description">Description:</label>
-        <input style="grid-column: 2;" type="text" id="description" name="description" placeholder="Describe the purpose">
+            <!-- Description -->
+            <label style="grid-column: 2;" for="description">Description:</label>
+            <input style="grid-column: 2;" type="text" id="description" name="description" placeholder="Describe the purpose">
 
-        <!-- Submit Button -->
-        <button style="width: min-content; grid-column: 2 / span 2; place-self: center; margin-top: 20px;" type="submit">Submit</button>
-    </form>
+            <!-- Submit Button -->
+            <button style="width: min-content; grid-column: 2 / span 2; place-self: center; margin-top: 20px;" type="submit">Submit</button>
+        </form>
+    </div>
 </div>
 
 
 
-
-
-
-
-
-
-
-
-        <div class="announcement_header">
-            <div class="header_item">ID</div>
-            <div class="header_item">What</div>
-            <div class="header_item">Where</div>
-            <div class="header_item">When</div>
-            <div class="header_item">Requirement</div>
-            <div class="header_item">Description</div>
-            <div class="header_item">Date</div>
-            <div class="header_item">Status</div>
-        </div>
-
-        <div class="fetched_announcement">
-            <!-- Fetched announcements will be inserted here using AJAX -->
-        </div>
+ <!-- Table to display announcements -->
+ <table id="announcement_table" >
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>What</th>
+            <th>Where</th>
+            <th>When</th>
+            <th>Requirement</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody class="fetched_announcement">
+        <!-- Fetched announcements will be inserted here using AJAX -->
+    </tbody>
+</table>
 
         <div class="announcement_pagination" style="display: flex; justify-content: space-between; margin-top: 10px;">
             <button  class="announcement_prev pagination_button" id="announcement_backpage" onclick="announcement_changePage('back')">Previous</button>
@@ -86,17 +87,18 @@
 
 
 <!-- Flatpickr for Date Range -->
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     let announcement_currentPage = 1;
     const announcement_itemsPerPage = 5;
-    let totalAnnouncements = 0; // To track the total number of announcements
+    let totalAnnouncements = 0;
 
     function announcement_applyFilter() {
         const announcementID = $('#announcementID').val();
         const announcementStatus = $('#announcementStatus').val();
-        
+
         $.ajax({
             url: '/fetch_admin_announcements',  // Your API endpoint
             type: 'GET',
@@ -107,43 +109,36 @@
                 itemsPerPage: announcement_itemsPerPage
             },
             success: function(data) {
-    // Clear previous announcements
-    $('.fetched_announcement').empty();
+                // Clear previous announcements
+                $('.fetched_announcement').empty();
 
-    // Log the response for debugging
-    console.log('Response data:', data);
-    
-    // Check if data is an array
-    if (Array.isArray(data)) {
-        // Update total announcements based on the fetched data
-        totalAnnouncements = data.length;
+                // Check if data is an array
+                if (Array.isArray(data)) {
+                    totalAnnouncements = data.length;
 
-        // Iterate through the fetched data and append it to the div
-        data.forEach(announcement => {
-            const statusClass = announcement.status === "Available" ? "Available" : "Unavailable";
-            // Format the date using moment.js
-            const formattedDate = moment(announcement.date_posted).format('MMMM DD, YYYY HH:mm');
-            $('.fetched_announcement').append(`
-                <div class="announcement_item ${statusClass}">
-                    <div>${announcement.announcementID}</div>
-                    <div>${announcement.What}</div>
-                    <div>${announcement.Where}</div>
-                    <div>${announcement.When}</div>
-                    <div>${announcement.Requirement}</div>
-                    <div>${announcement.Description}</div>
-                    <div>${formattedDate}</div> <!-- Use formatted date -->
-                    <div>${announcement.status}</div>
-                </div>
-            `);
-        });
-    } else {
-        console.error('Unexpected data format:', data);
-        $('.fetched_announcement').append('<p>No announcements found.</p>');
-    }
+                    // Iterate through the fetched data and append rows to the table
+                    data.forEach(announcement => {
+                        const statusClass = announcement.status === "Available" ? "Available" : "Unavailable";
+                        const formattedDate = moment(announcement.date_posted).format('MMMM DD, YYYY HH:mm');
+                        $('.fetched_announcement').append(`
+                        <tr class="${statusClass}">
+            <td data-label="ID">${announcement.announcementID}</td>
+            <td data-label="What">${announcement.What}</td>
+            <td data-label="Where">${announcement.Where}</td>
+            <td data-label="When">${announcement.When}</td>
+            <td data-label="Requirement">${announcement.Requirement}</td>
+            <td data-label="Description">${announcement.Description}</td>
+            <td data-label="Date">${formattedDate}</td>
+            <td data-label="Status">${announcement.status}</td>
+        </tr>
+                        `);
+                    });
+                } else {
+                    $('.fetched_announcement').append('<tr><td colspan="8">No announcements found.</td></tr>');
+                }
 
-    // Update button states based on the current page and total announcements
-    updatePaginationButtons();
-},
+                updatePaginationButtons();
+            },
             error: function(err) {
                 console.error('Error fetching announcements:', err);
             }
@@ -195,21 +190,21 @@
     // Toggle display of announcement form
     function toggleMakeAnnounce(event) {
         event.stopPropagation();  // Prevent click from propagating to document
-        const formContainer = document.getElementById('makeanannounce');
+        const formContainer = document.getElementById('announce_container');
         if (formContainer.style.display === 'none') {
-            formContainer.style.display = 'block';
+            formContainer.style.display = 'flex';
         } else {
             formContainer.style.display = 'none';
         }
     }
 
     // Hide the form when clicking outside of it
-    $(document).click(function(event) {
-        const formContainer = $('#makeanannounce');
-        if (!formContainer.is(event.target) && formContainer.has(event.target).length === 0) {
-            formContainer.hide();
-        }
-    });
+    // $(document).click(function(event) {
+    //     const formContainer = $('#makeanannounce');
+    //     if (!formContainer.is(event.target) && formContainer.has(event.target).length === 0) {
+    //         formContainer.hide();
+    //     }
+    // });
 
 
 
