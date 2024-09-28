@@ -1,3 +1,189 @@
-<div class="notifications" style="display: none; background-color: blue; width: 50px; border: 1px solid; height: 50px;">
-
-</div>
+<style>
+    /* Style the filter inputs and button */
+    .admin_notification_filter {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    /* Style the table */
+    .admin_notification_table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    
+    .admin_notification_table th, .admin_notification_table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    .admin_notification_table th {
+        background-color: #c4e7ff82;
+        color: black;
+        font-weight: bold;
+    }
+    
+    .admin_notification_table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    
+    .admin_notification_table tr:hover {
+        background-color: #ddd;
+    }
+    
+    /* Profile image styling */
+    .admin_notification_table img {
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    /* Hover effect for the entire row */
+    .admin_notification_table tr:hover .close_icon {
+        content: url('static/images/close_red.png');
+    }
+    
+    /* Pagination styles */
+    .admin_notification_pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+    }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_notification.css') }}">
+    <div class="notifications" style="flex-direction: column; display: none; background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+        <h1 style="color: white;">Notification</h1>
+        
+        <div style="padding: 20px; background-color: white; border-radius: 10px;">
+            <!-- FILTER -->
+            <div class="admin_notification_filter" style="margin-bottom: 16px;">
+                <input type="number" id="filter_notification_id" placeholder="Filter by ID" class="filter_input">
+                <input type="text" id="filter_fname" placeholder="Filter by name" class="filter_input">
+                <button id="filter_button" class="filter_button">Search</button>
+            </div>
+    
+            <!-- TABLE -->
+            <table class="admin_notification_table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>PROFILE</th>
+                        <th>MESSAGE</th>
+                        <th>DATE</th>
+                    </tr>
+                </thead>
+                <tbody id="admin_notification_body">
+                    <!-- Rows will be populated here by jQuery -->
+                </tbody>
+            </table>
+            
+            <div class="admin_notification_pagination">
+                <button id="admin_notification_prev_button" class="pagination_button" disabled>Previous</button>
+                <button id="admin_notification_next_button" class="pagination_button">Next</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    let admin_notification_currentPage = 1;
+    const admin_notification_notificationsPerPage = 5; // Set maximum notifications per page
+    
+    // Function to fetch notifications with optional filters
+    function admin_notification_fetchNotifications(fname, notification_id) {
+        $.ajax({
+            url: '/retrieve_admin_notification',
+            type: 'GET',
+            data: {
+                fname: fname,
+                notification_id: notification_id
+            },
+            dataType: 'json',
+            success: function(data) {
+                const admin_notification_totalNotifications = data.length;
+                const admin_notification_totalPages = Math.ceil(admin_notification_totalNotifications / admin_notification_notificationsPerPage);
+                const admin_notification_start = (admin_notification_currentPage - 1) * admin_notification_notificationsPerPage;
+                const admin_notification_end = admin_notification_start + admin_notification_notificationsPerPage;
+                const admin_notification_notificationsToDisplay = data.slice(admin_notification_start, admin_notification_end);
+                const tbody = $('#admin_notification_body');
+                tbody.empty(); // Clear any existing rows
+    
+                // Iterate through the data and append rows
+                admin_notification_notificationsToDisplay.forEach(notification => {
+                    const fullDate = moment(notification.notification_date).format('MMMM DD, YYYY');
+                    const formattedDate = moment(notification.notification_date).fromNow();
+    
+                    tbody.append(`
+                        <tr>
+                            <td>${notification.notification_id}</td>
+                            <td><span style="display: flex; align-items: center;"><img src="${notification.picture}" alt="${notification.fname}" style="width: 50px; height: 50px; border:1px solid;"> <label>${notification.fname}</label></span></td>
+                            <td>${notification.notification_text}</td>
+                            <td title="${fullDate}" style="position: relative;">
+                                ${formattedDate}
+                                <button class="close_notification" style="height: 30px; position: absolute; transform: translate(5em, -1.7em); background: none; border: none;" onclick="closeNotification(${notification.notification_id})">
+                                    <img class="close_icon" src="static/images/close.png" style="height: -webkit-fill-available;">
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                });
+    
+                // Update pagination buttons
+                $('#admin_notification_prev_button').prop('disabled', admin_notification_currentPage === 1);
+                $('#admin_notification_next_button').prop('disabled', admin_notification_currentPage === admin_notification_totalPages);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error retrieving notifications:', error);
+            }
+        });
+    }
+    
+    // Document ready function to handle page interactions
+    $(document).ready(function() {
+        // Fetch notifications on page load
+        admin_notification_fetchNotifications();
+    
+        // Handle filter button click
+        $('#filter_button').click(function() {
+            const fname = $('#filter_fname').val();
+            const notification_id = $('#filter_notification_id').val();
+            admin_notification_fetchNotifications(fname, notification_id);
+        });
+    
+        // Handle pagination button clicks
+        $('#admin_notification_prev_button').click(function() {
+            if (admin_notification_currentPage > 1) {
+                admin_notification_currentPage--;
+                admin_notification_fetchNotifications();
+            }
+        });
+    
+        $('#admin_notification_next_button').click(function() {
+            admin_notification_currentPage++;
+            admin_notification_fetchNotifications();
+        });
+    });
+    
+    // Function to close notification
+    function closeNotification(notification_id) {
+        $.ajax({
+            url: '/close_admin_notification',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ notification_id: notification_id }),
+            success: function(response) {
+                console.log(response.message);
+                // Re-fetch notifications after closing one
+                admin_notification_fetchNotifications();  // Fetch updated notifications
+            },
+            error: function(xhr, status, error) {
+                console.error('Error closing notification:', error);
+            }
+        });
+    }
+    </script>
+    

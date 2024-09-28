@@ -1,3 +1,408 @@
-<div class="dashboard" style="display: block; background-color: red; width: 50px; border: 1px solid; height: 50px;">
+<link rel="stylesheet" href="static/css/admin/admin_dasboard.css">
+<link rel="stylesheet" href="static/css/employer/employer_home.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+   
 
+
+<div class="dashboard" style="flex-direction: column; display: block; background-color: rgb(209 224 255); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <div class="dashboard_grid">
+        <h1 style="color: black; white-space: nowrap;">User Management</h1>
+        <div style="display: flex; width: min-content; padding: 20px; gap: 40px; grid-row: 2;">
+            <div id="approvedUser" class="usersContainer" style="text-align: center;">
+                <canvas id="approvedChart" class="doughnut_canva" width="100" height="100"></canvas>
+                <label id="approvedCountLabel" class="count_doughnut">0</label>
+                <label>Approved Users:</label>
+            </div>
+            <div id="activeUser" class="usersContainer" style="text-align: center;">
+                <canvas id="activeChart"  class="doughnut_canva" width="100" height="100"></canvas>
+                <label id="activeCountLabel" class="count_doughnut">0</label>
+                <label>Active Users: </label>
+            </div>
+
+            <div id="inactiveUser" class="usersContainer" style="text-align: center;">
+                <canvas id="inactiveChart"class="doughnut_canva"  width="100" height="100"></canvas>
+                <label id="inactiveCountLabel" class="count_doughnut">0</label>
+                <label>Inactive Users: </label>
+            </div>
+        </div>
+
+        <div class="jobseeker_employer_chart">
+            <canvas id="userTypeChart" width="400" height="200"></canvas>
+        </div>
+
+
+        <div class="job_vacancy">
+            <label style="align-self: center; font-weight: bold; font-family: monospace; font-size: 1.5em;">JOB VACANCY</label>
+            <div class="job_vacancy_active_inactive">
+                <label class="switch">
+                    <input type="checkbox" id="jobStatusToggle" onchange="toggleJobStatus()">
+                    <span class="slider"></span>
+                </label>
+                <span id="jobStatusLabel">Unavailable</span>
+                <span id="jobCount">Count: 0</span>
+            </div>
+        </div>
+        
+
+        <div class="list_admin_rate">
+            <div class="total_ratings">
+                <label>Total Ratings:</label>
+                <label id="totalRatings">0</label>
+                <span id="totalRatingComparison">(compared to last year)</span>
+            </div>
+            <div class="average_rating">
+                <label>Average Rating:</label>
+                <label id="averageRatings">0</label>
+                <span id="averageRatingComparison">(compared to last year)</span>
+            </div>
+            <div class="rating_charts">
+                <canvas id="ratingChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+
+        <iframe class="bulacan_statistic" src="/statistics"></iframe>
+
+        <div id="educational-attainment-chart" style="width: -webkit-fill-available;height: 100%;"> <canvas id="attainmentChart" width="486" height="243" style="display: block; box-sizing: border-box; height: 177px; width: 354px;"></canvas> </div>
+
+
+    </div>
 </div>
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch educational attainment data from the backend
+        fetch('/fetch_educational_attainment')
+            .then(response => response.json())
+            .then(data => {
+                // Create a horizontal bar chart using Chart.js
+                const ctx = document.getElementById('attainmentChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            'Elementary', 
+                            'Senior High', 
+                            'Tertiary', 
+                            'Graduate Studies', 
+                            'Vocational Training'
+                        ],
+                        datasets: [{
+                            label: 'Educational Attainment',
+                            data: [
+                                data.elementary,
+                                data.senior_high,
+                                data.tertiary,
+                                data.graduate_studies,
+                                data.vocational_training
+                            ],
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Makes the chart horizontal
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                stepSize: 1,  // Force whole numbers
+                ticks: {
+                    precision: 0   // Remove decimals
+                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching educational attainment data:', error));
+    });
+</script>
+
+
+
+
+
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentYear = new Date().getFullYear(); // Get the current year
+    
+        // Fetch data from the backend
+        fetch('/get_all_ratings')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Rating data: ", data);  // Debugging log
+                // Update total and average ratings
+                document.getElementById('totalRatings').textContent = data.total_ratings;
+                document.getElementById('averageRatings').textContent = data.average_ratings;
+    
+                // Display percentage change in total ratings
+                const percentageChangeText = data.percentage_change_ratings >= 0 
+                    ? `+${data.percentage_change_ratings.toFixed(2)}% from last year`
+                    : `${data.percentage_change_ratings.toFixed(2)}% from last year`;
+                document.getElementById('totalRatingComparison').textContent = percentageChangeText;
+    
+                // Display percentage change in average rating
+                const percentageChangeAverageText = data.percentage_change_average >= 0 
+                    ? `+${data.percentage_change_average.toFixed(2)}% from last year`
+                    : `${data.percentage_change_average.toFixed(2)}% from last year`;
+                document.getElementById('averageRatingComparison').textContent = percentageChangeAverageText;
+    
+                // Prepare data for the chart
+                const ratingLabels = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+                const ratingValues = [
+                    data.ratings_by_star[1] || 0,  // Poor
+                    data.ratings_by_star[2] || 0,  // Fair
+                    data.ratings_by_star[3] || 0,  // Good
+                    data.ratings_by_star[4] || 0,  // Very Good
+                    data.ratings_by_star[5] || 0   // Excellent
+                ];
+    
+                // Create the horizontal bar chart
+                const ctx = document.getElementById('ratingChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ratingLabels,
+                        datasets: [{
+                            label: `Number of Ratings (${currentYear})`,
+                            data: ratingValues,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(153, 102, 255, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                stepSize: 1,  // Force whole numbers
+                                ticks: {
+                                    precision: 0   // Remove decimals
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching ratings:', error));  // Debugging log
+    });
+    </script>
+
+
+
+
+<script>
+let userTypeChart; // Variable to hold the user type chart instance
+const progressCharts = {}; // Object to hold the chart instances for progress bars
+
+function createChart(dates, jobseekers, employers) {
+    const ctx = document.getElementById('userTypeChart').getContext('2d');
+
+    // Check if the chart already exists and destroy it
+    if (userTypeChart) {
+        userTypeChart.destroy();
+    }
+
+    // Create a new user type chart
+    userTypeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates, // Use the parsed dates here
+            datasets: [
+                {
+                    label: 'Jobseekers',
+                    data: jobseekers,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: false,
+                    tension: 0.1
+                },
+                {
+                    label: 'Employers',
+                    data: employers,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: false,
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month', // Use 'month' as we are aggregating by month
+                        tooltipFormat: 'MMMM yyyy', // Format for tooltip
+                    },
+                    title: {
+                        display: true,
+                        text: 'Month' // Label for the x-axis
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    },
+                 
+                                stepSize: 1,  // Force whole numbers
+                ticks: {
+                    precision: 0   // Remove decimals
+                }
+                }
+            }
+        }
+    });
+}
+
+// Function to create circular progress bars
+function createProgressBar(canvasId, count, total, labelId) {
+    // Check if the chart instance already exists, and destroy it if it does
+    if (progressCharts[canvasId]) {
+        progressCharts[canvasId].destroy();
+    }
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const data = {
+        datasets: [{
+            data: [count, total - count],
+            backgroundColor: ['#00FF00', '#CCCCCC'], // Green for count, grey for remaining
+            borderWidth: 1
+        }]
+    };
+
+    // Create a new progress bar chart and store its instance
+    progressCharts[canvasId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Set the text content of the label using the ID passed in
+    document.getElementById(labelId).textContent = `${count}`;
+}
+
+// Function to fetch user counts from the server using AJAX
+function fetchUserCounts() {
+    fetch('/retrieve_types_of_users')
+        .then(response => response.json())
+        .then(data => {
+            // Create progress bars with the data received from the server
+            createProgressBar('approvedChart', data.count.approved, data.count.total, 'approvedCountLabel');
+            createProgressBar('activeChart', data.count.active, data.count.total, 'activeCountLabel');
+            createProgressBar('inactiveChart', data.count.inactive, data.count.total, 'inactiveCountLabel');
+        })
+        .catch(error => console.error('Error fetching user counts:', error));
+}
+
+// Function to fetch user type data from the server using AJAX
+function fetchUserTypeData() {
+    $.ajax({
+        url: "/get_userType",
+        method: "GET",
+        success: function(data) {
+            console.log("Fetched data:", data);
+
+            // Check if data contains the expected structure
+            if (!data.dates || !data.jobseeker || !data.employer) {
+                console.error("Data structure is missing required fields");
+                return;
+            }
+
+            // Call the createChart function with the new data
+            createChart(data.dates, data.jobseeker, data.employer);
+        },
+        error: function(error) {
+            console.error("Error fetching data", error);
+        }
+    });
+}
+
+// Function to toggle job status
+function toggleJobStatus() {
+    const toggle = document.getElementById('jobStatusToggle');
+    const statusLabel = document.getElementById('jobStatusLabel');
+    const jobCount = document.getElementById('jobCount');
+
+    const jobStatus = toggle.checked ? 'Available' : 'Unavailable';
+    statusLabel.textContent = jobStatus;
+
+    // Fetch job count from the database
+    fetchJobCount(jobStatus).then(count => {
+        jobCount.textContent = `Count: ${count}`;
+    });
+}
+
+// Function to fetch job count
+async function fetchJobCount(status) {
+    try {
+        const response = await fetch('/get_job_count', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ jobStatus: status })
+        });
+        
+        const data = await response.json();
+        return data.count; // Assuming the response contains { count: number }
+    } catch (error) {
+        console.error('Error fetching job count:', error);
+        return 0; // Fallback to 0 in case of error
+    }
+}
+
+// Function to update both user counts and user type data
+function updateData() {
+    fetchUserCounts();
+    fetchUserTypeData();
+}
+
+// jQuery ready function
+$(document).ready(function() {
+    toggleJobStatus(); 
+});
+</script>

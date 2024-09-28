@@ -1,0 +1,458 @@
+
+    <!--  -->
+    <div class="bulacan_statistic">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" integrity="sha512-SbiR/eusphKoMVVXysTKG/7VseWii+Y3FdHrt0EpKgpToZeemhqHeZeLWLhJutz/2ut2Vw1uQEj2MbRF+TVBUA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.2/font/bootstrap-icons.min.css" integrity="sha512-YFENbnqHbCRmJt5d+9lHimyEMt8LKSNTMLSaHjvsclnZGICeY/0KYEeiHwD1Ux4Tcao0h60tdcMv+0GljvWyHg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+        <script type="text/javascript">var TEChartSettings = {}; var TESymbol = ''; var TECountry = ''; var TECategory = ''; var TEFrequency = ''; var TELanguage = ''; var TELastUpdate = '20240831000000'; var TEChartVersion = ''; var symbol = ''; var symbolType = ''; var hasCalendar = false; var isLoggedIn = false; var TEAlertsName = ''; var TEChartsDatasource = 'https://d3ii0wo49og5mi.cloudfront.net'; var IsMobile =  false; var TEChartsMeta = ''; var TEForecast = []; var TEAuthorization = ''; var TESecurify = ''; var TESecurifyUrl = ''; var TEType = ''; var TEChartUrl = '/philippines/employment-rate'; var TEComparable = 0; var isAlertsLoaded = false; var IsDarkMode = false; var isPakoLoaded = false; var TEChartsToken = '20240229:nazare'; var TEObfuscationkey = 'tradingeconomics-charts-core-api-key'; var isCopyright = false;</script>
+        <script type="text/javascript" language="Javascript">var TESymbol = 'PHILIPPINEEMPRAT'; console.log('TESymbol:', TESymbol);var TELanguage = ''; console.log('TELanguage:', TELanguage);TELastUpdate = '202409060355'; console.log('TELastUpdate:', TELastUpdate);TEChart = 'EC'; console.log('TEChart:', TEChart);var TEAlertsName= 'Philippines Employment Rate'; console.log('TEAlertsName:', TEAlertsName);</script><script type="text/javascript" language="Javascript">TEChartUrl = 'https://d3fy651gv2fhd3.cloudfront.net/charts/philippines-employment-rate.png?s=philippineemprat&v=202409060355V20230410';TECountry = 'Philippines';TECategory = 'Employment Rate';TEType = 'te';TEFrequency = 'Monthly';</script>	      
+      
+    <form method="post" action="/philippines/employment-rate" id="aspnetForm" style="    margin: 2px;">
+    <h1 style="padding: 10px; font-family: auto;">Employment Rate</h1>
+    <div id="UpdatePanelChart">
+        <div id="chart"><div id="trading_chart" style="position: relative; height: 450px"></div>
+    </div>
+    
+    </form>
+    
+    <script src='https://d1v8a2ofhkdel3.cloudfront.net/cdn/highstock_exporting.10.1.0.js'></script>
+    <link href="https://d2xewprs6ejfae.cloudfront.net/production/ec.min.css?v=20240320" rel="stylesheet"  />
+    <script src="https://d2xewprs6ejfae.cloudfront.net/production/ec.min.js?v=20240320"></script>
+    <script>
+        TENotificationsHistorical = []
+        TENotificationsNews = []
+        //console.log('• Notifications Script Loaded - 20240701')
+        
+        setTimeout(() => {
+            getNotificationsFromCookie()
+            loadBellStatus()
+        },1000)
+    
+    
+        function loadBellStatus() {
+            //console.log("• get bell status from cookie")
+            var seenData = false
+            const cookieData = document.cookie.split(';').find(item => item.trim().startsWith('TENewNotifications'));
+            if (cookieData) {
+                seenData = cookieData.split('TENewNotifications=')[1].split(',')[0]
+            }
+    
+            if (seenData == 'true') {
+                //console.log("new notification")
+                $('#notification-new').show()
+                $('#notification-empty').hide()
+            } else {
+                $('#notification-new').hide()
+                $('#notification-empty').show()
+             }
+        }
+    
+        function setNotificationCookieStatus(status) {
+            document.cookie = `TENewNotifications=${status.toString()}; expires=${createExpirationDate('eod')}; path=/`;
+        }
+    
+        function changeIconStatus(isHover) {
+            try {
+                //console.log("change bell")
+                if (TENotificationsHistorical.length > 0 && !isHover) {
+                    $('#notification-new').show()
+                    $('#notification-empty').hide()
+                    setNotificationCookieStatus(true)
+                } else if (TENotificationsNews.length > 0 && !isHover) {
+                    $('#notification-new').show()
+                    $('#notification-empty').hide()
+                    setNotificationCookieStatus(true)
+                } else {
+                    $('#notification-new').hide()
+                    $('#notification-empty').show()
+                    setNotificationCookieStatus(false)
+                }
+    
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    
+        function timeAgo(datetime) {
+            try {
+                const now = new Date();
+                const diff = now - new Date(datetime);
+                let seconds = Math.floor(diff / 1000);
+                const minuteInSecs = 60;
+                const hourInSecs = minuteInSecs * 60;
+    
+                let timeAgoString;
+                if (seconds < minuteInSecs) {
+                    if (seconds == 0) {
+                        seconds = 1
+                    }
+                    const plural = seconds == 1 ? '' : 's';
+                    timeAgoString = `${seconds} second${plural} ago`;
+                } else if (seconds < hourInSecs) {
+                    const minutes = Math.floor(seconds / minuteInSecs);
+                    timeAgoString = `${minutes} minutes ago`;
+                } else {
+                    const hours = Math.floor(seconds / hourInSecs);
+                    const plural = hours > 1 ? 's' : '';
+                    timeAgoString = `${hours} hour${plural} ago`;
+                }
+                return timeAgoString;
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    
+        function createExpirationDate(span) {
+            const expires = new Date();
+            if (span == '1d') {
+                expires.setDate(expires.getDate() + 1)
+                return expires.toUTCString()
+            } else if (span == '1h') {
+                expires.setHours(expires.getHours() + 1);
+                return expires.toUTCString();
+            } else if (span == 'eod') { //end of day
+                const expiresTime = new Date(expires.getTime());
+                expiresTime.setHours(23, 59, 59); 
+                return expiresTime.toUTCString();
+            }
+        }
+    
+        function removeNotificationIndex(i) {
+            try {
+                if (TENotificationsHistorical.length == 0 && TENotificationsNews.length > 0) {
+                    TENotificationsNews.splice(i, 1);
+                    document.cookie = `TELastNews=${JSON.stringify(TENotificationsNews)}; path=/`;
+                }
+                if (TENotificationsHistorical.length > 0) {
+                    TENotificationsHistorical.splice(i, 1);
+                }
+    
+                $('.notification-list').empty();
+                addNotificationCookie()
+    
+                if (TENotificationsNews.length == 0 || (TENotificationsNews.length == 0 && TENotificationsHistorical.length == 0)) {
+                    addEmptyContent()
+                }
+    
+                if (TENotificationsHistorical.length > 0 || TENotificationsNews.length > 0) {
+                    upsertNotification(null, true, false)
+                }
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    
+        function addEmptyContent() {
+            try {
+    
+                //console.log("Add Empty Content")
+                const notificationList = $('.notification-list');
+                notificationList.empty();
+    
+                    //notificationList.append('<div style="display:flex;justify-content:space-between;align-itens:center"><span style="margin-left:18px"><b>Notifications</b></span></div>')
+    
+                        let html = `<div class="empty-notificationlist">
+                                        <div class="empty-notificationlist-content">
+                                           <span>You have no new notifications</span>
+                                           <br>                                       
+                                           <i class="bi bi-bell-slash-fill"></i>
+                                           <br>
+                                           <div><a href="/stream" title="Show all news" class="empty-notificationlist-more"><div class="btn btn-outline-secondary">All News</div></a></div>
+    
+                                        </div>
+                                    </div>`;
+                notificationList.append(html);
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    
+        function addContent() {
+            try {
+                //console.log("AddContent")
+                const notifiList = TENotificationsHistorical.length > 0 ? TENotificationsHistorical : TENotificationsNews;
+    
+                const notificationList = $('.notification-list');
+                notificationList.empty();
+    
+                if (notifiList.length > 0) {
+                    notificationList.append('<div class="notificationList-first-title"><span style="margin-left:18px"><b>Notifications</b></span><span class="notifications-clean-all" title="Delete all notifications">Clear all</span></div>')
+    
+    
+                    for (let i = notifiList.length - 1; i >= 0; i--) {
+                        const notification = notifiList[i];
+                        let html = `<div>
+                      <div class="card notificationlist-card" style="margin:0;">
+                        <div class="card-body notificationlist-body">
+                          <div class="notificationlist-header">
+                            <div class="notificationlist-header-title"><a href="${notification.url}"><b>${notification.title}</b></a><span class="badge badge-notification-type" style="background-color:${notification.color}">${notification.type}</span></div>
+                            <span id="n-${i}" title="Delete" style="cursor:pointer"><i id="cleanIndividualNotif" class="bi bi-trash3"></i></span>
+                          </div>
+                          <span  style="font-size:15px">${notification.text}</span>
+                          <div class="notificationlist-footer">
+                            <p>${timeAgo(notification.datetime)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>`;
+                        notificationList.append(html);
+    
+                        $(`#n-${i}`).on('click', function () {
+                            removeNotificationIndex(i)
+                        })
+                    }
+    
+                    notificationList.append('<div class="notificationlist-more-div"><a href="/stream" title="Show more streams" class="notificationlist-more"><div class="btn btn-outline-secondary">More News</div></a></div>')
+    
+    
+                    $('.notifications-clean-all').on('click', function () {
+                        //console.log("Clicked")
+                        notificationList.empty();
+                        if (TENotificationsHistorical.length > 0) {
+                            document.cookie = "TENotifications=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+                            TENotificationsHistorical = []
+                        } else if (TENotificationsNews.length > 0) {
+                            document.cookie = `TELastNews=[]; path=/`;
+                            TENotificationsNews = []
+                        }
+                        upsertNotification(null, true, false)
+                    });
+                }   
+            } catch (e) {
+                console.error(e)
+            }  
+        }
+    
+        function fetchLastNews() {
+            try {
+                //console.log("• Fetch News")
+    
+                TENotificationsNews = []
+                const newsUrl = '/ws/stream.ashx?start=0&size=3'
+                fetch(newsUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                console.error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            for (let item of data) {
+                                if (item.description.length > 300) {
+                                    item.description = item.description.substring(0, 300) + ' ...';
+    
+                                    let lastPeriodIndex = Math.min(item.description.lastIndexOf('. '), 300);
+    
+                                    if (lastPeriodIndex !== -1) {
+                                        item.description = item.description.substring(0, lastPeriodIndex + 1) + '..'; 
+                                    } else {
+                                        item.description = item.description.substring(0, 300) + '...';
+                                    }
+                                }
+                                TENotificationsNews.unshift({ title: item.title, url: item.url, text: item.description, importance: item.importance, datetime: item.date, type: 'News', color: '#ddd' })
+                            }
+                            document.cookie = `TELastNews=${JSON.stringify(TENotificationsNews)}; path=/`;
+                           // console.log("• Saved News on Cookies TELastNews")
+                            upsertNotification(null, true, false)
+                        })
+                        .catch(error => {
+                            console.error('Error fetching last news:', error);
+                        });
+                
+                
+            } catch (e) {
+                console.error(e)
+            } 
+        }
+    
+        function getNotificationsFromCookie() {
+            try {
+                //console.log("• get Notifications From Cookie")
+                const cookieData = document.cookie.split(';').find(item => item.trim().startsWith('TENotifications'));
+                if (cookieData) {
+                    let encodedData = cookieData.split('TENotifications=')[1].split(',')
+                    //const decrompressedData = pako.inflate(encodedData, { to: 'string' });
+                    try {
+                        TENotificationsHistorical = JSON.parse(encodedData);
+                        //console.log(TENotificationsHistorical)
+                        if (TENotificationsHistorical.length > 0) {
+                            upsertNotification(null, true, false)
+                        }
+                    } catch (error) {
+                        console.error("Error parsing existing cookie data:", error);
+                    }
+                }
+            } catch (e) {
+                console.error(e)
+            }
+        }
+    
+        function estimateNotificationSize() {
+            return JSON.stringify(TENotificationsHistorical).length;
+        }
+    
+        function getCookieSize() {
+            try {
+                let safeLoop = 0
+                const cookies = document.cookie.split(';');
+                let total = 0
+                for (const cookie of cookies) {
+                    if (safeLoop == 50) {
+                        return 0;
+                    }
+                    const [key, value] = cookie.trim().split('=');
+                    if (key !== 'TENotifications') {
+                        total = total + JSON.stringify(cookie).length + 2
+                    }
+                    safeLoop++
+                }
+                return total;
+            } catch (e) {
+                console.error(e);
+            }
+    
+        }
+    
+        function manageCookieSize(maxSize) {
+            try {
+                //console.log("• Check threshold of cookies size");
+    
+                const currentCookieSize = getCookieSize();
+                const currentNotificationsSize = estimateNotificationSize();
+                let totalBytes = currentCookieSize + currentNotificationsSize;
+                let nLoopCount = 0;
+                //console.log("• Current Cookies Estimated Size: " + currentCookieSize);
+                //console.log("• With Notifications Cookie Estimated Size: " + currentNotificationsSize);
+    
+                if (totalBytes > maxSize) {
+                    while (nLoopCount < 10 && totalBytes > maxSize) {
+                        //console.log("---------------------> nLoopCount: " + nLoopCount);
+    
+                        TENotificationsHistorical.shift();
+                        totalBytes = currentCookieSize + estimateNotificationSize();
+                        //console.log(`• Notification removed to control cookie size. New size: ${totalBytes} bytes`);
+    
+                        if (totalBytes <= maxSize) {
+                            //console.log(`• Cookie size is already within limit: ${totalBytes} bytes`);
+                            break;
+                        }
+                        nLoopCount++;
+                    }
+                }// else {
+                    //console.log(`• Cookie size is within limit: ${totalBytes} bytes`);
+                //}
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    
+        function addNotificationCookie() {
+            try {
+                //console.log("• Add Notifications on Cookie");
+                const isEmptyNews = TENotificationsNews.length === 0;
+                const isEmptyHistorical = TENotificationsHistorical.length === 0;
+    
+                document.cookie = `TELastNews=${isEmptyNews ? '[]' : JSON.stringify(TENotificationsNews)}; path=/`;
+    
+                manageCookieSize(3400);
+    
+                if (isEmptyHistorical) {
+                    document.cookie = `TENotifications=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+                } else {
+                    document.cookie = `TENotifications=${JSON.stringify(TENotificationsHistorical)}; expires=${createExpirationDate('1d')}; path=/`;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    
+        function createDefaultNotification(n) {
+            return {
+                ...n,
+                datetime: new Date(),
+                type: n.importance > 0 ? 'Calendar' : 'News',
+                color: n.importance > 0 ? '#ffb3ba' : '#ddd',
+            };
+        }
+    
+        function upsertNotification(n, cookie, fromStream) {
+            try {
+                //console.log("-----------------------------------------------> Start of upsert Notification on list flow");
+                //console.log(`• Dealing with ${JSON.stringify(n)}`);
+    
+                if (!cookie) {
+                    const newNotification = createDefaultNotification(n);
+    
+                    const existingNotification = TENotificationsHistorical.find(item => item.text === newNotification.text);
+                    if (existingNotification) {
+                        TENotificationsHistorical.splice(TENotificationsHistorical.indexOf(existingNotification), 1);
+                    }
+                    TENotificationsHistorical.push(newNotification);
+                }
+    
+                const notificationListContainer = $('.offcanvas-top.notification-list.container');
+                const notificationList = $('.notification-list');
+    
+                if (!notificationList.length) {
+                    notificationListContainer.append(`<div class="offcanvas-header"></div>`);
+                }
+    
+                if (TENotificationsHistorical.length > 0 || TENotificationsNews.length > 0) {
+                    if (fromStream == true) {
+                        changeIconStatus(false);
+                        setNotificationCookieStatus(true);
+                    }
+    
+                    if (!cookie) {
+                        addNotificationCookie();
+                    }
+    
+                    addContent();
+                } else {
+                    addEmptyContent();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    
+        $('.btn-notification-list').on('click', function (event) {
+            //console.log('click')
+            event.preventDefault()
+            let cookieNewsIsPresent = false
+    
+            //console.log("• Check if there is LastNews Cookie")
+            const cookieData = document.cookie.split(';').find(item => item.trim().startsWith('TELastNews'));
+            if (cookieData) {
+                let cookieNews = cookieData.split('TELastNews=')[1].split(',')
+                cookieNewsIsPresent = true
+                TENotificationsNews = JSON.parse(cookieNews)
+            }
+    
+            //console.log(cookieNewsIsPresent)
+    
+            if (TENotificationsHistorical.length == 0 && TENotificationsNews.length == 0 && !cookieNewsIsPresent) {
+                //console.log("IF")
+                $('.offcanvas-top').removeClass("show")
+                $('.offcanvas-top').removeClass("showing")
+                fetchLastNews()
+            } else {
+                if (TENotificationsNews.length > 0 || TENotificationsHistorical.length > 0) {
+                    upsertNotification(null, true, false)
+                } else {
+                    addEmptyContent()
+                }
+            }
+            changeIconStatus(true)
+        });
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SZ14JCTXWQ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function ga() { dataLayer.push(arguments); }
+        ga('js', new Date());
+        ga('config', 'G-SZ14JCTXWQ', { 'allow_google_signals': false });
+    </script>
+    
+    </div>

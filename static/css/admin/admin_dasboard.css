@@ -1,0 +1,132 @@
+.dashboard_grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(10,10%);
+    padding: 10px;
+    grid-row-gap: 0px;
+    margin-bottom: 1%;
+}
+
+.usersContainer {
+    position: relative;
+    width: min-content;
+    font-size: 1em;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 1px solid;
+}
+.doughnut_canva{position: relative;}
+.count_doughnut{
+    transform: translate(0px, -3.3em);
+    text-align: center;
+    width: -webkit-fill-available;
+}
+
+.jobseeker_employer_chart{position: relative;width: 400px;height: -webkit-fill-available;background-color: white;border-radius: 10px;border: 1px solid;grid-column: 8/span 2;grid-row: 2;justify-self: center;}
+
+
+
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+.job_vacancy .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.job_vacancy .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.job_vacancy .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: red; /* Red for unavailable */
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.job_vacancy .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.job_vacancy input:checked + .slider {
+    background-color: green; /* Green for available */
+}
+
+.job_vacancy input:checked + .slider:before {
+    transform: translateX(26px);
+}
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+
+
+.job_vacancy{
+    width: 85%;
+    background: white;
+    border: 1px solid;
+    border-radius: 10px;
+    padding: 10px;
+    grid-column: 7/span 4;
+    grid-row: 3;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-self: center;
+}
+.job_vacancy_active_inactive{
+    display: flex;
+    margin: 10px;
+    white-space: nowrap;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: auto;
+    justify-content: space-evenly;
+}
+
+.list_admin_rate{
+    display: flex;
+    flex-direction: column;
+    grid-row: 4;
+    grid-column: 7/span 4;
+    margin-top: 10px;
+    gap: 10px;
+    align-items: center;
+}
+.total_ratings{
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 85%;
+    border: 1px solid;
+    display: flex;
+    justify-content: space-evenly;
+}
+.average_rating{
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 85%;
+    border: 1px solid;
+    display: flex;
+    justify-content: space-evenly;
+}
+.rating_charts{position: relative;width: 400px;height: -webkit-fill-available;background-color: white;border-radius: 10px;border: 1px solid;grid-column: 8/span 2;grid-row: 2;justify-self: center;}
+.bulacan_statistic{width: 40.4em;position: relative;border: 1px solid;grid-row: 4/span 2;grid-column: 1/span 6;border-radius: 5px;place-self: center;height: 33em;margin-top: 5%;}
+#educational-attainment-chart{background: #fefefe;grid-row: 3;grid-column: 1/span 6;display: flex;place-content: center;border: 1px solid;border-radius: 5px;padding: 4px;position: relative;margin: 0px 10px 10px 10px;}

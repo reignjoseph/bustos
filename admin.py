@@ -73,6 +73,290 @@ def admin():
 
 
 
+@app.route('/statistics', methods=['GET', 'POST'])
+def statistics():
+    return render_template('admin/employment_statistic.html')
+
+
+
+def construct_image_url(userType, picture):
+    if userType == 'Jobseeker':
+        return f"/static/{picture}"
+    elif userType == 'Employer':
+        return  f"/static/images/employer-images/{picture}" 
+    else:
+        return 'path/to/default/image.png'
+
+@app.route('/retrieve_admin_notification', methods=['GET'])
+def retrieve_admin_notification():
+    fname = request.args.get('fname')
+    notification_id = request.args.get('notification_id')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        query = """
+            SELECT notification_id, userType, picture, fname, notification_text, notification_date
+            FROM admin_notification
+            WHERE (notification_popup IS NULL OR notification_popup = '')
+        """
+        params = []
+
+        if fname:
+            query += " AND fname LIKE ?"
+            params.append(f"%{fname}%")
+        if notification_id:
+            query += " AND notification_id = ?"
+            params.append(notification_id)
+
+        cur.execute(query, params)
+        notifications = cur.fetchall()
+
+        data = [
+            {
+                "notification_id": notification['notification_id'],
+                "userType": notification['userType'],
+                "picture": construct_image_url(notification['userType'], notification['picture']),
+                "fname": notification['fname'],
+                "notification_text": notification['notification_text'],
+                "notification_date": notification['notification_date']
+            }
+            for notification in notifications
+        ]
+
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"Error retrieving notifications: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+
+@app.route('/close_admin_notification', methods=['POST'])
+def close_admin_notification():
+    notification_id = request.json.get('notification_id')  # Get notification_id from the request
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE admin_notification
+            SET notification_popup = 'false'
+            WHERE notification_id = ?""", (notification_id,))
+        conn.commit()  # Commit the changes to the database
+
+        return jsonify({"message": "Notification closed successfully"}), 200
+
+    except Exception as e:
+        print(f"Error closing notification: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/get_userType', methods=['GET'])
+def get_user_type():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Group by month and year
+    cursor.execute('''
+        SELECT strftime('%Y-%m', dateRegister) as month,  -- Group by Year-Month
+               SUM(CASE WHEN userType = "Jobseeker" AND status = "Approved" THEN 1 ELSE 0 END) as jobseeker_count,
+               SUM(CASE WHEN userType = "Employer" AND status = "Approved" THEN 1 ELSE 0 END) as employer_count
+        FROM users
+        GROUP BY month
+        ORDER BY month ASC
+    ''')
+
+    results = cursor.fetchall()
+
+    # Prepare the response
+    data = {
+        'dates': [row[0] for row in results],  # This will contain the year-month (YYYY-MM)
+        'jobseeker': [row[1] for row in results],
+        'employer': [row[2] for row in results]
+    }
+
+    conn.close()
+
+    # Return the data as JSON
+    return jsonify(data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/retrieve_types_of_users')
+def retrieve_types_of_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    print("Database connection established.")  # Debugging line
+
+    # Query to count users
+    cursor.execute("SELECT COUNT(*) as total, "
+                   "(SELECT COUNT(*) FROM users WHERE currentState='Active') as active, "
+                   "(SELECT COUNT(*) FROM users WHERE currentState='Inactive') as inactive, "
+                   "(SELECT COUNT(*) FROM users WHERE status='Approved') as approved "
+                   "FROM users")
+
+    result = cursor.fetchone()
+
+    print("Query executed. Result fetched: ", result)  # Debugging line
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+    # Check if result is None
+    if result is None:
+        print("No result returned from the database.")  # Debugging line
+        return jsonify({'count': {'total': 0, 'active': 0, 'inactive': 0, 'approved': 0}})
+
+    return jsonify({
+        'count': {
+            'total': result['total'],
+            'active': result['active'],
+            'inactive': result['inactive'],
+            'approved': result['approved']
+        }
+    })
+
+
+
+
+@app.route('/get_all_ratings', methods=['GET'])
+def get_all_ratings():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    current_year = datetime.now().year
+    previous_year = current_year - 1
+
+    # Total ratings for the current year
+    cursor.execute("""
+        SELECT COUNT(*) AS total_ratings, SUM(star) AS total_stars
+        FROM rating 
+        WHERE strftime('%Y', date_created) = ?
+    """, (str(current_year),))
+    result_current_year = cursor.fetchone()
+    total_ratings_current_year = result_current_year['total_ratings']
+    total_stars_current_year = result_current_year['total_stars'] or 0  # Handle case where no ratings exist
+    average_ratings_current_year = total_stars_current_year / total_ratings_current_year if total_ratings_current_year > 0 else 0
+
+    # Total ratings for the previous year
+    cursor.execute("""
+        SELECT COUNT(*) AS total_ratings, SUM(star) AS total_stars
+        FROM rating 
+        WHERE strftime('%Y', date_created) = ?
+    """, (str(previous_year),))
+    result_previous_year = cursor.fetchone()
+    total_ratings_previous_year = result_previous_year['total_ratings']
+    total_stars_previous_year = result_previous_year['total_stars'] or 0
+    average_ratings_previous_year = total_stars_previous_year / total_ratings_previous_year if total_ratings_previous_year > 0 else 0
+
+    # Calculate the percentage change in total ratings and average ratings
+    percentage_change_ratings = ((total_ratings_current_year - total_ratings_previous_year) / total_ratings_previous_year) * 100 if total_ratings_previous_year > 0 else 0
+    percentage_change_average = ((average_ratings_current_year - average_ratings_previous_year) / average_ratings_previous_year) * 100 if average_ratings_previous_year > 0 else 0
+
+    # Count ratings by star for the current year
+    cursor.execute("""
+        SELECT star, COUNT(*) AS count 
+        FROM rating 
+        WHERE strftime('%Y', date_created) = ?
+        GROUP BY star 
+        ORDER BY star
+    """, (str(current_year),))
+    ratings_by_star = cursor.fetchall()
+
+    conn.close()
+
+    ratings_dict = {row['star']: row['count'] for row in ratings_by_star}
+
+    return jsonify({
+        'total_ratings': total_ratings_current_year,
+        'average_ratings': round(average_ratings_current_year, 2),  # Rounded average rating
+        'percentage_change_ratings': percentage_change_ratings,
+        'percentage_change_average': percentage_change_average,
+        'ratings_by_star': ratings_dict
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/get_job_count', methods=['POST'])
+def get_job_count():
+    data = request.get_json()
+    job_status = data.get('jobStatus')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT COUNT(*) as count FROM jobs WHERE jobStatus = ?"
+    cursor.execute(query, (job_status,))
+    row = cursor.fetchone()
+    
+    conn.close()
+    return jsonify({'count': row[0]})
+
+
+
+
+
 
 @app.route('/fetch_admin_announcements', methods=['GET'])
 def fetch_admin_announcements():

@@ -1,0 +1,96 @@
+/* General container styling */
+.notifications {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 66, 201, 0.49);
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
+    margin: 16px;
+    border-radius: 5px;
+    border: 1px solid;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Styling */
+.admin_notification_Table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background-color: #fff;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Header Styling */
+.admin_notification_Table th {
+    background-color: #c4e7ff82;  /* New header color */
+    color: black;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 2px solid #dddddd;
+    font-weight: bold;
+}
+
+/* Row and Cell Styling */
+.admin_notification_Table td {
+    padding: 12px;
+    color: #333;
+    border-bottom: 1px solid #dddddd;
+}
+
+/* Zebra striping for rows */
+.admin_notification_Table tr:nth-child(even) {
+    background-color: #ddd; /* Alternate row color */
+}
+
+.admin_notification_Table tr:nth-child(odd) {
+    background-color: white; /* Odd rows stay white */
+}
+
+/* Hover effect for rows */
+.admin_notification_Table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Pagination Controls Styling */
+.admin_notification_Pagination_Control {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.admin_notification_Pagination_Control button {
+    background-color: #0042c9;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.admin_notification_Pagination_Control button:hover {
+    background-color: #00359e;
+}
+
+/* Disable button styling */
+.admin_notification_Pagination_Control button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Search input styling */
+.admin_notification_Filter input {
+    padding: 10px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.admin_notification_Filter input:focus {
+    border-color: #0042c9;
+    outline: none;
+}

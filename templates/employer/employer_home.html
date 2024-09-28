@@ -139,7 +139,11 @@
                         indexAxis: 'y', // Makes the chart horizontal
                         scales: {
                             x: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                stepSize: 1,  // Force whole numbers
+                ticks: {
+                    precision: 0   // Remove decimals
+                }
                             }
                         }
                     }
@@ -174,7 +178,11 @@
                     options: {
                         scales: {
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                stepSize: 1,  // Force whole numbers
+                ticks: {
+                    precision: 0   // Remove decimals
+                }
                             }
                         }
                     }
