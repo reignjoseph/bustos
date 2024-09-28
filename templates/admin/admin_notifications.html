@@ -71,7 +71,7 @@
             <table class="admin_notification_table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>NOTIF ID</th>
                         <th>PROFILE</th>
                         <th>MESSAGE</th>
                         <th>DATE</th>
@@ -124,7 +124,7 @@
                             <td>${notification.notification_text}</td>
                             <td title="${fullDate}" style="position: relative;">
                                 ${formattedDate}
-                                <button class="close_notification" style="height: 30px; position: absolute; transform: translate(5em, -1.7em); background: none; border: none;" onclick="closeNotification(${notification.notification_id})">
+                                <button class="close_notification" style="height: 30px; position: absolute; transform: translate(0, -1.7em); background: none; border: none;" onclick="closeNotification(${notification.notification_id})">
                                     <img class="close_icon" src="static/images/close.png" style="height: -webkit-fill-available;">
                                 </button>
                             </td>

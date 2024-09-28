@@ -36,7 +36,7 @@
 
         <!-- Profile Information -->
                 <textarea id="bio" name="bio" class="profile_bio w-full h-24 p-2 border border-gray-300 rounded resize-none"
-                          placeholder="Write your bio here (up to 30 words)" maxlength="50" spellcheck="false">{{user_data[10]}}</textarea>
+                          placeholder="Write your bio here (up to 30 words)" maxlength="50" spellcheck="false">{{user_data[9]}}</textarea>
 
                  <div class="PIcontainer mt-4">
                     <h6 class="email">Email:</h6>
@@ -47,7 +47,7 @@
                            placeholder="Phone" value="{{ user_data[5] }}" maxlength="11" minlength="11"
                            pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
                     <textarea class="address resize-none mt-4" type="text" id="address" name="address"
-                              placeholder="Address" spellcheck="false" maxlength="80">{{user_data[11]}}</textarea>
+                              placeholder="Address" spellcheck="false" maxlength="80">{{user_data[10]}}</textarea>
                 </div>
 
                 <button type="submit" class="button-profile bg-blue-500 text-white px-4 py-2 rounded mt-4">Update Profile</button>

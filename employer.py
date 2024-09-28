@@ -776,7 +776,8 @@ def update_applicant_status():
         print(f"Generated status description: {status_description}")
 
         # Get current time in Philippine time (UTC+8)
-        philippine_tz = timezone(timedelta(hours=8))
+        # philippine_tz = timezone(timedelta(hours=8))
+        philippine_tz = pytz.timezone('Asia/Manila')
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
         print(f"Current Philippine time: {current_time_pht}")
 
@@ -953,7 +954,7 @@ def post_job():
         closingDate = request.form['closingDate']
         jobStatus = request.form['jobStatus']
         skills = request.form.getlist('skills[]')
-        philippine_tz = timezone(timedelta(hours=8))
+        philippine_tz = pytz.timezone('Asia/Manila')
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -1011,7 +1012,7 @@ def post_job():
         jobseekers = cursor.fetchall()
 
         # Get current time in Philippine Time (PHT)
-        philippine_tz = timezone(timedelta(hours=8))
+        philippine_tz = pytz.timezone('Asia/Manila')
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
         # Generate notification text

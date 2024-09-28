@@ -11,7 +11,7 @@ from main import app
 import random
 import pytz
 timezone = pytz.timezone('Asia/Manila')
-
+from threading import Thread
 
 
 # Configure logging
@@ -79,13 +79,56 @@ def statistics():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def construct_image_url(userType, picture):
     if userType == 'Jobseeker':
-        return f"/static/{picture}"
+        # Check if the picture exists; if not, return the default image path
+        return f"/static/{picture}" if picture else 'static/images/user.png'
     elif userType == 'Employer':
-        return  f"/static/images/employer-images/{picture}" 
+        # Check if the picture exists; if not, return the default image path
+        return f"/static/images/employer-images/{picture}" if picture else 'static/images/user.png'
     else:
-        return 'path/to/default/image.png'
+        return 'static/images/user.png'
+
+def update_notification_pictures():
+    while True:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        try:
+            # Update pictures in admin_notification from users table
+            cur.execute("""
+                UPDATE admin_notification
+                SET picture = (SELECT profile FROM users WHERE User_ID = admin_notification.user_id)
+                WHERE user_id IN (SELECT User_ID FROM users)
+            """)
+            conn.commit()
+            print("Updated notification pictures.")
+        except Exception as e:
+            print(f"Error updating notification pictures: {e}")
+        finally:
+            cur.close()
+            conn.close()
+        
+        time.sleep(3)  # Sleep for 3 seconds
+
+# Start the background thread
+Thread(target=update_notification_pictures, daemon=True).start()
 
 @app.route('/retrieve_admin_notification', methods=['GET'])
 def retrieve_admin_notification():
@@ -110,20 +153,27 @@ def retrieve_admin_notification():
             query += " AND notification_id = ?"
             params.append(notification_id)
 
+        print("Executing query:", query)  # Print the query being executed
+        print("With parameters:", params)   # Print the parameters being used
+
         cur.execute(query, params)
         notifications = cur.fetchall()
 
+        print("Fetched notifications:", notifications)  # Print fetched notifications
+
         data = [
             {
-                "notification_id": notification['notification_id'],
-                "userType": notification['userType'],
-                "picture": construct_image_url(notification['userType'], notification['picture']),
-                "fname": notification['fname'],
-                "notification_text": notification['notification_text'],
-                "notification_date": notification['notification_date']
+                "notification_id": notification[0],
+                "userType": notification[1],
+                "picture": construct_image_url(notification[1], notification[2]),
+                "fname": notification[3],
+                "notification_text": notification[4],
+                "notification_date": notification[5]
             }
             for notification in notifications
         ]
+
+        print("Processed notification data:", data)  # Print the processed notification data
 
         return jsonify(data)
 
@@ -138,6 +188,14 @@ def retrieve_admin_notification():
 
 
 
+
+
+
+
+
+
+
+
 @app.route('/close_admin_notification', methods=['POST'])
 def close_admin_notification():
     notification_id = request.json.get('notification_id')  # Get notification_id from the request
@@ -145,13 +203,36 @@ def close_admin_notification():
     cur = conn.cursor()
 
     try:
+        # Fetch the user_id from the admin_notification table using the notification_id
         cur.execute("""
-            UPDATE admin_notification
-            SET notification_popup = 'false'
+            SELECT user_id FROM admin_notification 
             WHERE notification_id = ?""", (notification_id,))
-        conn.commit()  # Commit the changes to the database
+        user_id_row = cur.fetchone()
+        
+        if user_id_row:
+            user_id = user_id_row[0]  # Extract user_id
+            
+            # Fetch the profile (picture) from the users table
+            cur.execute("""
+                SELECT profile FROM users 
+                WHERE User_ID = ?""", (user_id,))
+            profile_row = cur.fetchone()
+            
+            if profile_row:
+                new_picture = profile_row[0]  # Get the profile picture
+                
+                # Update the admin_notification table with the new picture
+                cur.execute("""
+                    UPDATE admin_notification
+                    SET picture = ?, notification_popup = 'false'
+                    WHERE notification_id = ?""", (new_picture, notification_id))
+                conn.commit()  # Commit the changes to the database
 
-        return jsonify({"message": "Notification closed successfully"}), 200
+                return jsonify({"message": "Notification closed and picture updated successfully"}), 200
+            else:
+                return jsonify({"error": "User not found"}), 404
+        else:
+            return jsonify({"error": "Notification not found"}), 404
 
     except Exception as e:
         print(f"Error closing notification: {e}")
@@ -160,7 +241,6 @@ def close_admin_notification():
     finally:
         cur.close()
         conn.close()
-
 
 
 

@@ -83,7 +83,7 @@ def insert_html2pdf_jobseeker():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        philippine_tz = timezone(timedelta(hours=8))
+        
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
         # Insert into the `pdf` table with the unique filename
@@ -93,6 +93,33 @@ def insert_html2pdf_jobseeker():
         ''', (new_filename,))
 
         conn.commit()
+# Now retrieve the last inserted user from the `users` table
+        cursor.execute("SELECT user_id, fname, profile, userType FROM users ORDER BY user_id DESC LIMIT 1")
+        user = cursor.fetchone()
+
+        if user:
+            user_id = user[0]
+            fname = user[1]
+            profile = user[2]
+            userType = user[3]
+
+            # Create the notification text
+            notification_text = f"{fname} created an account as a {userType}"
+
+            # Insert into the `admin_notification` table
+            cursor.execute('''
+                INSERT INTO admin_notification (user_id, userType, fname, picture, notification_text, notification_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, userType, fname, profile, notification_text, current_time_pht))
+
+            # Commit the notification insert
+            conn.commit()
+
+            print(f"Notification for user '{fname}' inserted into admin_notification table.")
+        else:
+            print("No user found in the users table.")
+
+
         conn.close()
 
         print(f"PDF filename '{new_filename}' inserted into the database.")
@@ -467,7 +494,7 @@ def create_account():
     cursor = conn.cursor()
 
         # Get current time in Philippine Time (PHT)
-    philippine_tz = timezone(timedelta(hours=8))
+    # philippine_tz = timezone(timedelta(hours=8))
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
     
     # Insert data into the users table
@@ -792,6 +819,8 @@ def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
+
+
 @app.route('/applicant', methods=['POST'])
 def applicant():
     if request.method == 'POST':
@@ -821,7 +850,7 @@ def applicant():
         jobseeker_name = session.get('user_fname')
         email = session.get('user_email')
         contact_no = session.get('user_contact')
-        philippine_tz = timezone(timedelta(hours=8))
+        # philippine_tz = timezone(timedelta(hours=8))
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')        
 
         # Connect to the database
@@ -834,8 +863,39 @@ def applicant():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
         ''', (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, file_path, 'Pending',current_time_pht))
         
+
+
         print(f"Received data - Date Request: {current_time_pht}")
         # Commit and close the connection
+        # Get jobseeker details from `users` table
+        cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
+        user = cursor.fetchone()
+        
+        if user:
+            picture = user[0]  # profile (picture)
+            fname = user[1]    # fname
+            userType = user[2] # userType
+        
+            # Get job details from `jobs` table to retrieve company and location
+            cursor.execute('SELECT Company, location FROM jobs WHERE Job_ID = ?', (job_id,))
+            job = cursor.fetchone()
+            
+            if job:
+                company = job[0]
+                location = job[1]
+
+                # Create notification text
+                notification_text = f"{fname} applied for a job at {company} located in {location}"
+                
+                # Insert notification into `admin_notification` table
+                cursor.execute('''
+                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
+
+                print(f"Admin Notification: {notification_text}")
+
+
         conn.commit()
         cursor.close()
         conn.close()
@@ -942,19 +1002,38 @@ def update_job_statuses():
     conn = get_db_connection()
 
     # Get current time in Philippine Time (PHT)
-    # philippine_tz = timezone(timedelta(hours=8))
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
     # Print current time in PHT for debugging purposes
-    print(f"Current Time (PHP): {current_time_pht}")
+    print(f"Current Time (PHT): {current_time_pht}")
 
     try:
-        conn.execute("""
+        # Perform the update and count how many rows were affected
+        cursor = conn.execute("""
             UPDATE jobs 
             SET jobStatus = 'Unavailable'
             WHERE closingDate <= ?
         """, (current_time_pht,))
+
         conn.commit()
+
+        # Print the number of rows affected
+        rows_updated = cursor.rowcount
+        print(f"Rows Updated: {rows_updated}")
+
+        # Optional: Verify which jobs were updated
+        cursor.execute("""
+            SELECT job_id, title, closingDate 
+            FROM jobs 
+            WHERE closingDate <= ?
+        """, (current_time_pht,))
+        updated_jobs = cursor.fetchall()
+
+        print("Jobs marked as 'Unavailable':")
+        for job in updated_jobs:
+            job_id, title, closing_date = job
+            print(f"Job ID: {job_id}, Title: {title}, Closing Date: {closing_date}")
+
     except sqlite3.Error as e:
         print(f"An error occurred: {e}")
     finally:
@@ -1008,6 +1087,7 @@ def jobseeker():
 @app.route('/jobseeker_update_profile', methods=['POST'])
 def update_profile():
     # Check if the user is logged in
+    current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
     if 'user_id' not in session:
         flash('You need to log in first')
         return redirect(url_for('signin'))
@@ -1054,6 +1134,29 @@ def update_profile():
         WHERE User_ID = ?
     """, (bio, address, phone, image_path, user_id))
     
+
+
+    # Get jobseeker details from `users` table
+    cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (user_id,))
+    user = cursor.fetchone()
+
+    if user:
+        picture = user[0]  # profile (picture)
+        fname = user[1]    # fname
+        userType = user[2] # userType
+
+        # Now fetch the rating using the last inserted `rating_id`
+        notification_text = f"{fname} update his profile status"
+
+        # Insert notification into `admin_notification` table
+        cursor.execute('''
+            INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, userType, picture, fname, notification_text, current_time_pht))
+
+        print(f"Admin Notification: {notification_text}")
+
+
     conn.commit()
     conn.close()
     
@@ -1070,7 +1173,7 @@ def submit_rating():
     comments = request.form['comments']
     user_id = request.form['user_id']
     date_created = datetime.now().strftime('%d/%m/%Y')
-    philippine_tz = timezone(timedelta(hours=8))
+    # philippine_tz = timezone(timedelta(hours=8))
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -1078,6 +1181,38 @@ def submit_rating():
     cursor = conn.cursor()
     cursor.execute("INSERT INTO rating (star, comments, User_ID, date_created) VALUES (?, ?, ?, ?)",
                    (star, comments, user_id, current_time_pht))
+
+    # Get jobseeker details from `users` table
+    rating_id = cursor.lastrowid
+    print(f"Newly inserted Rating ID: {rating_id}")
+    cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (user_id,))
+    user = cursor.fetchone()
+    
+    if user:
+        picture = user[0]  # profile (picture)
+        fname = user[1]    # fname
+        userType = user[2] # userType
+    
+        
+        cursor.execute('SELECT star, comments FROM rating WHERE RatingID = ?', (rating_id,))
+        rating = cursor.fetchone()
+        
+        if rating:
+            star = rating[0]
+            comments = rating[1]
+
+            # Create notification text
+            notification_text = f"{fname} gives a rate of {star}. {comments}"
+            
+            # Insert notification into `admin_notification` table
+            cursor.execute('''
+                INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, userType, picture, fname, notification_text, current_time_pht))
+
+            print(f"Admin Notification: {notification_text}")
+
+
     conn.commit()
     conn.close()
     
