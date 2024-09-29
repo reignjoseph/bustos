@@ -12,6 +12,7 @@ import random
 import pytz
 timezone = pytz.timezone('Asia/Manila')
 from threading import Thread
+import time
 
 
 # Configure logging
@@ -96,44 +97,13 @@ def statistics():
 
 
 
-def construct_image_url(userType, picture):
-    if userType == 'Jobseeker':
-        # Check if the picture exists; if not, return the default image path
-        return f"/static/{picture}" if picture else 'static/images/user.png'
-    elif userType == 'Employer':
-        # Check if the picture exists; if not, return the default image path
-        return f"/static/images/employer-images/{picture}" if picture else 'static/images/user.png'
-    else:
-        return 'static/images/user.png'
-
-def update_notification_pictures():
-    while True:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        try:
-            # Update pictures in admin_notification from users table
-            cur.execute("""
-                UPDATE admin_notification
-                SET picture = (SELECT profile FROM users WHERE User_ID = admin_notification.user_id)
-                WHERE user_id IN (SELECT User_ID FROM users)
-            """)
-            conn.commit()
-            print("Updated notification pictures.")
-        except Exception as e:
-            print(f"Error updating notification pictures: {e}")
-        finally:
-            cur.close()
-            conn.close()
-        
-        time.sleep(3)  # Sleep for 3 seconds
-
-# Start the background thread
-Thread(target=update_notification_pictures, daemon=True).start()
 
 @app.route('/retrieve_admin_notification', methods=['GET'])
 def retrieve_admin_notification():
     fname = request.args.get('fname')
     notification_id = request.args.get('notification_id')
+    date_range = request.args.get('dateRange')  # Get date range from the request
+    user_id = request.args.get('user_id')  # Get user_id from the request
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -152,20 +122,37 @@ def retrieve_admin_notification():
         if notification_id:
             query += " AND notification_id = ?"
             params.append(notification_id)
+        if user_id:
+            query += " AND user_id = ?"  # Add condition for user_id
+            params.append(user_id)
+        if date_range:
+            # Split the date range into start and end dates
+            date_range = date_range.split(' to ')
+            if len(date_range) == 2:
+                start_date = date_range[0]
+                end_date = date_range[1]
+                query += " AND notification_date BETWEEN ? AND ?"
+                params.append(start_date)
+                params.append(end_date)
 
-        print("Executing query:", query)  # Print the query being executed
-        print("With parameters:", params)   # Print the parameters being used
+        print("Executing query:", query)
+        print("With parameters:", params)
 
         cur.execute(query, params)
         notifications = cur.fetchall()
 
-        print("Fetched notifications:", notifications)  # Print fetched notifications
+        print("Fetched notifications:", notifications)
 
         data = [
             {
                 "notification_id": notification[0],
                 "userType": notification[1],
-                "picture": construct_image_url(notification[1], notification[2]),
+                "picture": (
+                    f"static/{notification[2]}" if notification[1] == "Jobseeker" 
+                    else f"/static/images/employer-images/{notification[2]}" if notification[1] == "Employer" 
+                    else f"/static/{notification[2]}" if notification[1] == "Admin" 
+                    else notification[2]  # Default case if not Jobseeker, Employer, or Admin
+                ),
                 "fname": notification[3],
                 "notification_text": notification[4],
                 "notification_date": notification[5]
@@ -173,7 +160,7 @@ def retrieve_admin_notification():
             for notification in notifications
         ]
 
-        print("Processed notification data:", data)  # Print the processed notification data
+        print("Processed notification data:", data)
 
         return jsonify(data)
 
@@ -184,6 +171,57 @@ def retrieve_admin_notification():
     finally:
         cur.close()
         conn.close()
+
+
+
+
+
+# def update_notification_pictures():
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+
+#     try:
+#         # Update pictures in admin_notification from users table
+#         cur.execute("""
+#             UPDATE admin_notification
+#             SET picture = (SELECT profile FROM users WHERE User_ID = admin_notification.user_id)
+#             WHERE user_id IN (SELECT User_ID FROM users)
+#         """)
+#         conn.commit()
+#         print("Updated notification pictures.")
+#     except Exception as e:
+#         print(f"Error updating notification pictures: {e}")
+#     finally:
+#         cur.close()
+#         conn.close()
+# # Start the background thread
+# Thread(target=update_notification_pictures, daemon=True).start()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -868,7 +906,7 @@ def fetch_all_jobseekers():
     query = """
         SELECT User_ID, email, fname, contactnum, address,currentState, dateRegister
         FROM users
-        WHERE userType = 'Jobseeker'
+        WHERE userType = 'Jobseeker' AND status = 'Approved'
     """
     
     # Filtering by User_ID, fname, and date range if provided
@@ -938,7 +976,7 @@ def fetch_all_employers():
     query = """
         SELECT User_ID, email, fname, contactnum, address, currentState, dateRegister
         FROM users
-        WHERE userType = 'Employer'
+        WHERE userType = 'Employer' AND status = 'Approved'
     """
     
     # Filtering by User_ID, fname, and date range if provided
