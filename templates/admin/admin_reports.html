@@ -1,110 +1,33 @@
-<style>
-  /* Page break for PDF */
-  .page {
-      page-break-after: always;
-      padding: 20px;
-  }
-  .page:last-child {
-      page-break-after: auto; /* No page break after the last page */
-  }
-
-  /* Styling for the report */
-  .page h1, .page h2 {
-      text-align: center;
-      color: #0042c9;
-  }
-
-  .page table {
-      width: 100%;
-      border-collapse: collapse;
-  }
-
-  .page table, .page table th, .page table td {
-      border: 1px solid #0042c9;
-  }
-
-  .page table th, .page table td {
-      padding: 8px;
-      text-align: left;
-  }
-</style>
-
-<div class="reports" style="flex-direction: column; display: none; background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
-
-
-
-
-<div class="page">
-    <h1>Public Employment Service Office Report</h1>
-    <h2>Page 1: Employer Profile Updates</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>User Type</th>
-                <th>Name</th>
-                <th>Notification</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for notification in notifications[:10] %} <!-- First 10 entries -->
-            <tr>
-                <td>{{ notification[0] }}</td> <!-- userType -->
-                <td>{{ notification[1] }}</td> <!-- fname -->
-                <td>{{ notification[2] }}</td> <!-- notification_text -->
-                <td>{{ notification[3] }}</td> <!-- notification_date -->
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div class="page">
-    <h1>Public Employment Service Office Report</h1>
-    <h2>Page 2: Jobseeker Profile Updates</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>User Type</th>
-                <th>Name</th>
-                <th>Notification</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for notification in notifications[10:20] %} <!-- Next 10 entries -->
-            <tr>
-                <td>{{ notification[0] }}</td> <!-- userType -->
-                <td>{{ notification[1] }}</td> <!-- fname -->
-                <td>{{ notification[2] }}</td> <!-- notification_text -->
-                <td>{{ notification[3] }}</td> <!-- notification_date -->
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div class="page">
-    <h1>Public Employment Service Office Report</h1>
-    <h2>Page 3: Summary & Statistics</h2>
-
-    <p>This page contains a summary of the profile updates and any other important statistics or charts.</p>
+<html lang="en"><head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .mainframe {
+        border: 1px solid;
+        width: -webkit-fill-available;
+        margin: 40px;
+        height: min-content;
+    }
+    header{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+    </style>
+    </head><body style="display: flex;justify-content: center;margin: 0px 315px 0px 315px;">
+        <main class="mainframe">
+            <header>
+                <h6 style="font-size: 14px;font-family: auto;margin-bottom: 3px;">Republic of the Philippines</h6>
+                <h6 style="font-size: 10px;font-family: auto;margin-bottom: 0;">MUNICIPALITY OF BUSTOS</h6>
+                <h4 style="font-family: auto;margin: 0;font-weight: 500;">PESO Office Reports</h4>
+                <h4 style="font-weight: 900;font-size: 22px;">PUBLIC EMPLOYMENT SERVICE OFFICE</h4>
+                <p style="margin: 0;font-size: xx-small;">Email: pesobustos@gmail.com / Facebook Page: facebook.com/PesoBustos / Address: 2nd floor Annex Building Municipal Compound Poblacion, Bustos, Philippines</p>
+                <div style="width: -webkit-fill-available;border: 1px solid;margin: 0;padding: 0;"></div>
+            </header>
     
-    <!-- Add any charts, graphs, or summary information here -->
-
-</div>
+        </main>
     
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     
-    
-    
-    
-    
-    
-        
-
-
-
-
-</div>
+    </body></html>

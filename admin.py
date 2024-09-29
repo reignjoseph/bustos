@@ -1,5 +1,5 @@
 import re
-from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify, send_from_directory,abort
+from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify, send_from_directory,abort,make_response,send_file
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
@@ -13,6 +13,8 @@ import pytz
 timezone = pytz.timezone('Asia/Manila')
 from threading import Thread
 import time
+import pdfkit
+
 
 
 # Configure logging
@@ -71,6 +73,52 @@ def admin():
         return redirect(url_for('signin'))
 
     return render_template('admin/admin.html')
+
+
+
+
+
+
+
+@app.route('/peso_report_view', methods=['GET'])
+def peso_report_view():
+    return render_template('admin/admin_reports.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,0 +1,66 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+.report-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+header {
+    position: relative;
+    text-align: center;
+    margin: 50px 0;
+    padding: 20px;
+}
+
+.header-text {
+    display: inline-block;
+    margin: 0 auto;
+}
+
+.logo-left {
+    float: left;
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: 140px;
+}
+
+.logo-right {
+    float: right;
+    position: absolute;
+    top: 0;
+    right: 20px;
+    width: 140px;
+}
+
+header h1, header h2, header h5, header h6 {
+    margin: 5px 0;
+    color: black;
+}
+
+.header-paragraph {
+    font-size: 0.72em;
+    white-space: nowrap;
+    text-align: justify;
+}
+
+.divider {
+    width: 100%;
+    border: 2px solid;
+    margin-top: 20px;
+}
+
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 0.9em;
+    color: #666;
+}

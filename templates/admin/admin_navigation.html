@@ -1,3 +1,4 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <div style="width: 16em;">
 <div class="navigation_container">
     <aside class="navigation_sidebar">
@@ -35,7 +36,7 @@
                 <img src="static/images/admin-images/notification.png" alt="Notifications Icon"> 
                 <span>Notifications</span>
             </li>
-            <li onclick="showSection('reports', this)">
+            <li onclick="generatePDF()"> 
                 <img src="static/images/admin-images/reports.png" alt="Reports Icon"> 
                 <span>Reports</span>
             </li>
@@ -82,5 +83,37 @@
     // Optionally: Set the dashboard as the default section on load
     window.onload = function() {
         showSection('dashboard', document.querySelector('.navigation_nav li.active'));
+    }
+</script>
+
+<script>
+    function generatePDF() {
+        // Get the element to print
+        const element = document.querySelector('.mainframe');
+
+        // Check if the element exists and has content
+        if (!element || !element.innerHTML.trim()) {
+            alert("No content available for PDF generation.");
+            return;
+        }
+
+        // Options for the PDF with best quality settings
+        const options = {
+            margin: 0.25,
+            filename: 'peso_report.pdf',
+            image: { type: 'jpeg', quality: 1 }, // Best quality for images
+            html2canvas: { scale: 4 }, // Higher scale for better resolution
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Generate the PDF
+        html2pdf()
+            .from(element)
+            .set(options)
+            .save()
+            .catch(err => {
+                console.error('Error generating PDF:', err);
+                alert('An error occurred while generating the PDF.');
+            });
     }
 </script>
