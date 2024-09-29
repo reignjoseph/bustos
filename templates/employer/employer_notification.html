@@ -125,6 +125,7 @@ function approvedApplicant(applicantId) {
         contentType: 'application/json',
         success: function(response) {
             alert('Applicant approved successfully!');
+            fetchApprovedApplicants();
             fetchApplicants(currentPage); // Refresh the list after updating
         },
         error: function(xhr, status, error) {
@@ -143,6 +144,7 @@ function deniedApplicant(applicantId) {
         contentType: 'application/json',
         success: function(response) {
             alert('Applicant denied successfully!');
+            fetchApprovedApplicants();
             fetchApplicants(currentPage); // Refresh the list after updating
         },
         error: function(xhr, status, error) {

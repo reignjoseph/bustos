@@ -110,7 +110,7 @@
     white-space: nowrap;
 }
 
-#bio{resize:none;}
+#bio{resize:none;height: 2.3em;text-align: center;}
 
 
 

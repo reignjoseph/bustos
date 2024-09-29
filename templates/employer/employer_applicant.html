@@ -160,6 +160,7 @@ $(document).ready(function() {
             container.append(applicantCard);
             fetchInterviewResult(applicant.Applicant_ID);
             
+            
         });
         
         
@@ -207,7 +208,8 @@ $(document).ready(function() {
             success: function(response) {
                 alert('Interview status updated successfully');
                 $(this).prop('disabled', true); // Disable the checkbox
-
+                $(`#schedule-${applicantId}`).prop('disabled', true);
+                
                 // Automatically display the result section when the interview status is updated to YES
                 $(`#result-section-${applicantId}`).css('display', 'block');
                 
@@ -285,5 +287,6 @@ $(document).ready(function() {
 
     // Attach the search function to the global scope for oninput
     window.approvedSearchApplicants = approvedSearchApplicants;
+    window.fetchApprovedApplicants =fetchApprovedApplicants;
 });
 </script>

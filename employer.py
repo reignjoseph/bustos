@@ -434,6 +434,16 @@ def update_interview_result():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Fetch the jobseeker_id from the application_status table
+        cursor.execute('SELECT jobseeker_id FROM application_status WHERE applicant_id = ?', (applicant_id,))
+        jobseeker = cursor.fetchone()
+
+        if jobseeker is None:
+            print(f"Error: Jobseeker ID not found for applicant ID {applicant_id}")
+            return jsonify({'status': 'error', 'message': 'Jobseeker ID not found'}), 404
+
+        jobseeker_id = jobseeker[0]    
+
         # Fetch job details from the applicant and jobs tables
         cursor.execute('''
             SELECT a.job_id, j.company, j.position
@@ -457,12 +467,54 @@ def update_interview_result():
                 f"Congratulations! You are now hired!",
                 f"You are now hired at {company} as a {position}."
             ]
+
+           # Get jobseeker details from `users` table
+            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
+            user = cursor.fetchone()
+
+            if user:
+                picture = user[0]  # profile (picture)
+                fname = user[1]    # fname
+                userType = user[2] # userType
+
+                notification_text = f"{fname}'s application was successfully hired at the company {company}."
+
+                # Insert notification into `admin_notification` table
+                cursor.execute('''
+                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
+
+                print(f"Admin Notification: {notification_text}")
+
+
         elif result == "Failed":
             status_type = "Failed"
             status_descriptions = [
                 f"Your interview did not meet our expectations.",
                 f"Unfortunately, you were not selected for the position at {company}. Please feel free to apply for other opportunities."
             ]
+
+           # Get jobseeker details from `users` table
+            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
+            user = cursor.fetchone()
+
+            if user:
+                picture = user[0]  # profile (picture)
+                fname = user[1]    # fname
+                userType = user[2] # userType
+
+                notification_text = f"{fname}'s application failed to hired."
+
+                # Insert notification into `admin_notification` table
+                cursor.execute('''
+                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
+
+                print(f"Admin Notification: {notification_text}")
+
+
         else:
             status_type = result  # Use the result as status_type if it's neither Passed nor Failed
             status_descriptions = [
@@ -529,20 +581,14 @@ def check_interview_availability():
     current_time_pht = datetime.now(philippine_tz)
     
     # Fetch the scheduled time for the applicant
-    cursor.execute('''
-        SELECT scheduled FROM application_status WHERE applicant_id = ?
-    ''', (applicant_id,))
+    cursor.execute('''SELECT scheduled FROM application_status WHERE applicant_id = ?''', (applicant_id,))
     result = cursor.fetchone()
 
     conn.close()
 
-    if result:
+    if result and result[0] is not None:
         scheduled_time_str = result[0]
         try:
-            # Print the scheduled time string and current time
-            # print(f"Scheduled Time String: {scheduled_time_str}")
-            # print(f"Current Time PHT: {current_time_pht}")
-
             # Parse the scheduled time
             if len(scheduled_time_str) == 16:  # Format 'YYYY-MM-DD HH:MM'
                 scheduled_time = datetime.strptime(scheduled_time_str, '%Y-%m-%d %H:%M')
@@ -552,9 +598,6 @@ def check_interview_availability():
                 scheduled_time = philippine_tz.localize(scheduled_time)  # Localize to Philippine Time
             else:
                 raise ValueError("Unexpected date format")
-
-            # Print the parsed scheduled time
-            # print(f"Parsed Scheduled Time: {scheduled_time}")
 
             # Compare scheduled time with current time
             if scheduled_time < current_time_pht:
@@ -566,6 +609,8 @@ def check_interview_availability():
             print(f"Date parsing error: {e}")
             return jsonify({'status': 'hide'})
     else:
+        # Handle the case where no scheduled time was found or it was None
+        print(f"No scheduled time found for applicant ID {applicant_id}")
         return jsonify({'status': 'hide'})
 
 
@@ -710,9 +755,13 @@ def fetch_applicants():
         return jsonify({'error': 'An error occurred while fetching applicants'}), 500
 
 
+
+
 @app.route('/update_applicant_status', methods=['POST'])
 def update_applicant_status():
     try:
+        philippine_tz = pytz.timezone('Asia/Manila')
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
         data = request.get_json()
         applicant_id = data.get('applicant_id')
         status = data.get('status')
@@ -750,6 +799,18 @@ def update_applicant_status():
         company = job[0]
         print(f"Fetched company: {company}")
 
+
+        # Fetch employer fname based on employer_id from users table
+        cursor.execute('SELECT fname FROM users WHERE User_ID = ?', (employer_id,))
+        employer = cursor.fetchone()
+
+        if employer:
+            employer_fname = employer[0]  # Employer's fname
+        else:
+            employer_fname = f"Employer ID {employer_id}"
+
+
+
         # Define status descriptions based on the status
         if status == "Approved":
             status_descriptions = [
@@ -759,12 +820,53 @@ def update_applicant_status():
                 f"Alert: The status of your application at {company} is {status}.",
                 f"Info: Your application status at {company} has changed to {status}."
             ]
+
+            # Get jobseeker details from `users` table
+            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
+            user = cursor.fetchone()
+
+            if user:
+                picture = user[0]  # profile (picture)
+                fname = user[1]    # fname
+                userType = user[2] # userType
+
+                notification_text = f"{fname}'s application was {status} by {employer_fname}."
+
+                # Insert notification into `admin_notification` table
+                cursor.execute('''
+                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
+
+                print(f"Admin Notification: {notification_text}")
+
         elif status == "Denied":
             status_descriptions = [
                 f"Your application at {company} is {status} due to a mismatch of your resume.",
                 f"We're sad to inform you that your application is {status}.",
                 f"Alert: The status of your application at {company} is {status}."
             ]
+
+            # Get jobseeker details from `users` table
+            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
+            user = cursor.fetchone()
+
+            if user:
+                picture = user[0]  # profile (picture)
+                fname = user[1]    # fname
+                userType = user[2] # userType
+
+                notification_text = f"{fname}'s application was {status} by {employer_fname}."
+
+                # Insert notification into `admin_notification` table
+                cursor.execute('''
+                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
+
+                print(f"Admin Notification: {notification_text}")
+
+
         else:
             status_descriptions = [
                 f"Your application at {company} is {status}.",
@@ -776,9 +878,9 @@ def update_applicant_status():
         print(f"Generated status description: {status_description}")
 
         # Get current time in Philippine time (UTC+8)
-        # philippine_tz = timezone(timedelta(hours=8))
-        philippine_tz = pytz.timezone('Asia/Manila')
-        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+        # # philippine_tz = timezone(timedelta(hours=8))
+        # philippine_tz = pytz.timezone('Asia/Manila')
+        # current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
         print(f"Current Philippine time: {current_time_pht}")
 
         # Update the applicant's status in the applicant table
@@ -836,10 +938,36 @@ def employer_profile_update():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Update the profile picture path in the database
-    cursor.execute('UPDATE users SET profile = ? WHERE User_ID = ?', (filename, user_id))
-    conn.commit()
-    conn.close()
+    try:
+        # Update the profile picture path in the database
+        cursor.execute('UPDATE users SET profile = ? WHERE User_ID = ?', (filename, user_id))
+        conn.commit()  # Commit after updating users table
+
+        # Get user details for notification
+        cursor.execute('SELECT fname, userType FROM users WHERE User_ID = ?', (user_id,))
+        user = cursor.fetchone()
+
+        if user:
+            fname = user[0]    # First name
+            userType = user[1] # User type
+            notification_text = f"{fname} has updated their profile picture."
+
+            # Insert notification into admin_notification table
+            cursor.execute('''
+                INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, userType, filename, fname, notification_text, datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')))
+            
+            conn.commit()  # Commit after inserting notification
+            print(f"Admin Notification: {notification_text}")
+
+    except Exception as e:
+        conn.rollback()  # Rollback in case of error
+        print(f"Error during update or notification insertion: {e}")
+        return jsonify(success=False, error="Internal Server Error"), 500
+    finally:
+        # Close the connection
+        conn.close()
 
     # Update the session to reflect the new profile picture
     session['user_profile'] = filename
@@ -861,36 +989,62 @@ def profile_employer():
 
     if request.method == 'POST':
         # Update user information
-        email = request.form['email']
         contact = request.form['contact']
         bio = request.form['bio']
+        address = request.form['address']  # New address field
 
+        # Update the user's profile in the `users` table
         cursor.execute('''
             UPDATE users
-            SET contactnum = ?, bio = ?
+            SET contactnum = ?, bio = ?, address = ?
             WHERE User_ID = ?
-        ''', (contact, bio, user_id))
+        ''', (contact, bio, address, user_id))
         conn.commit()
+
+        # Get updated user details for the notification
+        cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (user_id,))
+        user = cursor.fetchone()
+
+        if user:
+            picture = user[0]  # Profile picture (or placeholder)
+            fname = user[1]    # First name
+            userType = user[2] # User type (e.g., employer)
+            
+            # Create the notification text
+            notification_text = f"{fname} has updated their profile."
+
+            # Insert notification into `admin_notification` table
+            current_time_pht = datetime.now(pytz.timezone('Asia/Manila')).strftime('%Y-%m-%d %H:%M:%S')  # Assuming you're using timezone aware timestamps
+            cursor.execute('''
+                INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, userType, picture, fname, notification_text, current_time_pht))
+
+            conn.commit()
+
         cursor.close()
         conn.close()
         return redirect(url_for('profile_employer'))
 
     else:
         # Display user information
-        cursor.execute('''
-            SELECT * FROM users WHERE User_ID = ?
-        ''', (user_id,))
+        cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
         user = cursor.fetchone()
-        cursor.close()
-        conn.close()
 
         if user:
             session['user_email'] = user['email']
             session['user_contact'] = user['contactnum']
             session['user_bio'] = user['bio']
+            session['user_address'] = user['address']  # Retrieve address
             return render_template('/employer/employer.html', user=user)
         else:
+            cursor.close()
+            conn.close()
             return "User not found", 404
+
+
+
+
 
 @app.route('/change_password', methods=['POST'])
 def change_password():
@@ -1012,8 +1166,8 @@ def post_job():
         jobseekers = cursor.fetchall()
 
         # Get current time in Philippine Time (PHT)
-        philippine_tz = pytz.timezone('Asia/Manila')
-        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+        # philippine_tz = pytz.timezone('Asia/Manila')
+        # current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
         # Generate notification text
         notification_text = generate_notification_text(company, title)
@@ -1025,6 +1179,26 @@ def post_job():
                 'INSERT INTO jobseeker_notifications (employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 (session['user_id'], notification_text, company, title, employer_fname, employer_profile, current_time_pht)
             )
+        
+        # INSERT THE applicant_notifications table with the same data
+        cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (session['user_id'],))
+        user = cursor.fetchone()
+
+        if user:
+            picture = user[0]  # profile (picture)
+            fname = user[1]    # fname
+            userType = user[2] # userType
+
+            # Now fetch the rating using the last inserted `rating_id`
+            notification_text = f"{fname} requesting permission to post about the company{company} as they are currently hiring. "
+
+            # Insert notification into `admin_notification` table
+            cursor.execute('''
+                INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (session['user_id'], userType, picture, fname, notification_text, current_time_pht))
+
+            print(f"Admin Notification: {notification_text}")
 
         conn.commit()
         conn.close()
@@ -1037,6 +1211,19 @@ def post_job():
 
     flash('Invalid file format')
     return redirect(request.url)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
