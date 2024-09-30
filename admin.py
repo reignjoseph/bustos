@@ -79,71 +79,178 @@ def admin():
 
 
 
+@app.route('/report_registration_data')
+def report_get_registration_data():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Get the current year
+    cur.execute("SELECT strftime('%Y', 'now') as current_year")
+    current_year = cur.fetchone()['current_year']
+    previous_years = [str(int(current_year) - i) for i in range(1, 4)]  # Get the last three years
+
+    # Prepare labels
+    labels = [current_year] + previous_years
+
+    # Fetch Jobseeker and Employer data for the current year and the last three years
+    cur.execute("""
+        SELECT strftime('%Y', dateRegister) as year, 
+               COUNT(CASE WHEN userType = 'Jobseeker' AND status = 'Approved' THEN 1 END) as jobseeker_count,
+               COUNT(CASE WHEN userType = 'Employer' AND status = 'Approved' THEN 1 END) as employer_count
+        FROM users
+        WHERE status = 'Approved' 
+        AND strftime('%Y', dateRegister) IN (?, ?, ?, ?)
+        GROUP BY year
+    """, (current_year, previous_years[0], previous_years[1], previous_years[2]))
+
+    rows = cur.fetchall()
+
+    jobseekers = [0] * 4  # Initialize list for Jobseeker counts
+    employers = [0] * 4   # Initialize list for Employer counts
+
+    # Populate jobseeker and employer counts based on fetched data
+    for row in rows:
+        year = row['year']
+        index = labels.index(year)
+        jobseekers[index] = row['jobseeker_count']
+        employers[index] = row['employer_count']
+    
+    conn.close()
+    
+    return jsonify({
+        'labels': labels,
+        'jobseekers': jobseekers,
+        'employers': employers
+    })
+
+
+@app.route('/hired_data')
+def hired_data():
+    # Connect to the database
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Get the current year and the previous 3 years
+    current_year = datetime.now().year
+    years = [str(current_year - i) for i in range(4)]  # ['2024', '2023', '2022', '2021']
+    
+    # Query to count applicants by year where status_type is "Passed"
+    data = {}
+    for year in years:
+        cur.execute("""
+            SELECT COUNT(*)
+            FROM application_status
+            WHERE status_type = 'Passed'
+            AND strftime('%Y', date_posted) = ?
+        """, (year,))
+        count = cur.fetchone()[0]
+        data[year] = count
+    
+    conn.close()
+    
+    return jsonify({
+        'labels': years[::-1],  # Reverse to show earliest year first
+        'applicants': [data[year] for year in years[::-1]]  # Applicants count sorted by year
+    })
+
+
+@app.route('/ratings_data', methods=['GET'])
+def ratings_data():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Fetch all data in the rating table
+    cur.execute("SELECT * FROM rating")
+    all_ratings = cur.fetchall()
+    all_ratings_list = [tuple(row) for row in all_ratings]
+    print("All ratings data in the table:", all_ratings_list)
+
+    # Get the current year
+    current_year = datetime.now().year
+
+    # Step 1: Check available years in the rating table
+    cur.execute("SELECT DISTINCT strftime('%Y', date_created) AS year FROM rating")
+    available_years = cur.fetchall()
+    print("Available years in the rating table:", [year[0] for year in available_years])
+
+    # Prepare the year range for querying
+    start_year = current_year - 3
+    end_year = current_year
+    print(f"Fetching ratings for years from {start_year} to {end_year}.")
+
+    # SQL Query to count ratings by year and star rating (1 to 5)
+    query = '''
+        SELECT strftime('%Y', date_created) AS year, star, COUNT(*) as count
+        FROM rating
+        WHERE strftime('%Y', date_created) BETWEEN ? AND ?
+        GROUP BY year, star
+        ORDER BY year, star
+    '''
+    
+    print(f"Executing query: {query} with parameters: {(start_year, end_year)}")
+    cur.execute(query, (str(start_year), str(end_year)))  # Ensure parameters are strings
+    ratings = cur.fetchall()
+    ratings_list = [tuple(row) for row in ratings]
+    print("Ratings fetched from database:", ratings_list)
+
+    # Initialize a dictionary to store ratings by year
+    result = {
+        "labels": [],  # Years
+        "stars": {1: [], 2: [], 3: [], 4: [], 5: []}  # Star ratings from 1 to 5
+    }
+
+    # Populate the result dictionary with 0 as a fallback
+    for year in range(start_year, end_year + 1):
+        result["labels"].append(str(year))  # Add year to labels
+        for star in range(1, 6):  # Loop through stars (1 to 5)
+            count = next((r[2] for r in ratings if r[0] == str(year) and r[1] == star), 0)
+            result["stars"][star].append(count)  # Add the count for each star rating
+
+            # Print star count for each year to verify the counts
+            print(f"Year: {year}, Star: {star}, Count: {count}")
+
+    # Print the final result dictionary before returning it
+    print("Final result to be sent as JSON:", result)
+
+    conn.close()
+    return jsonify(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @app.route('/peso_report_view', methods=['GET'])
 def peso_report_view():
     return render_template('admin/admin_reports.html')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/statistics', methods=['GET', 'POST'])
 def statistics():
     return render_template('admin/employment_statistic.html')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @app.route('/retrieve_admin_notification', methods=['GET'])

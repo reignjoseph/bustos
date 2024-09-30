@@ -1,66 +1,49 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f4f4;
-}
 
-.report-container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+.mainframe {
+    /* border: 1px solid; */
+    width: -webkit-fill-available;
+    margin: 40px;
+    height: min-content;
 }
-
 header {
-    position: relative;
-    text-align: center;
-    margin: 50px 0;
-    padding: 20px;
+    display: grid;
+    justify-items: center;
+    grid-template-rows: 0px min-content;
+}
+.noRegistered {
+    display: flex;
+    margin: 40px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    align-content: center;
+}
+#registrationChart {
+    width: 50% ; /* Make it responsive to the container */
+    height: auto ; /* Maintain aspect ratio */
 }
 
-.header-text {
-    display: inline-block;
-    margin: 0 auto;
+#hiredChart {
+    width: 50% ; /* Make it responsive to the container */
+    height: auto ; /* Maintain aspect ratio */
 }
-
-.logo-left {
-    float: left;
-    position: absolute;
-    top: 0;
-    left: 20px;
-    width: 140px;
+.noApplicant {
+    display: flex;
+    margin: 40px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    align-content: center;
 }
-
-.logo-right {
-    float: right;
-    position: absolute;
-    top: 0;
-    right: 20px;
-    width: 140px;
+#ratingsChart {
+    width: 50% ; /* Make it responsive to the container */
+    height: auto ; /* Maintain aspect ratio */
 }
-
-header h1, header h2, header h5, header h6 {
-    margin: 5px 0;
-    color: black;
-}
-
-.header-paragraph {
-    font-size: 0.72em;
-    white-space: nowrap;
-    text-align: justify;
-}
-
-.divider {
-    width: 100%;
-    border: 2px solid;
-    margin-top: 20px;
-}
-
-.footer {
-    text-align: center;
-    margin-top: 40px;
-    font-size: 0.9em;
-    color: #666;
+.noRatings {
+    display: flex;
+    margin: 40px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    align-content: center;
 }

@@ -1,33 +1,345 @@
-<html lang="en"><head>
+<html lang="en">
+<head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .mainframe {
-        border: 1px solid;
-        width: -webkit-fill-available;
-        margin: 40px;
-        height: min-content;
-    }
-    header{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-    </style>
-    </head><body style="display: flex;justify-content: center;margin: 0px 315px 0px 315px;">
+    <link rel="stylesheet" href="static/css/admin/admin_reports.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@latest"></script> <!-- Date Adapter -->
+</head>
+<body style="display: flex; justify-content: center; margin: 0px 315px 0px 315px;">
+    <div class="reports" style="flex-direction: column; display: none; width: -webkit-fill-available; height: -webkit-fill-available; margin: 30px 200px 0px 200px; border: 1px solid;">
         <main class="mainframe">
             <header>
-                <h6 style="font-size: 14px;font-family: auto;margin-bottom: 3px;">Republic of the Philippines</h6>
-                <h6 style="font-size: 10px;font-family: auto;margin-bottom: 0;">MUNICIPALITY OF BUSTOS</h6>
-                <h4 style="font-family: auto;margin: 0;font-weight: 500;">PESO Office Reports</h4>
-                <h4 style="font-weight: 900;font-size: 22px;">PUBLIC EMPLOYMENT SERVICE OFFICE</h4>
-                <p style="margin: 0;font-size: xx-small;">Email: pesobustos@gmail.com / Facebook Page: facebook.com/PesoBustos / Address: 2nd floor Annex Building Municipal Compound Poblacion, Bustos, Philippines</p>
-                <div style="width: -webkit-fill-available;border: 1px solid;margin: 0;padding: 0;"></div>
+                <div style="display: flex; height: min-content; width: -webkit-fill-available; justify-content: space-between; margin: 0px;">
+                    <img src="static/images/bayan_ng_bustos.png" alt="Bayan Logo" width="90px">
+                    <img src="static/images/peso_logo.png" alt="Peso Logo" width="90px">
+                </div>
+                <h6 style="font-size: 14px; font-family: auto; margin-bottom: 3px;">Republic of the Philippines</h6>
+                <h6 style="font-size: 10px; font-family: auto; margin-bottom: 0;">MUNICIPALITY OF BUSTOS</h6>
+                <h4 style="font-family: auto; margin: 0; font-weight: 500;">PESO Office Reports</h4>
+                <h4 style="font-weight: 900; font-size: 22px;">PUBLIC EMPLOYMENT SERVICE OFFICE</h4>
+                <p style="margin: 0; font-size: xx-small;">
+                    Email: pesobustos@gmail.com / Facebook Page: facebook.com/PesoBustos / 
+                    Address: 2nd floor Annex Building Municipal Compound Poblacion, Bustos, Philippines
+                </p>
+                <div style="width: -webkit-fill-available; border: 1px solid; margin: 0; padding: 0;"></div>
             </header>
-    
+
+            <div class="noRegistered">
+                <h5 style="text-align: center; font-size: 13px;">Number of Registered Jobseekers and Employers</h5>
+                <canvas id="registrationChart"></canvas>
+            </div>
+
+            <div class="noApplicant">
+                <h5 style="text-align: center; font-size: 13px;">Number of Applicants</h5>
+                <canvas id="hiredChart" width="50%"></canvas>
+            </div>
+
+
+            <div class="noRatings">
+                <h5 style="text-align: center; font-size: 13px;">Number of Ratings</h5>
+                <canvas id="ratingsChart" width="50%"></canvas>
+            </div>            
+
+            <p id="conclusionReport" style="font-size: 12px; text-align: center; margin-top: 20px; text-align:justify"></p>
+            
+
         </main>
-    
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // Generate the conclusion report
+            const conclusionText = 
+                "In conclusion, the Public Employment Service Office (PESO) of Bustos has made significant efforts to assist local residents seeking employment. These initiatives aim to improve the overall welfare of the community and reduce the unemployment rate in Bustos. As part of its commitment, PESO will continue to integrate and provide effective solutions based on community feedback.";
     
-    </body></html>
+            // Append the conclusion message to the conclusionReport element
+            $('#conclusionReport').text(conclusionText);
+        });
+    </script>
+
+    <script type="text/javascript">
+        // Fetch data from the Flask route and render the chart
+        $(document).ready(function () {
+            $.ajax({
+                url: "/report_registration_data", // Flask route to get the registration data
+                type: "GET",
+                success: function (response) {
+                    const ctx = document.getElementById('registrationChart').getContext('2d');
+                    
+                    // Ensure the data is sorted by year
+                    const sortedIndices = response.labels.map((label, index) => ({ label, index }))
+                        .sort((a, b) => a.label - b.label); // Sort by year
+    
+                    const sortedLabels = sortedIndices.map(item => item.label);
+                    const sortedJobseekers = sortedIndices.map(item => response.jobseekers[item.index]);
+                    const sortedEmployers = sortedIndices.map(item => response.employers[item.index]);
+    
+                    const registrationChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: sortedLabels, // Sorted years
+                            datasets: [
+                                {
+                                    label: 'Jobseekers',
+                                    data: sortedJobseekers, // Sorted data for jobseekers
+                                    borderColor: '#1f77b4',
+                                    fill: false
+                                },
+                                {
+                                    label: 'Employers',
+                                    data: sortedEmployers, // Sorted data for employers
+                                    borderColor: '#ff7f0e',
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    type: 'category', // Set x-axis type to 'category'
+                                    title: {
+                                        display: true,
+                                        text: 'Year' // Optional: Label for the x-axis
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    stepSize: 1, // Set the step size to 1
+                                    title: {
+                                        display: true,
+                                        text: 'Count' // Optional: Label for the y-axis
+                                    }
+                                }
+                            },
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: true
+                                }
+                            }
+                        }
+                    });
+    
+                    // Logic to determine the highest Jobseeker count and corresponding year
+                    // Logic to determine the highest Jobseeker count and corresponding year
+                    const jobseekerCounts = sortedJobseekers;
+                    const employerCounts = sortedEmployers; // Ensure you have this array available
+                    const highestJobseekerCount = Math.max(...jobseekerCounts);
+                    const highestEmployerCount = Math.max(...employerCounts);
+                    const highestJobseekerYearIndex = jobseekerCounts.indexOf(highestJobseekerCount);
+                    const highestEmployerYearIndex = employerCounts.indexOf(highestEmployerCount);
+                    const highestJobseekerYear = sortedLabels[highestJobseekerYearIndex];
+                    const highestEmployerYear = sortedLabels[highestEmployerYearIndex];
+
+                    // Determine the comparison text for Jobseekers
+                    let jobseekerComparisonText;
+                    if (highestJobseekerYear === String(new Date().getFullYear())) {
+                        jobseekerComparisonText = "than the previous year.";
+                    } else {
+                        jobseekerComparisonText = "than the current year.";
+                    }
+
+                    // Determine the employer message based on the count
+                    let employerMessage;
+                    if (highestEmployerCount >= 2) {
+                        employerMessage = `${highestEmployerCount} Employers were hired on ${new Date().getFullYear()}.`;
+                    } else if (highestEmployerCount === 1) {
+                        employerMessage = `1 Employer was hired on ${new Date().getFullYear()}.`;
+                    } else {
+                        employerMessage = `No Employers were hired on ${new Date().getFullYear()}.`;
+                    }
+
+                    // Create the paragraph and append it to the DOM
+                    const message = `The graph portrays that ${highestJobseekerCount} Jobseeker(s) registered to find a job on ${highestJobseekerYear} ${jobseekerComparisonText} ${employerMessage}`;
+                    $('<p style="font-size: 10px;">').text(message).appendTo('.noRegistered');
+
+                },
+                error: function (error) {
+                    console.error("Error fetching the registration data: ", error);
+                }
+            });
+        });
+    </script>
+    
+    <script type="text/javascript">
+        // Fetch data from the Flask route and render the chart
+        $(document).ready(function () {
+            $.ajax({
+                url: "/hired_data", // Flask route to get the applicants data
+                type: "GET",
+                success: function (response) {
+                    const ctx = document.getElementById('hiredChart').getContext('2d');
+                    
+                    // Ensure the data is sorted by year
+                    const sortedLabels = response.labels;
+                    const sortedApplicants = response.applicants;
+                    
+                    // Create the chart for passed applicants
+                    const hiredChart = new Chart(ctx, {
+                        type: 'bar',  // You can change the type to 'line' if you prefer
+                        data: {
+                            labels: sortedLabels, // Sorted years
+                            datasets: [
+                                {
+                                    label: 'Applicants Hired',
+                                    data: sortedApplicants, // Sorted data for applicants
+                                    backgroundColor: '#4caf50',  // Color for bars
+                                    borderColor: '#388e3c',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    type: 'category', // Set x-axis type to 'category'
+                                    title: {
+                                        display: true,
+                                        text: 'Year' // Optional: Label for the x-axis
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    stepSize: 1, // Set the step size to 1
+                                    title: {
+                                        display: true,
+                                        text: 'Count' // Optional: Label for the y-axis
+                                    }
+                                }
+                            },
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: true
+                                }
+                            }
+                        }
+                    });
+    
+                    // Logic to determine the highest count and corresponding year for passed applicants
+                    const highestApplicantCount = Math.max(...sortedApplicants);
+                    const highestApplicantYearIndex = sortedApplicants.indexOf(highestApplicantCount);
+                    const highestApplicantYear = sortedLabels[highestApplicantYearIndex];
+    
+                    // Create the paragraph and append it to the DOM
+                    const message = `The highest number of hired applicants was ${highestApplicantCount} in ${highestApplicantYear}.`;
+                    $('<p style="font-size: 10px;">').text(message).appendTo('.noApplicant');
+                },
+                error: function (error) {
+                    console.error("Error fetching the applicants data: ", error);
+                }
+            });
+        });
+    </script>
+    
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.ajax({
+                url: "/ratings_data", // Flask route to get the ratings data
+                type: "GET",
+                success: function (response) {
+                    const ctx = document.getElementById('ratingsChart').getContext('2d');
+    
+                    // Define colors for each star rating (1 to 5)
+                    const starColors = ['#ff9999', '#ffcc99', '#ffff99', '#ccff99', '#99ff99'];
+    
+                    const ratingsChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: response.labels, // Years
+                            datasets: [
+                                {
+                                    label: '1 Star',
+                                    data: response.stars[1], // 1-star ratings
+                                    backgroundColor: starColors[0]
+                                },
+                                {
+                                    label: '2 Stars',
+                                    data: response.stars[2], // 2-star ratings
+                                    backgroundColor: starColors[1]
+                                },
+                                {
+                                    label: '3 Stars',
+                                    data: response.stars[3], // 3-star ratings
+                                    backgroundColor: starColors[2]
+                                },
+                                {
+                                    label: '4 Stars',
+                                    data: response.stars[4], // 4-star ratings
+                                    backgroundColor: starColors[3]
+                                },
+                                {
+                                    label: '5 Stars',
+                                    data: response.stars[5], // 5-star ratings
+                                    backgroundColor: starColors[4]
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    type: 'category',
+                                    title: {
+                                        display: true,
+                                        text: 'Year' // Label for the x-axis
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Number of Ratings' // Label for the y-axis
+                                    }
+                                }
+                            },
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: true
+                                }
+                            }
+                        }
+                    });
+    
+                    // Logic to determine the highest rating count for the current year
+                    const currentYear = new Date().getFullYear().toString();
+                    const previousYear = (new Date().getFullYear() - 1).toString();
+                    
+                    // Calculate total ratings for the current year and previous year
+                    const currentYearRatings = response.stars[1][response.labels.indexOf(currentYear)] +
+                        response.stars[2][response.labels.indexOf(currentYear)] +
+                        response.stars[3][response.labels.indexOf(currentYear)] +
+                        response.stars[4][response.labels.indexOf(currentYear)] +
+                        response.stars[5][response.labels.indexOf(currentYear)];
+    
+                    const previousYearRatings = response.stars[1][response.labels.indexOf(previousYear)] +
+                        response.stars[2][response.labels.indexOf(previousYear)] +
+                        response.stars[3][response.labels.indexOf(previousYear)] +
+                        response.stars[4][response.labels.indexOf(previousYear)] +
+                        response.stars[5][response.labels.indexOf(previousYear)];
+    
+                    // Create the message
+                    let message;
+                    if (currentYearRatings > previousYearRatings) {
+                        message = `The current year (${currentYear}) has higher ratings (${currentYearRatings}) than the previous year (${previousYear}) with (${previousYearRatings}).`;
+                    } else {
+                        message = `The previous year (${previousYear}) had higher ratings (${previousYearRatings}) than the current year (${currentYear}) with (${currentYearRatings}).`;
+                    }
+    
+                    // Append the message to the DOM
+                    $('<p style="font-size: 12px; text-align: center;">').text(message).appendTo('.noRatings');
+                },
+                error: function (error) {
+                    console.error("Error fetching the ratings data: ", error);
+                }
+            });
+        });
+    </script>
+        
+
+
+</body>
+</html>

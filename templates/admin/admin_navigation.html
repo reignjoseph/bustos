@@ -36,7 +36,7 @@
                 <img src="static/images/admin-images/notification.png" alt="Notifications Icon"> 
                 <span>Notifications</span>
             </li>
-            <li onclick="generatePDF()"> 
+            <li onclick="showSection('reports', this)">
                 <img src="static/images/admin-images/reports.png" alt="Reports Icon"> 
                 <span>Reports</span>
             </li>
@@ -78,6 +78,11 @@
 
         // Add 'active' class to clicked item
         element.classList.add('active');
+
+        // Trigger PDF generation only when the 'reports' section is clicked
+        if (section === 'reports') {
+            setTimeout(generatePDF, 7000); // Allow the content to render before generating PDF
+        }
     }
 
     // Optionally: Set the dashboard as the default section on load
@@ -87,26 +92,27 @@
 </script>
 
 <script>
-    function generatePDF() {
-        // Get the element to print
-        const element = document.querySelector('.mainframe');
+function generatePDF() {
+    // Get the element to print
+    const element = document.querySelector('.mainframe');
 
-        // Check if the element exists and has content
-        if (!element || !element.innerHTML.trim()) {
-            alert("No content available for PDF generation.");
-            return;
-        }
+    // Check if the element exists and has content
+    if (!element || !element.innerHTML.trim()) {
+        alert("No content available for PDF generation.");
+        return;
+    }
 
-        // Options for the PDF with best quality settings
-        const options = {
-            margin: 0.25,
-            filename: 'peso_report.pdf',
-            image: { type: 'jpeg', quality: 1 }, // Best quality for images
-            html2canvas: { scale: 4 }, // Higher scale for better resolution
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
+    // Options for the PDF with best quality settings
+    const options = {
+        margin: 0.45,
+        filename: 'peso_report.pdf',
+        image: { type: 'jpeg', quality: 1 }, // Best quality for images
+        html2canvas: { scale: 4 }, // Higher scale for better resolution
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
 
-        // Generate the PDF
+    // Delay PDF generation to ensure chart rendering is done
+    setTimeout(() => {
         html2pdf()
             .from(element)
             .set(options)
@@ -115,5 +121,6 @@
                 console.error('Error generating PDF:', err);
                 alert('An error occurred while generating the PDF.');
             });
-    }
+    }, 1000); // Adjust the delay as needed
+}
 </script>
