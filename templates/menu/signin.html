@@ -45,6 +45,24 @@
     </header>
 <main>
   <div class="container-login">
+    <div class="forgot_password-form" style="display:none">
+        <h2>Forgot Password</h2>
+        <form id="forgot_password_form" action="/forgot_password_update" method="post">
+            <label for="forgot_password_old">Old Password:</label>
+            <input type="password" id="forgot_password_old" name="forgot_password_old" required><br>
+
+            <label for="forgot_password_new">New Password:</label>
+            <input type="password" id="forgot_password_new" name="forgot_password_new" required><br>
+
+            <label for="forgot_password_confirm">Confirm New Password:</label>
+            <input type="password" id="forgot_password_confirm" name="forgot_password_confirm" required><br>
+
+            <button id="forgot_password_submit" type="submit" onclick="validateForgotPassword()">Update Password</button>
+        </form>
+    </div>
+
+
+
     <div class="form-box-login">
         <h2>Sign in to your account</h2>
         {% if error_message %}
@@ -75,6 +93,11 @@
         </div>
     </div>
 </div>
+
+
+
+
+
 
 <script>
 function togglePasswordVisibility() {

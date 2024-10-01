@@ -47,3 +47,30 @@ header {
     flex-direction: column;
     align-content: center;
 }
+
+
+
+.PDF {
+    position: fixed;
+    border: 1px solid;
+    border-radius: 5px;
+    bottom: 0px;
+    background-color: #007bff; /* Blue background */
+    color: white; /* White text */
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
+}
+
+.PDF:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: scale(1.1); /* Slightly enlarge the button on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Add shadow effect on hover */
+}
+
+.PDF:active {
+    transform: scale(0.95); /* Slight shrink effect when clicked */
+}
+

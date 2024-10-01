@@ -80,9 +80,9 @@
         element.classList.add('active');
 
         // Trigger PDF generation only when the 'reports' section is clicked
-        if (section === 'reports') {
-            setTimeout(generatePDF, 7000); // Allow the content to render before generating PDF
-        }
+        // if (section === 'reports') {
+        //     setTimeout(generatePDF, 7000); // Allow the content to render before generating PDF
+        // }
     }
 
     // Optionally: Set the dashboard as the default section on load
@@ -91,7 +91,7 @@
     }
 </script>
 
-<script>
+<!-- <script>
 function generatePDF() {
     // Get the element to print
     const element = document.querySelector('.mainframe');
@@ -123,4 +123,4 @@ function generatePDF() {
             });
     }, 1000); // Adjust the delay as needed
 }
-</script>
+</script> -->

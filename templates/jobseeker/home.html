@@ -208,12 +208,13 @@ function seeFullDetail(button) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    function showLocation(address) {
-        const iframe = document.getElementById('mapIframe');
-        const encodedAddress = encodeURIComponent(address);
-        iframe.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAzO-uYOWLMPV2l3V7dozLaXjkLhOzYlCk&q=${encodedAddress}`;
-        $('#mapModal').modal('show');
-    }
+function showLocation(address) {
+    const iframe = document.getElementById('mapIframe');
+    const encodedAddress = encodeURIComponent(address);
+    iframe.src = `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodedAddress}+(My%20Business%20Name)&t=&z=14&ie=UTF8&iwloc=B&output=embed`;
+    $('#mapModal').modal('show'); // Make sure jQuery is included and modal is initialized
+}
+
 
  </script>
 
