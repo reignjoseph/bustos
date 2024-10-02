@@ -125,33 +125,41 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 function toggleFormsDisplay() {
-        var selectedRole = document.querySelector('input[name="role"]:checked').value;
-        var jobseekerForm = document.querySelector(".form-container_registration_jobseeker");
-        var employerForm = document.querySelector(".form-container_registration_employer");
+    var selectedRole = document.querySelector('input[name="role"]:checked').value;
+    var jobseekerForm = document.querySelector(".form-container_registration_jobseeker");
+    var employerForm = document.querySelector(".form-container_registration_employer");
 
-        // Show the jobseeker form if "Jobseeker" is selected, hide the employer form
-        if (selectedRole === "Jobseeker") {
-            jobseekerForm.style.display = "block"; // Show Jobseeker form
-            employerForm.style.display = "none";   // Hide Employer form
-            
-            // Add required attribute back to specific fields in Jobseeker form
-            document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
-                field.setAttribute('required', 'required');
-            });
+    // Show the jobseeker form if "Jobseeker" is selected, hide the employer form
+    if (selectedRole === "Jobseeker") {
+        jobseekerForm.style.display = "block"; // Show Jobseeker form
+        employerForm.style.display = "none";   // Hide Employer form
 
-        } 
-        // Show the employer form if "Employer" is selected, hide the jobseeker form
-        else if (selectedRole === "Employer") {
-            jobseekerForm.style.display = "none";  // Hide Jobseeker form
-            employerForm.style.display = "block";  // Show Employer form
+        // Add required attribute back to specific fields in Jobseeker form
+        document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+            field.setAttribute('required', 'required');
+        });
 
-            // Remove required attribute from specific fields in Jobseeker form
-            document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
-                field.removeAttribute('required');
-            });
-        }
+        // Remove required attribute from specific fields in Employer form
+        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"]').forEach(function(field) {
+            field.removeAttribute('required');
+        });
+    } 
+    // Show the employer form if "Employer" is selected, hide the jobseeker form
+    else if (selectedRole === "Employer") {
+        jobseekerForm.style.display = "none";  // Hide Jobseeker form
+        employerForm.style.display = "block";  // Show Employer form
+
+        // Add required attribute back to specific fields in Employer form
+        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"]').forEach(function(field) {
+            field.setAttribute('required', 'required');
+        });
+
+        // Remove required attribute from specific fields in Jobseeker form
+        document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+            field.removeAttribute('required');
+        });
     }
-
+}
 
 
 
@@ -287,19 +295,25 @@ function displayDetails() {
     function generateAndUploadPDF_jobseeker() {
     return new Promise((resolve, reject) => {
         const element = document.querySelector('.form-container_registration_jobseeker'); // Adjust the selector to your form container class or ID
-        html2pdf().from(element).output('blob').then(blob => {
+        // Define custom options for pdf generation
+        const options = {
+            margin: [0.25, 0.25, 0.25, 0.25],  // Top, right, bottom, left (inches)
+            filename: 'form-content-jobseeker.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 4 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().from(element).set(options).output('blob').then(blob => {
             if (!blob.size) {
                 alert('No content to generate PDF.');
                 return reject(); // Reject the promise if no content is available
             }
 
-            // Save PDF locally
-            // html2pdf().from(element).save('form-content.pdf');
-
             // Upload PDF to server
             const formData = new FormData();
             formData.append('pdf', blob, 'form-content-jobseeker.pdf');
-
+            
             fetch('/insert_html2pdf_jobseeker', {
                 method: 'POST',
                 body: formData
@@ -323,12 +337,15 @@ function displayDetails() {
 }
 
 
+
+
+
 function generateAndUploadPDF_employer() {
     return new Promise((resolve, reject) => {
         const element = document.querySelector('.form-container_registration_employer'); // Adjust the selector to your form container class or ID
         // Define custom options for pdf generation
         const options = {
-            margin: [0.25, 0.25, 0.47, 0.25],  // Top, right, bottom, left (inches)
+            margin: [0.25, 0.25, 0.25, 0.25],  // Top, right, bottom, left (inches)
             filename: 'form-content-employer.pdf',
             image: { type: 'jpeg', quality: 1 },
             html2canvas: { scale: 4 },
