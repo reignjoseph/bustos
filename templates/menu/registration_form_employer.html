@@ -1,0 +1,232 @@
+<style>
+    .page-break {
+        page-break-before:always    }
+</style>
+
+
+<style>
+.employer_form_group{ border: 1px solid; width: -webkit-fill-available; grid-column: 1/span 4; text-align: left; color: black; display: flex; flex-wrap: nowrap; }
+
+</style>
+
+<div class="form-container_registration_employer" style="display:none">
+    <div class="form-header_registration"></div>
+
+    <div id="page1" class="page active">
+        <h2 class="headera">NSRP Form 2<br>September<br>2020</h2><p class="headerb">Republic of the Philippines<br>Department of Labor and Employment<span style="font-weight: bold;"><br>NATIONAL SKILLS REGISTRATION PROGRAM<br>ESTABLISHMENT REGISTRATION FORM</span></p>
+        <p class="headerc"><span style="font-weight:bold;">INSTRUCTIONS:</span> Please fill out the form legibly in block letters using a ballpoint pen. Check if appropriate boxes. Please
+            do not leave any items unanswered. Indicate “NA” if not applicable. You may use extra sheet if needed. Submit
+            Accomplished form to the Public Employment Service Office (PESO) Manager or Officer in your city/municipality.
+            </p>
+                <div class="form-group_registration1"> 
+                    <h3 class="row1a">I.ESTABLISHMENT DETAILS</h3> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_business" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Business Name:</label><input required class="row3a" type="text"  name="employer_business" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_trade" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Trade Name:</label><input required class="row3a" type="text"  name="employer_trade" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_acronym" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Acronym/Abbreviation:</label><input required class="row3a" type="text"  name="employer_acronym" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;"> <label style=" margin: 10px; "><input type="radio" name="office_type" value="Main Office"> Main Office</label> <label style=" margin: 10px; "><input type="radio" name="office_type" value="Branch"> Branch</label> <label class="row2a" for="employer_tax_identifier_number" style="margin: 0;white-space: nowrap;font-weight: bolder;display: inherit;">Tax Identifier Number: <input ="" class="row3a" type="text"  name="employer_tax_identifier_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></label> </div>
+                    <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;">
+                         <label style="margin: 10px;font-weight: bolder;">Employer Type</label> 
+                         <div style=" display: grid; justify-content: center; column-gap: 20px; "> 
+                            <div>
+                            <label><input type="checkbox" name="employer_type" value="Public"> Public </label>
+                                <div style=" display: flex; flex-direction: column; margin: 10px; width: min-content; white-space: nowrap; ">
+                                    <label><input type="checkbox" name="employer_type_public" value="National Government Agency">National Government Agency</label>
+                                    <label><input type="checkbox" name="employer_type_public" value="Local Government Unit">Local Government Unit</label>
+                                    <label><input type="checkbox" name="employer_type_public" value="Government-Owned and Controlled Corporation">Government-Owned and Controlled Corporation</label>
+                                    <label><input type="checkbox" name="employer_type_public" value="State/Local Univesity or College">State/Local Univesity or College</label>
+                                </div>
+                            </div>
+                            
+                            <div  style=" grid-column: 2;">
+                            <label><input type="checkbox" name="employer_type" value="Private"> Private </label>
+                                <div style=" display: flex; flex-direction: column; margin: 10px; width: min-content; white-space: nowrap; ">
+                                    <label><input type="checkbox" name="employer_type_private" value="Direct Hire">Direct Hire</label>
+                                    <label><input type="checkbox" name="employer_type_private" value="Local Recruitment Agency">Local Recruitment Agency</label>
+                                    <label><input type="checkbox" name="employer_type_private" value="Overseas Recruitment Agency">Overseas Recruitment Agency</label>
+                                    <label><input type="checkbox" name="employer_type_private" value="D.O. 174">D.O. 174</label>
+                                </div></div>
+                            </div>
+                        </div>
+                    <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;align-items: center;flex-direction: row;"><label class="row2a" for="employer_total_work_force" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Total Work Force:</label> <div style=" display: flex; width: -webkit-fill-available; justify-content: space-evenly; align-items: center; "> <label style="display: flex;margin: 0;"><input type="checkbox" name="employer_micro" value="Micro (1-9)">Micro (1-9)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_small" value="Micro (1-9)">Small (10-99)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_medium" value="Micro (1-9)">Medium (100-999)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_large" value="Large (200 and up)">Large (200 and up)</label> </div> </div>
+                    <div class="employer_form_group"><label class="row2a" for="employer_line_of_business_industry" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Line of Business/Industry<span style="font-weight: normal;"> (check BIR 2303)</span>:</label><input  class="row3a" type="text"  name="employer_line_of_business_industry" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_street_village" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Street/Village:</label><input  class="row3a" type="text"  name="employer_street_village" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_barangay" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Barangay:</label><input  class="row3a" type="text"  name="employer_barangay" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_municipal" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Municipal/City:</label><input  class="row3a" type="text"  name="employer_municipal" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div class="employer_form_group"><label class="row2a" for="employer_province" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Province:</label><input class="row3a" type="text"  name="employer_province" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    
+
+
+            </div>
+
+            <div class="form-group_registration1">
+                <h3 class="row1a">II.ESTABLISHMENT CONTACT DETAILS</h3> 
+                <div class="employer_form_group"><label class="row2a" for="employer_president" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Name of Owner/President (Full Name):</label><input  class="row3a" type="text"  name="employer_president" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_contact" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Contact Person (Full Name):</label><input  class="row3a" type="text"  name="employer_contact" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_position" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Position:</label><input  class="row3a" type="text"  name="employer_position" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_telephone_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Telephone Number:</label><input  class="row3a" type="text"  name="employer_telephone_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_mobile_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Mobile Number:</label><input  class="row3a" type="text"  name="employer_mobile_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_fax_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Fax Number:</label><input  class="row3a" type="text"  name="employer_fax_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_email_address" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Email Address:</label><input  class="row3a" type="text"  name="employer_email_address" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+            </div>
+
+            <div class="form-group_registration1">
+                <h3 class="row1a">III.VACANCY DETAILS</h3> 
+                <div class="employer_form_group"><label class="row2a" for="employer_position_title" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Position Title:</label><input  class="row3a" type="text"  name="employer_position_title" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1 / span 2;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;align-items: flex-start;grid-row: 3/span 4;"> <label class="row2a" for="employer_job_description" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Job Description:</label> <textarea  class="row3a" type="text" name="employer_job_description" style="width: -webkit-fill-available; text-align: left; font-weight: normal; font-size: small; padding: 10px; border: none; height: -webkit-fill-available; resize: none;"></textarea> </div>
+                <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 3/span 2;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;align-items: flex-start;">
+                    <label class="row2a" for="employer_nature_of_work" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Nature of Work:</label>
+                    <div style="display: grid;justify-content: center;column-gap: 20px;align-self: center;"> 
+                       <div>
+                           <div style=" display: flex; flex-direction: column; margin: 10px; width: min-content; white-space: nowrap; ">
+                               <label><input type="checkbox" name="employer_permanent" value="Permanent">Permanent</label>
+                               <label><input type="checkbox" name="employer_contractual" value="Contractual">Contractual</label>
+                               <label><input type="checkbox" name="employer_project_based" value="Project Based">Project Based</label>
+                           </div></div>
+                       
+                       <div style=" grid-column: 2;">
+                           <div style=" display: flex; flex-direction: column; margin: 10px; width: min-content; white-space: nowrap; ">
+                               <label><input type="checkbox" name="employer_internship_ojt" value="Internship/OJT">Internship/OJT</label>
+                               <label><input type="checkbox" name="employer_part_time" value="Part Time">Part Time</label>
+                               <label><input type="checkbox" name="employer_work_from_home_online_job" value="Work From Home / online job">Work From Home / online job</label>
+                           </div></div>
+                       </div>
+
+                </div>
+                <div class="employer_form_group" style="grid-column: 3 / span 2;"><label class="row2a" for="employer_place_of_work" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Place of Work:</label><input  class="row3a" type="text"  name="employer_place_of_work" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group" style="grid-column: 3 / span 2;"><label class="row2a" for="employer_salary" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Salary:</label><input  class="row3a" type="text"  name="employer_salary" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group" style="grid-column: 3 / span 2;"><label class="row2a" for="employer_vacancy_count" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Vacancy Count:</label><input  class="row3a" type="text"  name="employer_vacancy_count" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+            </div>
+
+            
+            <div class="form-group_registration1">
+                <h3 class="row1a">IV.QUALIFICATION REQUIREMENTS</h3> 
+                <div style="flex-direction: column; align-items: baseline; font-weight: bold;" class="employer_form_group"><label class="row2a" for="employer_work_experience">Work Experience:</label><textarea class="row3a autoAdjustTextarea" rows="1" type="text"  name="employer_work_experience" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+                <div style="flex-direction: column; align-items: baseline; font-weight: bold;" class="employer_form_group"><label class="row2a" for="employer_other_qualifications">Other Qualifications:</label><textarea rows="1" class="row3a autoAdjustTextarea" type="text"  name="employer_other_qualifications" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+
+                <div class="employer_form_group" style=" font-weight: bolder; padding: 5px; display: flex; flex-direction: column; ">
+                    <label style=" display: flex; flex-direction: row; width: -webkit-fill-available; white-space: nowrap; align-items: flex-start; justify-content: flex-start; gap: 20px; ">
+                        Accepts persons with disabilities (PWD)
+                        <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">
+                            Yes<input type="radio" name="employer_disability_button" value="Yes" id="employer_disability_yes">
+                        </label>
+                        <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">
+                            No<input type="radio" name="employer_disability_button" value="No" id="employer_disability_no">
+                        </label>
+                    </label>
+                    
+                    <div style="display: flex; align-items: center; justify-content: flex-start;">
+                        <label>If "yes":</label>
+                        <div style="display: flex; margin: 10px; width: min-content; white-space: nowrap; flex-wrap: nowrap; align-content: center; justify-content: center; align-items: center; gap: 5px; flex-direction: row;">
+                            <label style=" margin: 0; display: flex; align-items: center; ">
+                                <input type="checkbox" name="employer_visual" value="Visual" class="disability_checkbox">Visual
+                            </label>
+                            <label style=" margin: 0; display: flex; align-items: center; ">
+                                <input type="checkbox" name="employer_physical" value="Physical" class="disability_checkbox">Physical
+                            </label>
+                            <label style=" margin: 0; display: flex; align-items: center; ">
+                                <input type="checkbox" name="employer_hearing" value="Hearing" class="disability_checkbox">Hearing
+                            </label>
+                            <label style=" margin: 0; display: flex; align-items: center; ">
+                                <input type="checkbox" name="employer_mental" value="Mental" class="disability_checkbox">Mental
+                            </label>
+                            <label style=" margin: 0; display: flex; align-items: center; ">
+                                <input type="checkbox" name="employer_speech" value="Speech" class="disability_checkbox">Speech
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div style="place-self: center; width: -webkit-fill-available;">
+                        <label style="margin: 0; display: flex; align-items: center; flex-direction: row; white-space: nowrap;">
+                            <input type="checkbox" id="employer_others_checkbox"> Others: (please specify) 
+                            <input id="employer_others_input" style="outline: none; width: -webkit-fill-available; margin-left: 10px;" type="text" name="employer_others" disabled>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- JavaScript to enable/disable inputs and handle checkbox clearing -->
+                <script>
+                    // Select the relevant inputs and checkboxes
+                    const othersCheckbox = document.getElementById('employer_others_checkbox');
+                    const othersInput = document.getElementById('employer_others_input');
+                    const disabilityYesRadio = document.getElementById('employer_disability_yes');
+                    const disabilityNoRadio = document.getElementById('employer_disability_no');
+                    const checkboxes = document.querySelectorAll('.disability_checkbox');
+                
+                    // Enable or disable the "Others" input field based on checkbox
+                    othersCheckbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            othersInput.disabled = false;  // Enable input
+                        } else {
+                            othersInput.disabled = true;   // Disable input
+                            othersInput.value = '';        // Clear input field
+                        }
+                    });
+                
+                    // Event listener for the "No" radio button
+                    disabilityNoRadio.addEventListener('change', function() {
+                        if (this.checked) {
+                            // Uncheck all checkboxes
+                            checkboxes.forEach(function(checkbox) {
+                                checkbox.checked = false;
+                            });
+                
+                            // Uncheck and disable "Others" checkbox and clear input
+                            othersCheckbox.checked = false;
+                            othersInput.disabled = true;
+                            othersInput.value = '';  // Clear the "Others" text input
+                        }
+                    });
+                </script>
+                
+
+                <div class="employer_form_group" style=" font-weight: bolder; padding: 5px; display: flex; flex-direction: column; "> <label style="display: flex;flex-direction: row;width: -webkit-fill-available;white-space: nowrap;align-items: flex-start;justify-content: flex-start;gap: 20px;margin: 0;"> Accepts returning (OFWs): <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">Yes<input type="radio" name="employer_returning_button" value="Yes"></label> <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">No<input type="radio" name="employer_returning_button" value="No"></label> </label></div>
+                <div class="employer_form_group" style="grid-column: 1 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_education_level" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Education Level:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_education_level" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+                <div class="employer_form_group" style="grid-column: 3 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_course" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Course/SHS Strand:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_course" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+                <div class="employer_form_group" style="grid-column: 1 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_license" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">License:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_license" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+                <div class="employer_form_group" style="grid-column: 3 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_eligibility" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Eligibility:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_eligibility" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+                <div class="employer_form_group" style="grid-column: 1 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_certification" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Certification:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_certification" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+                <div class="employer_form_group" style="grid-column: 3 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_language_dialect" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Language/dialect Spoken:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_language_dialect" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
+
+
+                
+            </div>  
+
+            <div class="form-group_registration1">
+                <h3 class="row1a">V.POSTING DETAILS</h3>
+                <div class="employer_form_group"><label class="row2a" for="employer_posting_date" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Posting Date (mm/dd/year):</label><input  class="row3a" type="text"  name="employer_posting_date" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group"><label class="row2a" for="employer_valid_until" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Valid Until (mm/dd/year):</label><input  class="row3a" type="text"  name="employer_valid_until" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+            </div>
+            
+
+    </div>
+
+</div>
+<script>
+    // Select all textareas with the class autoAdjustTextarea
+    const textareas = document.querySelectorAll('.autoAdjustTextarea');
+
+    textareas.forEach(textarea => {
+        // Add input event listener to each textarea
+        textarea.addEventListener('input', () => {
+            textarea.style.height = 'auto';  // Reset the height to auto to recalculate
+            textarea.style.height = `${textarea.scrollHeight}px`;  // Set height based on content and line wrap
+        });
+    });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

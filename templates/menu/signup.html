@@ -7,7 +7,8 @@
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/signup.css">
-    <link rel="stylesheet" href="/static/css/registration_form.css">
+    <link rel="stylesheet" href="/static/css/registration_form_jobseeker.css">
+    <link rel="stylesheet" href="/static/css/registration_form_employer.css">
     <!-- Bootstrap and custom JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -61,7 +62,7 @@
             </div>
 
             
-                <div class="form-group-1 form-group-radio"> <label> <input type="radio" name="role" value="Jobseeker" checked> Jobseeker </label> <label> <input type="radio" name="role" value="Employer"> Employer </label> </div> <div class="form-group-2 abc"> <label for="name">Name:</label> <input type="text" id="name" name="name" required> </div> <div class="form-group-3 abc"> <label for="email">Email:</label> <input type="email" id="email" name="email" required> </div> <div class="form-group-4 abc password-group"> <label for="password">Password:</label> <input type="password" id="password" name="password" required> <span class="toggle-password" onclick="togglePasswordVisibility()"> <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password"> </span> </div> <div class="form-group-5"> <label> <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a> </label> </div>
+                <div class="form-group-1 form-group-radio"> <label> <input type="radio" name="role" value="Jobseeker" required> Jobseeker </label> <label> <input type="radio" name="role" value="Employer" required> Employer </label> </div> <div class="form-group-2 abc"> <label for="name">Name:</label> <input type="text" id="name" name="name" required> </div> <div class="form-group-3 abc"> <label for="email">Email:</label> <input type="email" id="email" name="email" required> </div> <div class="form-group-4 abc password-group"> <label for="password">Password:</label> <input type="password" id="password" name="password" required> <span class="toggle-password" onclick="togglePasswordVisibility()"> <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password"> </span> </div> <div class="form-group-5"> <label> <input type="checkbox" name="terms" required> I agree to the <a href="#">Terms of Service</a> </label> </div>
                 <div class="form-group-6">
                     <button type="button" onclick="displayDetails()" class="btn-signup">Additional Details</button>
                 </div> 
@@ -75,7 +76,8 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                {% include 'menu/registration_form.html' %}
+                                {% include 'menu/registration_form_jobseeker.html' %}
+                                {% include 'menu/registration_form_employer.html' %}
                             </div>
                             <div class="modal-footer">
                                 <button style="width: 20%;" type="button" onclick="validateAndSubmit()" id="generate-pdf" class="btn-signup">Submit</button>
@@ -108,43 +110,123 @@
 
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Select both radio buttons
+    var roleRadios = document.querySelectorAll('input[name="role"]');
+
+    // Function to toggle the display of jobseeker and employer forms
+
+    // Add event listener to each radio button
+    roleRadios.forEach(function(radio) {
+        radio.addEventListener('change', toggleFormsDisplay);
+    });
+
+});
+
+
+function toggleFormsDisplay() {
+        var selectedRole = document.querySelector('input[name="role"]:checked').value;
+        var jobseekerForm = document.querySelector(".form-container_registration_jobseeker");
+        var employerForm = document.querySelector(".form-container_registration_employer");
+
+        // Show the jobseeker form if "Jobseeker" is selected, hide the employer form
+        if (selectedRole === "Jobseeker") {
+            jobseekerForm.style.display = "block"; // Show Jobseeker form
+            employerForm.style.display = "none";   // Hide Employer form
+            
+            // Add required attribute back to specific fields in Jobseeker form
+            document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+                field.setAttribute('required', 'required');
+            });
+
+        } 
+        // Show the employer form if "Employer" is selected, hide the jobseeker form
+        else if (selectedRole === "Employer") {
+            jobseekerForm.style.display = "none";  // Hide Jobseeker form
+            employerForm.style.display = "block";  // Show Employer form
+
+            // Remove required attribute from specific fields in Jobseeker form
+            document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+                field.removeAttribute('required');
+            });
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
 function displayDetails() {
-    var name = document.getElementById("name").value.trim();
-    var email = document.getElementById("email").value.trim();
-    var password = document.getElementById("password").value.trim();
-    var terms = document.querySelector('input[name="terms"]').checked;
+    var selectedRole = document.querySelector('input[name="role"]:checked'); // Get the selected radio button
     var errorMessageDiv = document.getElementById("js-error-message");
     var errorMessageText = document.getElementById("js-error-text");
 
-    // Check if all required fields are filled
-    if (name === "" || email === "" || password === "" || !terms) {
+    // Check if a role is selected
+    if (!selectedRole) {
         errorMessageDiv.style.display = "block";
-        errorMessageText.innerHTML = "Please complete all required fields.";
-    } else {
-        // Hide the error message div if validation passes
-        errorMessageDiv.style.display = "none";
-
-        // Perform the AJAX call to check email
-        $.ajax({
-            url: "/check_email",
-            method: "POST",
-            data: { email: email },
-            success: function(response) {
-                if (response.email_exists) {
-                    errorMessageDiv.style.display = "block";
-                    errorMessageText.innerHTML = "Email is already registered.";
-                } else {
-                    // Email is not registered, show additional details section
-                    $('#registrationModal').modal('show');
-                }
-            },
-            error: function() {
-                errorMessageDiv.style.display = "block";
-                errorMessageText.innerHTML = "An error occurred. Please try again.";
-            }
-        });
+        errorMessageText.innerHTML = "Please select a role.";
+        return; // Exit if no role is selected
     }
+
+    selectedRole = selectedRole.value; // Get the value of the selected role
+
+    var name = document.getElementById("name");
+    var email = document.getElementById("email");
+    var password = document.getElementById("password");
+    var terms = document.querySelector('input[name="terms"]');
+
+    // Check if all required fields are filled based on the selected role
+    if (selectedRole === "Jobseeker") {
+        if (name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === "" || !terms.checked) {
+            errorMessageDiv.style.display = "block";
+            errorMessageText.innerHTML = "Please complete all required fields for Jobseeker.";
+            return; // Exit if validation fails
+        }
+    } else if (selectedRole === "Employer") {
+        // Only check the fields that are required for Employer
+        if (name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === "" || !terms.checked) {
+            errorMessageDiv.style.display = "block";
+            errorMessageText.innerHTML = "Please complete all required fields for Employer.";
+            return; // Exit if validation fails
+        }
+    }
+
+    // Hide the error message div if validation passes
+    errorMessageDiv.style.display = "none";
+    toggleFormsDisplay();
+    // Perform the AJAX call to check email
+    $.ajax({
+        url: "/check_email",
+        method: "POST",
+        data: { email: email.value.trim(), role: selectedRole }, // Include selectedRole in the data
+        success: function(response) {
+            if (response.email_exists) {
+                errorMessageDiv.style.display = "block";
+                errorMessageText.innerHTML = "Email is already registered.";
+            } else {
+                // Email is not registered, show additional details section
+                $('#registrationModal').modal('show');
+            }
+        },
+        error: function() {
+            errorMessageDiv.style.display = "block";
+            errorMessageText.innerHTML = "An error occurred. Please try again.";
+        }
+    });
 }
+
+
+
+
+
+
+
 
 </script>
 
@@ -165,6 +247,7 @@ function displayDetails() {
     function validateAndSubmit() {
         var form = document.getElementById("signupForm");
         var email = form.querySelector("input[name='email']").value; // Adjust selector if needed
+        var selectedRole = document.querySelector('input[name="role"]:checked').value; // Get selected role (Jobseeker or Employer)
 
         // Perform AJAX request to check email
         $.ajax({
@@ -177,12 +260,20 @@ function displayDetails() {
                 } else {
                     // Proceed with form submission if email does not exist
                     if (form.checkValidity()) {
-                        // Generate and upload PDF
-                        generateAndUploadPDF().then(() => {
-                            form.submit(); // Submit the form only after PDF operations are complete
-                        });
+                        // Check selected role and call the appropriate function
+                        if (selectedRole === "Jobseeker") {
+                            // Generate and upload Jobseeker PDF
+                            generateAndUploadPDF_jobseeker().then(() => {
+                                form.submit(); // Submit the form only after PDF operations are complete
+                            });
+                        } else if (selectedRole === "Employer") {
+                            // Generate and upload Employer PDF
+                            generateAndUploadPDF_employer().then(() => {
+                                form.submit(); // Submit the form only after PDF operations are complete
+                            });
+                        }
                     } else {
-                        form.reportValidity();
+                        form.reportValidity(); // Display form validation errors
                     }
                 }
             },
@@ -192,10 +283,10 @@ function displayDetails() {
         });
     }
 
-    function generateAndUploadPDF() {
+    
+    function generateAndUploadPDF_jobseeker() {
     return new Promise((resolve, reject) => {
-        const element = document.querySelector('.form-container_registration'); // Adjust the selector to your form container class or ID
-
+        const element = document.querySelector('.form-container_registration_jobseeker'); // Adjust the selector to your form container class or ID
         html2pdf().from(element).output('blob').then(blob => {
             if (!blob.size) {
                 alert('No content to generate PDF.');
@@ -207,7 +298,7 @@ function displayDetails() {
 
             // Upload PDF to server
             const formData = new FormData();
-            formData.append('pdf', blob, 'form-content.pdf');
+            formData.append('pdf', blob, 'form-content-jobseeker.pdf');
 
             fetch('/insert_html2pdf_jobseeker', {
                 method: 'POST',
@@ -230,6 +321,53 @@ function displayDetails() {
         });
     });
 }
+
+
+function generateAndUploadPDF_employer() {
+    return new Promise((resolve, reject) => {
+        const element = document.querySelector('.form-container_registration_employer'); // Adjust the selector to your form container class or ID
+        // Define custom options for pdf generation
+        const options = {
+            margin: [0.25, 0.25, 0.47, 0.25],  // Top, right, bottom, left (inches)
+            filename: 'form-content-employer.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 4 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().from(element).set(options).output('blob').then(blob => {
+            if (!blob.size) {
+                alert('No content to generate PDF.');
+                return reject(); // Reject the promise if no content is available
+            }
+
+            // Upload PDF to server
+            const formData = new FormData();
+            formData.append('pdf', blob, 'form-content-employer.pdf');
+
+
+            fetch('/insert_html2pdf_employer', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    // alert('PDF uploaded successfully!');
+                    resolve(); // Resolve the promise to indicate completion
+                } else {
+                    alert('Failed to upload PDF.');
+                    reject(); // Reject the promise if upload fails
+                }
+            }).catch(() => {
+                alert('An error occurred while uploading the PDF.');
+                reject(); // Reject the promise if an error occurs
+            });
+        }).catch(() => {
+            alert('An error occurred while generating the PDF.');
+            reject(); // Reject the promise if PDF generation fails
+        });
+    });
+}
+
 
 
 

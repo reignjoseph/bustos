@@ -9,6 +9,10 @@ from logging import FileHandler
 from main import app
 import random
 import pytz
+import time
+timezone = pytz.timezone('Asia/Manila')
+philippine_tz = pytz.timezone('Asia/Manila')
+
 
 timezone = pytz.timezone('Asia/Manila')
 
@@ -1264,3 +1268,66 @@ def generate_notification_text(company, job_title):
     notification_text = random.choice(templates)
 
     return notification_text
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/insert_html2pdf_employer', methods=['POST'])
+def insert_html2pdf_employer():
+    if 'pdf' not in request.files:
+        print("No file part")
+        return redirect('/signin')
+
+    file = request.files['pdf']
+
+    if file.filename == '':
+        print("No selected file")
+        return redirect('/signin')
+
+    if file:
+        # Secure the filename and prepare for saving
+        filename = secure_filename('form-content-employer.pdf')
+        file_path = os.path.join(app.config['EMPLOYER_UPLOAD_FOLDER'], filename)
+        
+        # Check if file already exists and rename if necessary
+        base, extension = os.path.splitext(filename)
+        counter = 1
+        new_filename = filename  # Initialize new_filename
+
+        while os.path.exists(file_path):
+            new_filename = f"{base}({counter}){extension}"
+            file_path = os.path.join(app.config['EMPLOYER_UPLOAD_FOLDER'], new_filename)
+            counter += 1
+        
+        # Save the file using the unique filename
+        file.save(file_path)
+        print(f"PDF saved to {file_path}")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Insert into the `pdf` table with the unique filename
+        cursor.execute('''
+            INSERT INTO pdf (pdf_form)
+            VALUES (?)
+        ''', (new_filename,))
+
+        conn.commit()
+        conn.close()
+
+        print(f"PDF filename '{new_filename}' inserted into the database.")
+
+    return redirect('/signin')
+ 
