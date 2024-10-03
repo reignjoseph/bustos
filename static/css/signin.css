@@ -1,82 +1,4 @@
-body, html {
-    background: linear-gradient(to bottom, #3636fb, lightblue, white);
-    height: min-content;
-    width: -webkit-fill-available;
-    background-repeat: no-repeat;
-    background-size: 100% 170%;
-    position: relative;
-    display: block;
-}
 
-.logo-box {
-    width: auto;
-    height: auto;
-}
-
-.menu-icon {
-    font-size: 24px;
-    cursor: pointer;
-    display: none;
-}
-
-.boxes-container {
-    font-weight: normal;
-    display: flex;
-    gap: 50px;
-    opacity: 1;
-    font-size: 13px;
-    text-shadow: 0 0 black;
-}
-
-.box {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: center;
-    text-align: -webkit-center;
-    color: black;
-}
-
-.image {
-    width: -webkit-fill-available;
-    height: -webkit-fill-available;
-    border: 1px solid;
-    border-radius: 30%;
-    width: 40px;
-    padding: 2px;
-    border-color: black;
-}
-
-.home {
-    border: 1px solid #000;
-    width: 50px;
-    height: 50px;
-    color: #fff;
-}
-
-.footer {
-    position: absolute;
-    width: -webkit-fill-available;
-    height: 3vw;
-    bottom: 0px;
-    left: 0;
-    background-color: #4e69ff;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    font-size: 1.5vw;
-    align-items: center;
-    flex-wrap: nowrap;
-    padding: 15px 10px 0px 0px;
-    border-radius: 15px 15px 0px 0px;
-}
-
-.footer a {
-    color: #fff;
-    text-decoration: none;
-}
 /* IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII */
 
 /* IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII */
@@ -170,14 +92,14 @@ h2 {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: flex;
-    width: 290px;
+    width: auto;
     position: relative;
-    /* transform: translate(0px, 15vw); */
-    /* top: 10px; */
+    white-space: nowrap;
+    margin-top: 3rem;
 }
 
 .form-box-login {
-    width: 300px;
+    width: auto;
 }
 
 h2 {
@@ -256,7 +178,7 @@ input[type="password"] {
 .eye{position: relative;width: 25px;}
 
 
-main{position:relative;display: grid;transform: translate(0vw, 15vw);grid-template-rows: 1fr 10vw;}
+main.base_signin{display: flex;flex-direction: column;flex-wrap: nowrap;justify-content: center;align-items: center;}
 a:hover {
     color: black;
     text-decoration: underline;
@@ -316,13 +238,69 @@ a:hover {
 }
 
 .boxes-container.open {
-    display: flex;
-    animation: menu-open 0.3s ease-in-out forwards;
-    z-index: 1;
 }
 
 .boxes-container.close {
     display: flex;
     animation: menu-close 0.3s ease-in-out forwards;
 }
+}
+
+
+
+
+
+
+.forgot_password-form {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+    place-self: center;
+    white-space: nowrap;
+    flex-direction: column;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+}
+
+.forgot_password-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.forgot_password-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.forgot_password-form input {
+    width: 16rem;
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.forgot_password-form button {
+    width: -webkit-fill-available;
+    padding: 5px;
+    background-color: #3F51B5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.forgot_password-form button:hover {
+    background-color: #45a049;
+}
+
+.error_message_forgotpassword{
+    text-align: center;
+    margin: 0;
 }

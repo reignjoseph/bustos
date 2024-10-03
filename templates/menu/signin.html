@@ -1,129 +1,40 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/signin.css">
-    <!-- Bootstrap and custom JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="/static/js/script.js" defer=""></script>
-    <title>Home</title>
-    <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
-</head>
+{% extends "menu/menu_navigation.html" %}
+{% block content %}
+<main class="base_signin">
 
-<style>
-    .forgot_password-form {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        max-width: -webkit-fill-available;
-        width: 100%;
-        position: absolute;
-        z-index: 1;
-        left: 0;
-        right: 0;
-        top: 0;
-        border: 0;
-    }
     
-    .forgot_password-form h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #333;
-    }
+    <div class="forgot_password-form" style="display:none;">
+        <img id="close_forgot_password" src="static/images/close.png" alt="Close" style="cursor: pointer; width: 30px; float: right; place-self: end; margin: 5px; position: relative;" onclick="closeForgotPassword()" />
+        <div style="padding: 0px 20px 20px 20px; display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px;">
+        
+        
+        <div class="error_message_forgotpassword" id="error_message_forgotpassword" style="color: red;">
+        </div> <!-- Added id for error display -->
+        <h2>Forgot Password</h2>
+        <form id="forgot_password_form" action="/forgot_password_update" method="post">
+            <label for="forgot_password_email">Email:</label>
+            <input type="email" id="forgot_password_email" name="forgot_password_email" required><br>
     
-    .forgot_password-form label {
-        display: block;
-        margin-bottom: 5px;
-        color: #555;
-    }
+            <label for="otp">OTP:</label>
+            <input type="text" id="otp" name="otp" placeholder="Enter OTP" required><br>
+            
+            <button type="button" id="send_otp" onclick="requestOtp()">Send OTP</button>
     
-    .forgot_password-form input {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 5px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 16px;
-    }
+            <label for="forgot_password_new">New Password:</label>
+            <input type="password" id="forgot_password_new" name="forgot_password_new" required><br>
     
-    .forgot_password-form button {
-        width: -webkit-fill-available;
-        padding: 5px;
-        background-color: #3F51B5;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-    }
+            <label for="forgot_password_confirm">Confirm New Password:</label>
+            <input type="password" id="forgot_password_confirm" name="forgot_password_confirm" required><br>
     
-    .forgot_password-form button:hover {
-        background-color: #45a049;
-    }
-    
-    </style>
+            <button id="forgot_password_submit" type="submit" onclick="validateForgotPassword()">Update Password</button>
+            
+        </form>
+    </div>
+    </div>    
 
-<body>
-    <header style="padding: 10px;">
-        <div class="container" style="max-width: -webkit-fill-available;">
-            <div class="d-flex justify-content-between align-items-center py-2">
-                    <a href="/" class="logo-box">
-                        <img src="/static/images/jobahanap.png" style="max-width: 200px;" alt="Logo">
-                    </a>
-                <button class="menu-icon btn btn-primary d-md-none" onclick="toggleMenu()">☰</button>
-                <div class="boxes-container close" id="boxes-container">
-                    <a href="/" class="box">
-                        <img class="image" src="/static/images/home.png" alt="Logo">
-                    Home</a>
-                    <a href="/announcement" class="box">
-                        <img class="image" src="/static/images/announcement.png" alt="Logo">
-                    Announcement</a>
-                    <a href="/about#" class="box">
-                        <img class="image" src="/static/images/aboutus.png" alt="Logo">
-                    About Us</a>
-                    <a href="/about#contact" class="box">
-                        <img class="image" src="/static/images/contactus.png" alt="Logo">
-                    Contact Us</a>
-                    <a href="/signin" class="box">
-                        <img class="image" src="/static/images/signin.png" alt="Logo">
-                    Sign In</a>
-
-                </div>
-            </div>
-        </div>
-    </header>
-<main>
   <div class="container-login">
 <!-- Forgot Password Form -->
-<div class="forgot_password-form" style="display:none;">
-    <img id="close_forgot_password" src="static/images/close.png" alt="Close" style="cursor: pointer; width: 30px; float: right;" onclick="closeForgotPassword()" />
-    <div class="error_message_forgotpassord" id="error_message_forgotpassord" style="color: red;"></div> <!-- Added id for error display -->
-    <h2>Forgot Password</h2>
-    <form id="forgot_password_form" action="/forgot_password_update" method="post">
-        <label for="forgot_password_email">Email:</label>
-        <input type="email" id="forgot_password_email" name="forgot_password_email" required><br>
 
-        <label for="otp">OTP:</label>
-        <input type="text" id="otp" name="otp" placeholder="Enter OTP" required><br>
-        
-        <button type="button" id="send_otp" onclick="requestOtp()">Send OTP</button>
-
-        <label for="forgot_password_new">New Password:</label>
-        <input type="password" id="forgot_password_new" name="forgot_password_new" required><br>
-
-        <label for="forgot_password_confirm">Confirm New Password:</label>
-        <input type="password" id="forgot_password_confirm" name="forgot_password_confirm" required><br>
-
-        <button id="forgot_password_submit" type="submit" onclick="validateForgotPassword()">Update Password</button>
-        
-    </form>
-</div>
 
 <script>
     let otpCooldown = false; // Flag for cooldown state
@@ -154,7 +65,7 @@
     // Function to request OTP
     function requestOtp() {
     const email = document.getElementById('forgot_password_email').value;
-    const errorMessageDiv = document.getElementById('error_message_forgotpassord');
+    const errorMessageDiv = document.getElementById('error_message_forgotpassword');
     errorMessageDiv.innerText = '';  // Clear previous error messages
 
     if (otpCooldown) {
@@ -224,7 +135,7 @@
     function validateForgotPassword() {
         const newPassword = document.getElementById('forgot_password_new').value;
         const confirmPassword = document.getElementById('forgot_password_confirm').value;
-        const errorMessageDiv = document.getElementById('error_message_forgotpassord');
+        const errorMessageDiv = document.getElementById('error_message_forgotpassword');
         errorMessageDiv.innerText = ''; // Clear previous error messages
 
         if (newPassword !== confirmPassword) {
@@ -246,7 +157,7 @@
             return; // Stop execution if validation fails
         }
 
-        const errorMessageDiv = document.getElementById('error_message_forgotpassord');
+        const errorMessageDiv = document.getElementById('error_message_forgotpassword');
         errorMessageDiv.innerText = ''; // Clear previous error messages
 
         fetch('/forgot_password_update', {
@@ -293,16 +204,22 @@
 
     // Wait for the DOM to fully load
     document.addEventListener('DOMContentLoaded', function() {
-        checkCooldown(); // Check for cooldown status on page load
+    checkCooldown(); // Check for cooldown status on page load
 
-        // Show the forgot password form when "Forgot password?" is clicked
-        document.getElementById('forgot_password_link').onclick = function() {
-            document.querySelector('.forgot_password-form').style.display = 'block'; // Show the form
-        };
+    // Show the forgot password form and hide the login form when "Forgot password?" is clicked
+    document.getElementById('forgot_password_link').onclick = function() {
+        document.querySelector('.forgot_password-form').style.display = 'flex'; // Show the forgot password form
+        document.querySelector('.container-login').style.display = 'none'; // Hide the login container
+    };
 
-        // Assign the close button functionality
-        document.getElementById('close_forgot_password').onclick = closeForgotPassword; // Close the form
-    });
+    // Assign the close button functionality
+    document.getElementById('close_forgot_password').onclick = function() {
+        document.querySelector('.forgot_password-form').style.display = 'none'; // Hide the forgot password form
+        document.querySelector('.container-login').style.display = 'block'; // Show the login container again
+    };
+});
+
+
 </script>
 
 
@@ -392,5 +309,4 @@ function togglePasswordVisibility() {
 
 </script>
 </main>
-</body>
-</html>
+{% endblock %}

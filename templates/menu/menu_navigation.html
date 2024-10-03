@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/announcement.css">
+    <link rel="stylesheet" href="/static/css/about.css">
+    <link rel="stylesheet" href="/static/css/signin.css">
+    <link rel="stylesheet" href="/static/css/signup.css">
+    <link rel="stylesheet" href="/static/css/registration_form_jobseeker.css">
+    <link rel="stylesheet" href="/static/css/registration_form_employer.css">
+    <!-- Bootstrap and custom JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="/static/js/script.js" defer=""></script>
+    <title>Home</title>
+    <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header style="padding: 10px;">
+        <div class="container" style="max-width: -webkit-fill-available;">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                    <a href="/" class="logo-box">
+                        <img src="/static/images/jobahanap.png" style="max-width: 200px;" alt="Logo">
+                    </a>
+                <button class="menu-icon btn btn-primary d-md-none" onclick="toggleMenu()">☰</button>
+                <div class="boxes-container close" id="boxes-container">
+                    <a href="/" class="box">
+                        <img class="image" src="/static/images/home.png" alt="Logo">
+                    Home</a>
+                    <a href="/announcement" class="box">
+                        <img class="image" src="/static/images/announcement.png" alt="Logo">
+                    Announcement</a>
+                    <a href="/about#" class="box">
+                        <img class="image" src="/static/images/aboutus.png" alt="Logo">
+                    About Us</a>
+                    <a href="/about#contact" class="box">
+                        <img class="image" src="/static/images/contactus.png" alt="Logo">
+                    Contact Us</a>
+                    <a href="/signin" class="box">
+                        <img class="image" src="/static/images/signin.png" alt="Logo">
+                    Sign In</a>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {% block content %}
+    <!-- This is where content from extended templates will be injected -->
+    {% endblock %}
+    
+    
+</body>
+</html>
