@@ -140,7 +140,6 @@ main.base_about .container4 {
     /* background-color: antiquewhite; */
     justify-content: center;
     row-gap: 5px;
-    margin-bottom: 10px;
 }
 
 main.base_about .container4 h1 {
