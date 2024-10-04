@@ -5,7 +5,7 @@
         <div class="signup-container">
             <h2>Sign Up As</h2>
 
-            <div id="js-error-message" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none; padding-left: 2rem; padding-right: 2rem;">
+            <div id="js-error-message" class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: center; display: none; padding-left: 2rem; padding-right: 2rem;">
                 <span id="js-error-text"></span>
                 <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="right: 0px; top: -15px; width: 0; height: 0; outline:none;"> -->
                     <!-- <span aria-hidden="true">&times;</span> -->
@@ -21,12 +21,12 @@
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="registrationModalLabel">Additional Registration Details</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <h5 class="modal-title" id="registrationModalLabel">Additional Registration Details <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
-                                </button>
+                                </button></h5>
+                                
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body" style="padding: 10px;">
                                 {% include 'menu/registration_form_jobseeker.html' %}
                                 {% include 'menu/registration_form_employer.html' %}
                             </div>
@@ -144,14 +144,14 @@ function displayDetails() {
     if (selectedRole === "Jobseeker") {
         if (name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === "" || !terms.checked) {
             errorMessageDiv.style.display = "block";
-            errorMessageText.innerHTML = "Please complete all required fields for Jobseeker.";
+            errorMessageText.innerHTML = "Please complete all required<br>fields for Jobseeker.";
             return; // Exit if validation fails
         }
     } else if (selectedRole === "Employer") {
         // Only check the fields that are required for Employer
         if (name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === "" || !terms.checked) {
             errorMessageDiv.style.display = "block";
-            errorMessageText.innerHTML = "Please complete all required fields for Employer.";
+            errorMessageText.innerHTML = "Please complete all required<br>fields for Employer.";
             return; // Exit if validation fails
         }
     }
