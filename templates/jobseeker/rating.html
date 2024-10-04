@@ -37,6 +37,9 @@
         updateStars(selectedRating); // Ensure default star is highlighted
     }
 
+
+
+
     function closeRate() {
         document.getElementById('ratingModal').style.display = 'none';
         document.body.classList.remove('no-scroll'); // Re-enable scrolling on body
@@ -70,4 +73,16 @@
             updateStars(selectedRating);
         });
     });
+
+
+
+</script>
+
+<script>
+        document.getElementById('ratingModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeRate();
+        }
+    });
+    
 </script>

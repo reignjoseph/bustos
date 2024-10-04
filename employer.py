@@ -76,6 +76,19 @@ def employer():
         session.clear()
         return redirect(url_for('signin'))
 
+    # Fetch user profile picture
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT profile FROM users WHERE User_ID = ?", (user_id,))
+    profile_picture = cursor.fetchone()[0]
+    conn.close()
+
+    # Check if profile picture is NULL or empty
+    if profile_picture is None or profile_picture == '':
+        profile_picture = 'images/employer-images/user_1.png'  # Set default image path
+
+
     # If session is still active, render the employer page
     return render_template('employer/employer.html')
 

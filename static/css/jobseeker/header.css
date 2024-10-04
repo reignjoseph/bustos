@@ -7,7 +7,7 @@ body, html {
     position: relative;
     display: block;
 }
-main{grid-template-columns: auto;display: grid;grid-template-rows: auto;position: relative;background-color: aliceblue;margin: 1vw;border-radius: 5px;padding: 20px;}
+main{grid-template-columns: auto;display: grid;grid-template-rows: auto;position: relative;background-color: aliceblue;margin: 20px;border-radius: 5px;padding: 20px;}
 
 .logo-box {
     width: auto;

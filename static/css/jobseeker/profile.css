@@ -24,14 +24,14 @@
     grid-column: 1/span2;
     place-self: center;
 }
-.profile_bio{width: -webkit-fill-available;height: 42px;max-width: -webkit-fill-available;grid-column: 1/span 2;/* place-self: center; */text-wrap: nowrap;grid-row: 2;place-self: center;margin: 10px;/* padding: 0; */}
-.profile-frame1 {height: auto;top: 100px;padding: 20px;display: grid;grid-template-rows: 1fr;gap: 0px;grid-template-columns: 1fr 1fr;max-width: 570px;}
+.profile_bio{border-radius: 5px;align-content: center;padding-left: 10px;resize: none;height: min-content;}
+.profile-frame1 {top: 100px;padding: 10px;display: flex;grid-template-columns: inherit;width: min-content;place-self: center;}
 .profile-row1 {position: relative;grid-column: 1/span 2;/* transform: translate(0px, 0px); */display: grid;justify-content: center;align-items: start;}
 .button-profile {grid-column: 2;width: min-content;text-wrap: nowrap;grid-row: 4;font-size: 11px;align-self: end;justify-self: center;}
 
 
-.formcontainer{display:grid;grid-template-columns: repeat(2, 50%);grid-template-rows: 1fr auto auto;grid-row: 1;grid-column: 1/span2;justify-content: center;align-items: center;/* grid-row-gap: 10px; */background-color: beige;border-radius: 10px;padding: 10px;}
-.PIcontainer{/* display: block; *//* position: relative; *//* top: 0; */grid-row: 3;grid-column: 1 / span 2;width: 300px;display: grid;/* grid-template-columns: repeat(1, 20%) 80%; */grid-template-rows: 60px 60px 80px;/* height: min-content; *//* align-self: end; *//* margin-left: 20px; *//* row-gap: 0px; */place-items: center;/* background-color: beige; */border-radius: 10px;padding: 0px 10px 0px 10px;}
+.formcontainer{display: flex;background-color: #c2c2c2;border-radius: 5px;padding: 10px;flex-direction: column;width: 25rem;gap: 20px;}
+.PIcontainer{display: block;position: relative;grid-row: 3;width: -webkit-fill-available;place-items: center;border-radius: 10px;}
 
 .PIcontainer .email{
     font-size: 20px;
@@ -60,12 +60,15 @@
 }
 
 .profile_email{
-    grid-column: 2;
-    max-width: 260px;
+    width: -webkit-fill-available;
+    height: min-content;
+    border: 1px solid !important;
+    padding: 10px;
+    border-radius: 5px;
+    background: aliceblue;
 }
 .profile_phone{
-    grid-column: 2;
-    max-width: 260px;
+    border: 1px solid black !important;
 }
 
 
@@ -81,20 +84,25 @@
     display: flex;
     flex-wrap: wrap;
 }
-.frame-profile-1{}
+
 
 
 .password_container{
-    background-color: antiquewhite;
+    background-color: #c2c2c2;
     border-radius: 5px;
     padding: 10px;
     width: 320px;
 }
-.profile-picture-container-main{
-    /* background-color: antiquewhite; */
-    /* display: grid; */
-    /* grid-template-columns: repeat(2, 50%); */
+/* Add the scaling effect on hover */
+.camera-hover-effect {
+    transition: transform 0.2s ease-in-out;
 }
+
+.camera-hover-effect:hover {
+    transform: scale(0.9);
+}
+   /* grid-template-columns: repeat(2, 50%); */
+
 .button1_profile{
     text-wrap: nowrap;
     width: -webkit-fill-available;

@@ -41,18 +41,21 @@ h2 {
     grid-template-columns: 1fr 3fr;
     align-items: center;
     width: -webkit-fill-available;
+    gap: 20px;
 }
 .form-group-3 {
     display: grid;
     grid-template-columns: 1fr 3fr;
     align-items: center;
     width: -webkit-fill-available;
+    gap: 20px;
 }
 .form-group-4 {
     display: grid;
     grid-template-columns: 1fr 3fr;
     align-items: center;
     width: -webkit-fill-available;
+    gap: 14px;
 }
 .form-group-5 {
     display: grid;

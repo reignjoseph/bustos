@@ -1,29 +1,31 @@
 .notification_notification {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 10px;
     margin-bottom: 10px;
     background-color: #fff;
     width: 100%;
-    justify-content: space-between; /* Distribute space between profile and content */
+     /* Distribute space between profile and content */
+    flex-direction: column;
 }
 
 .profile_notification {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    width: 5rem;
     background-color: rgb(227, 227, 227);
     margin-right: 15px;
     overflow: hidden;
     border: 1px solid black;
+    border-radius: 50%;
+    height: 4.5rem;
+    display: flex;
 }
 
 .notification-content_notification {
     display: flex;
     flex-direction: column; /* Align content in a column */
-    width: calc(100% - 60px); /* Adjust width to leave space for date */
+    width: -webkit-fill-available; /* Adjust width to leave space for date */
 }
 
 .fname_notification {
@@ -33,11 +35,13 @@
 
 .text_notification {
     margin-bottom: 5px; /* Space between text and date */
-    white-space: nowrap; /* Prevent text wrapping */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Add ellipsis if text overflows */
+     /* Prevent text wrapping */
+     /* Add ellipsis if text overflows */
+    font-size: 1rem;
 }
 
 .time_notification {
     text-align: right; /* Align date to the right */
 }
+
+.notifications-container{display: flex; flex-direction: column;}

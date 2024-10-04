@@ -5,23 +5,59 @@
 {% include 'jobseeker/profile.html' %}
 <div class="notifications-container">
     {% for notif in notifications %}
-        <div class="notification_notification">
-            <div class="profile_notification">
-                <img src="{{ notif['profile_picture'] }}" class="profile-picture-small" alt="Employer Profile Picture">
-            </div>
-            <div class="notification-content_notification">
-                <div class="fname_notification">{{ notif['employer_fname'] }}</div>
-                <div class="text_notification">
-                    {{ notif['text'] }}
+        <div class="notification_notification" id="notification-{{ notif['NotifID'] }}">
+            <img src="/static/images/close.png" style="position: relative; place-self: end;" width="30px" onclick="close_jobseeker_notification_popup(this)">
+
+
+
+            <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
+                <div class="profile_notification">
+                    <img src="{{ notif['profile_picture'] }}" class="profile-picture-small" alt="Employer Profile Picture">
                 </div>
-                <!-- Display the created date with an ID -->
-                <div class="time_notification" data-time="{{ notif['date_created'] }}"></div>
+                <div class="notification-content_notification">
+                    <div class="fname_notification">{{ notif['employer_fname'] }}</div>
+                    <div class="text_notification">
+                        {{ notif['text'] }}
+                    </div>
+                    <!-- Display the created date with an ID -->
+                    <div class="time_notification" data-time="{{ notif['date_created'] }}"></div>
+                </div>
             </div>
         </div>
     {% endfor %}
 </div>
 
+
 <script>
+function close_jobseeker_notification_popup(imgElement) {
+    // Find the parent notification element
+    const notificationElement = imgElement.closest('.notification_notification');
+
+    // Extract the NotifID from the parent element's ID
+    const notif_id = notificationElement.id.split('-')[1]; // Assuming the ID is like 'notification-2'
+
+    console.log("Closing notification ID:", notif_id);
+    
+    fetch(`/jobseeker/notification/close/${notif_id}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log(`Notification ${notif_id} closed successfully.`);
+            notificationElement.remove(); // Remove the notification from the DOM
+        } else {
+            console.error(`Failed to close notification: ${response.statusText}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error closing notification:', error);
+    });
+}
+
+
     document.addEventListener("DOMContentLoaded", function() {
         const elements = document.querySelectorAll('.time_notification');
         elements.forEach(element => {
@@ -37,6 +73,8 @@
             });
         }, 60000);
     });
+
+
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>

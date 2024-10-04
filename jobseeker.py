@@ -624,9 +624,14 @@ def jobseeker_notification():
         cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
         user_data = cursor.fetchone()
 
-        # Fetch notifications for the jobseeker
-        cursor.execute('SELECT * FROM jobseeker_notifications WHERE employer_id IS NOT NULL')
+        # Fetch notifications for the jobseeker where popup is NULL or empty
+        cursor.execute('SELECT * FROM jobseeker_notifications WHERE popup IS NULL OR popup = ""')
         notifications = cursor.fetchall()
+        
+        # Print notifications for debugging
+        print("Fetched Notifications:")
+        for notification in notifications:
+            print(dict(notification))
 
         # Generate notification texts
         notifications_with_text = []
@@ -651,7 +656,8 @@ def jobseeker_notification():
                 'company': company,
                 'job_title': job_title,
                 'date_created': date_created,
-                'profile_picture': profile_picture
+                'profile_picture': profile_picture,
+                'NotifID': notification['NotifID']  # Ensure NotifID is included
             })
 
         # Close the cursor and connection
@@ -662,6 +668,27 @@ def jobseeker_notification():
         return render_template('jobseeker/notification.html', user_data=user_data, notifications=notifications_with_text)
     
     return redirect(url_for('signin'))
+
+
+
+@app.route('/jobseeker/notification/close/<int:notif_id>', methods=['POST'])
+def close_jobseeker_notification(notif_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Update the popup status in the database
+    cursor.execute('UPDATE jobseeker_notifications SET popup = ? WHERE NotifID = ?', ('false', notif_id))
+    conn.commit()
+
+    # Check if the update was successful
+    if cursor.rowcount == 0:
+        return jsonify({'error': 'Notification not found'}), 404
+
+    cursor.close()
+    conn.close()
+    return jsonify({'success': True}), 200
+
+
 
 
 
@@ -728,6 +755,9 @@ def jobseeker():
         cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
         user_data = cursor.fetchone()
 
+        if user_data and (user_data[6] is None or user_data[6] == ''):
+            user_data = list(user_data)  # Convert to list to modify
+            user_data[6] = 'images/profile.png'
         
 
         # Close the cursor and connection

@@ -7,7 +7,7 @@
 <div class="status-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
     <!-- Dynamic status cards will be injected here -->
 </div>
-<style>.close-img { cursor: pointer; width: 30px; float: right; transition: transform 0.3s ease; } .close-img:hover { transform: scale(1.2); }</style>
+<style>.close-img { cursor: pointer; width: 30px; transition: transform 0.3s ease; align-self: self-end; } .close-img:hover { transform: scale(1.2); }</style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
@@ -16,7 +16,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchApplicationStatus();
     // Refresh status data every 60 seconds
-    setInterval(fetchApplicationStatus, 60000);
+    // setInterval(fetchApplicationStatus, 60000);
 });
 
 function fetchApplicationStatus() {
@@ -60,14 +60,15 @@ function fetchApplicationStatus() {
 
                 statusHtml += `
                     <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                        <div style="display: flex; align-items: center;">
-                            <div class="profile-picture" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
-                                <img src="${status.profile_picture}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img class="close-img"  src="/static/images/close.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close">
+                        <div style="display: grid; align-items: flex-start; grid-template-columns: min-content;">
+                            <div class="profile-picture" style="overflow: hidden; border: 1px solid black; display: flex; border-radius: 50%; width: 5rem; height: 5rem;">
+                                <img src="${status.profile_picture}" alt="Profile">
                             </div>
-                            <div class="status-info" style="margin-left: 20px;">
-                                <div class="employer-name" style="font-weight: bold; font-size: 18px;">${status.employer_name} <img class="close-img"  src="/static/images/close.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close"></div>
+                            <div class="status-info" style="margin: 0px 20px; display: flex; flex-direction: column; grid-column: 2;">
+                                <div class="employer-name" style="font-weight: bold;color:black;">${status.employer_name} </div>
                                 
-                                <div class="status-description" style="color: #666;">${status.status_description}</div>
+                                <div class="status-description" style="color: #000000; margin-top: 10px;">${status.status_description}</div>
                                 <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
                             </div>
                         </div>
