@@ -132,11 +132,11 @@ def fetch_educational_attainment():
     # Fetch counts for each educational attainment level
     cursor.execute("""
         SELECT 
-            COUNT(CASE WHEN elementary IS NOT NULL THEN 1 END) AS elementary_count,
-            COUNT(CASE WHEN senior_high IS NOT NULL THEN 1 END) AS senior_high_count,
-            COUNT(CASE WHEN tertiary IS NOT NULL THEN 1 END) AS tertiary_count,
-            COUNT(CASE WHEN graduate_studies IS NOT NULL THEN 1 END) AS graduate_studies_count,
-            COUNT(CASE WHEN vocational_training IS NOT NULL THEN 1 END) AS vocational_training_count
+            COUNT(CASE WHEN elementary IS NOT NULL AND elementary <> '' THEN 1 END) AS elementary_count,
+            COUNT(CASE WHEN senior_high IS NOT NULL AND senior_high <> '' THEN 1 END) AS senior_high_count,
+            COUNT(CASE WHEN tertiary IS NOT NULL AND tertiary <> '' THEN 1 END) AS tertiary_count,
+            COUNT(CASE WHEN graduate_studies IS NOT NULL AND graduate_studies <> '' THEN 1 END) AS graduate_studies_count,
+            COUNT(CASE WHEN vocational_training IS NOT NULL AND vocational_training <> '' THEN 1 END) AS vocational_training_count
         FROM form101
     """)
     result = cursor.fetchone()
@@ -154,6 +154,7 @@ def fetch_educational_attainment():
     }
     
     return jsonify(data)
+
 
 
 
@@ -634,70 +635,78 @@ def check_interview_availability():
 @app.route('/fetch_approved_applicants', methods=['GET'])
 def fetch_approved_applicants():
     try:
-        conn = sqlite3.connect('trabahanap.db')
-        cursor = conn.cursor()
+        # Ensure the user is logged in and is an employer
+        if 'user_id' in session and session['user_type'] == 'Employer':
+            employer_id = session['user_id']  # Get the employer's user_id from the session
 
-        # Fetch applicants with "Pending" status and their corresponding company from the jobs table
-        cursor.execute('''
-            SELECT 
-                applicant.Applicant_ID, 
-                applicant.job_id, 
-                applicant.employer_id, 
-                applicant.jobseeker_id, 
-                applicant.jobseeker_name, 
-                applicant.email, 
-                applicant.contact_no, 
-                applicant.form, 
-                applicant.schedule, 
-                applicant.status, 
-                applicant.date_request, 
-                jobs.Company, -- Assuming "Company" is a field in the jobs table
-                users.profile,
-                application_status.interviewed -- Add this line to fetch the interviewed status
-            FROM 
-                applicant
-            JOIN 
-                jobs 
-            ON 
-                applicant.job_id = jobs.Job_ID
-            JOIN
-                users
-            ON
-                applicant.jobseeker_id = users.User_ID
-            LEFT JOIN
-                application_status
-            ON
-                applicant.Applicant_ID = application_status.applicant_id
-            WHERE 
-                applicant.status = ?
-        ''', ('Approved',))
+            conn = sqlite3.connect('trabahanap.db')
+            cursor = conn.cursor()
 
-        applicants = cursor.fetchall()
-        # print("Fetched applicants with Approve status and Company from DB:", applicants)  # Debug the SQL response
+            # Fetch applicants with "Approved" status and their corresponding company where employer_id matches
+            cursor.execute('''
+                SELECT 
+                    applicant.Applicant_ID, 
+                    applicant.job_id, 
+                    applicant.employer_id, 
+                    applicant.jobseeker_id, 
+                    applicant.jobseeker_name, 
+                    applicant.email, 
+                    applicant.contact_no, 
+                    applicant.form, 
+                    applicant.schedule, 
+                    applicant.status, 
+                    applicant.date_request, 
+                    jobs.Company,  -- Assuming "Company" is a field in the jobs table
+                    users.profile,
+                    application_status.interviewed  -- Add this line to fetch the interviewed status
+                FROM 
+                    applicant
+                JOIN 
+                    jobs 
+                ON 
+                    applicant.job_id = jobs.Job_ID
+                JOIN
+                    users
+                ON
+                    applicant.jobseeker_id = users.User_ID
+                LEFT JOIN
+                    application_status
+                ON
+                    applicant.Applicant_ID = application_status.applicant_id
+                WHERE 
+                    applicant.status = ? AND
+                    applicant.employer_id = ?  -- Add the employer_id match condition
+            ''', ('Approved', employer_id))
 
-        conn.close()
+            applicants = cursor.fetchall()
+            # print("Fetched applicants with Approved status and Company from DB:", applicants)  # Debug the SQL response
 
-        approved_applicant_list = []
-        for row in applicants:
-            # print(f"Processing row: {row}")  # Debug each row as it's processed
-            approved_applicant_list.append({
-                'Applicant_ID': row[0],
-                'job_id': row[1],
-                'employer_id': row[2],
-                'jobseeker_id': row[3],
-                'jobseeker_name': row[4],
-                'email': row[5],
-                'contact_no': row[6],
-                'form': row[7],
-                'schedule': row[8],
-                'status': row[9],
-                'date_request': row[10],
-                'Company': row[11],  # Add the company information
-                'profile': row[12],
-                'interviewed': row[13]  # Add the interviewed information
-            })
+            conn.close()
 
-        return jsonify(approved_applicant_list)
+            approved_applicant_list = []
+            for row in applicants:
+                # print(f"Processing row: {row}")  # Debug each row as it's processed
+                approved_applicant_list.append({
+                    'Applicant_ID': row[0],
+                    'job_id': row[1],
+                    'employer_id': row[2],
+                    'jobseeker_id': row[3],
+                    'jobseeker_name': row[4],
+                    'email': row[5],
+                    'contact_no': row[6],
+                    'form': row[7],
+                    'schedule': row[8],
+                    'status': row[9],
+                    'date_request': row[10],
+                    'Company': row[11],  # Add the company information
+                    'profile': row[12],
+                    'interviewed': row[13]  # Add the interviewed information
+                })
+
+            return jsonify(approved_applicant_list)
+
+        else:
+            return jsonify({'error': 'Unauthorized access or invalid session'}), 401
 
     except Exception as e:
         print(f"Error fetching applicants: {e}")
@@ -707,65 +716,72 @@ def fetch_approved_applicants():
 @app.route('/fetch_applicants', methods=['GET'])
 def fetch_applicants():
     try:
-        conn = sqlite3.connect('trabahanap.db')
-        cursor = conn.cursor()
+        # Ensure the user is logged in and is an employer
+        if 'user_id' in session and session['user_type'] == 'Employer':
+            employer_id = session['user_id']  # Get the employer's user_id from the session
 
-        # Fetch applicants with "Pending" status and their corresponding company from the jobs table
-        cursor.execute('''
-            SELECT 
-                applicant.Applicant_ID, 
-                applicant.job_id, 
-                applicant.employer_id, 
-                applicant.jobseeker_id, 
-                applicant.jobseeker_name, 
-                applicant.email, 
-                applicant.contact_no, 
-                applicant.form, 
-                applicant.schedule, 
-                applicant.status, 
-                applicant.date_request, 
-                jobs.Company, -- Assuming "Company" is a field in the jobs table
-                users.profile
-            FROM 
-                applicant
-            JOIN 
-                jobs 
-            ON 
-                applicant.job_id = jobs.Job_ID
-            JOIN
-                users
-            ON
-                applicant.jobseeker_id = users.User_ID
-            WHERE 
-                applicant.status = ?
-        ''', ('Pending',))
+            conn = sqlite3.connect('trabahanap.db')
+            cursor = conn.cursor()
 
-        applicants = cursor.fetchall()
-        # print("Fetched applicants with Pending status and Company from DB:", applicants)  # Debug the SQL response
+            # Fetch applicants with "Pending" status and their corresponding company where employer_id matches
+            cursor.execute('''
+                SELECT 
+                    applicant.Applicant_ID, 
+                    applicant.job_id, 
+                    applicant.employer_id, 
+                    applicant.jobseeker_id, 
+                    applicant.jobseeker_name, 
+                    applicant.email, 
+                    applicant.contact_no, 
+                    applicant.form, 
+                    applicant.schedule, 
+                    applicant.status, 
+                    applicant.date_request, 
+                    jobs.Company,  -- Assuming "Company" is a field in the jobs table
+                    users.profile
+                FROM 
+                    applicant
+                JOIN 
+                    jobs 
+                ON 
+                    applicant.job_id = jobs.Job_ID
+                JOIN
+                    users
+                ON
+                    applicant.jobseeker_id = users.User_ID
+                WHERE 
+                    applicant.status = ? AND
+                    applicant.employer_id = ?  -- Add the employer_id match condition
+            ''', ('Pending', employer_id))
 
-        conn.close()
+            applicants = cursor.fetchall()
+            # print("Fetched applicants with Pending status and Company from DB:", applicants)  # Debug the SQL response
 
-        applicant_list = []
-        for row in applicants:
-            # print(f"Processing row: {row}")  # Debug each row as it's processed
-            applicant_list.append({
-                'Applicant_ID': row[0],
-                'job_id': row[1],
-                'employer_id': row[2],
-                'jobseeker_id': row[3],
-                'jobseeker_name': row[4],
-                'email': row[5],
-                'contact_no': row[6],
-                'form': row[7],
-                'schedule': row[8],
-                'status': row[9],
-                'date_request': row[10],
-                'Company': row[11],  # Add the company information
-                'profile': row[12],
+            conn.close()
 
-            })
+            applicant_list = []
+            for row in applicants:
+                # print(f"Processing row: {row}")  # Debug each row as it's processed
+                applicant_list.append({
+                    'Applicant_ID': row[0],
+                    'job_id': row[1],
+                    'employer_id': row[2],
+                    'jobseeker_id': row[3],
+                    'jobseeker_name': row[4],
+                    'email': row[5],
+                    'contact_no': row[6],
+                    'form': row[7],
+                    'schedule': row[8],
+                    'status': row[9],
+                    'date_request': row[10],
+                    'Company': row[11],  # Add the company information
+                    'profile': row[12],
+                })
 
-        return jsonify(applicant_list)
+            return jsonify(applicant_list)
+
+        else:
+            return jsonify({'error': 'Unauthorized access or invalid session'}), 401
 
     except Exception as e:
         print(f"Error fetching applicants: {e}")

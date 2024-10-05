@@ -152,38 +152,46 @@ def insert_html2pdf_jobseeker():
 @app.route('/retrieve_application_status', methods=['GET'])
 def retrieve_application_status():
     try:
+        # Check if user_id and user_type are in session
+        if 'user_id' not in session or session['user_type'] != 'Jobseeker':
+            return jsonify({'error': 'Unauthorized access'}), 403
+        
+        user_id = session['user_id']  # Get the jobseeker's user_id from the session
+
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
 
         print("Database connection established.")
 
         # Query to get application status and related information where 'popup' is empty or null
-        cursor.execute('''
+        cursor.execute('''  
             SELECT a.status_id, a.applicant_id, a.job_id, a.jobseeker_id, a.employer_id, a.status_description, 
                    a.status_type, a.company, u.profile, u.fname, a.date_posted
             FROM application_status a
             JOIN users u ON a.employer_id = u.User_ID
-            WHERE a.popup IS NULL OR a.popup = ''
-        ''')
+            WHERE (a.popup IS NULL OR a.popup = '') AND a.jobseeker_id = ?
+        ''', (user_id,))  # Filter by jobseeker_id
 
         status_list = cursor.fetchall()
 
         # Print the retrieved data
-        print(f"Fetched {len(status_list)} records from application_status.")
-
-        for row in status_list:
-            print("Record details:")
-            print(f"status_id: {row[0]}")
-            print(f"applicant_id: {row[1]}")
-            print(f"job_id: {row[2]}")
-            print(f"jobseeker_id: {row[3]}")
-            print(f"employer_id: {row[4]}")
-            print(f"status_description: {row[5]}")
-            print(f"status_type: {row[6]}")
-            print(f"company: {row[7]}")
-            print(f"profile_picture: {row[8]}")
-            print(f"employer_name: {row[9]}")
-            print(f"date_posted: {row[10]}")
+        if not status_list:
+            print("No data was found.")  # Print message when no records are found
+        else:
+            print(f"Fetched {len(status_list)} records from application_status.")
+            for row in status_list:
+                print("Record details:")
+                print(f"status_id: {row[0]}")
+                print(f"applicant_id: {row[1]}")
+                print(f"job_id: {row[2]}")
+                print(f"jobseeker_id: {row[3]}")
+                print(f"employer_id: {row[4]}")
+                print(f"status_description: {row[5]}")
+                print(f"status_type: {row[6]}")
+                print(f"company: {row[7]}")
+                print(f"profile_picture: {row[8]}")
+                print(f"employer_name: {row[9]}")
+                print(f"date_posted: {row[10]}")
 
         conn.close()
 
@@ -195,7 +203,7 @@ def retrieve_application_status():
             if profile_picture:
                 profile_url = url_for('static', filename=f'images/employer-images/{profile_picture}')
             else:
-                profile_url = url_for('static', filename='images/employer-images/default.jpg')
+                profile_url = url_for('static', filename='images/employer-images/woman.png')
 
             # Add the date_posted field to the result
             results.append({
@@ -211,6 +219,10 @@ def retrieve_application_status():
                 'employer_name': row[9],
                 'date_posted': row[10]  # Include the date_posted field
             })
+
+        # If no records were found, return an appropriate response
+        if not results:
+            return jsonify({'message': 'No application statuses found for this jobseeker.'}), 404
 
         return jsonify(results)
 
@@ -577,23 +589,38 @@ def applicant():
 def jobseeker_status():
     if 'user_id' in session and session['user_type'] == 'Jobseeker':
         user_id = session['user_id']
+        print(f"User ID from session: {user_id}")  # Print user ID to check if it's retrieved correctly
+        
         conn = get_db_connection()
         cursor = conn.cursor()
 
         # Fetch user data
         cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
         user_data = cursor.fetchone()
+        
+        # Convert Row object to a dictionary for easier debugging
+        if user_data:
+            user_data_dict = {key: user_data[key] for key in user_data.keys()}
+            print(f"Fetched user data: {user_data_dict}")  # Print fetched user data for debugging
+        else:
+            print("No user data found.")  # Notify if no user data is returned
 
+        # Ensure profile image is set to default if missing
+        if user_data and (user_data[6] is None or user_data[6] == ''):
+            user_data = list(user_data)  # Convert tuple to list to modify
+            user_data[6] = 'images/profile.png'  # Default profile image path
+            print("Profile image was missing; set to default.")  # Notify that the default image was set
         
         # Close the cursor and connection
         cursor.close()
         conn.close()
 
-        # Pass the notifications to the template
-        return render_template('jobseeker/status.html', user_data=user_data)
+        # Pass the user data to the template
+        print(f"Rendering status page with user data: {user_data_dict}")  # Print user data before rendering
+        return render_template('jobseeker/status.html', user_data=user_data_dict)
     
+    print("User not logged in or not a jobseeker. Redirecting to signin.")  # Notify if the user is not logged in
     return redirect(url_for('signin'))
-
 
 
 
@@ -623,6 +650,12 @@ def jobseeker_notification():
         # Fetch user data
         cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
         user_data = cursor.fetchone()
+
+
+            # Ensure profile image is set to default if missing
+        if user_data and (user_data[6] is None or user_data[6] == ''):
+            user_data = list(user_data)  # Convert tuple to list to modify
+            user_data[6] = 'images/profile.png'  # Default profile image path
 
         # Fetch notifications for the jobseeker where popup is NULL or empty
         cursor.execute('SELECT * FROM jobseeker_notifications WHERE popup IS NULL OR popup = ""')
