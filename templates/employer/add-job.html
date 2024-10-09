@@ -1,6 +1,294 @@
+<style>
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+    
+    .modal-content {
+    background-color: #fefefe;
+    margin: 39px;
+    padding: 20px;
+    border: 1px solid #888;
+    position: relative;
+    display: block;
+    height: max-content;}
+            
+    .close {
+        color: #aaa;
+        float: right; /* Float to the right */
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer; /* Change cursor to pointer on hover */
+    }
+    
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        outline: none; /* Remove outline on focus */
+    }
+    </style>
 
 <div class="add-job-container" style="display: none;">
-    <h2>Post a Job Vacancy</h2>
+    <h2 style="column-gap: 30px; display: flex; justify-content: start; align-items: end;">
+        Post a Job Vacancy
+        <div style="position: relative; display: inline-block;">
+            <img class="openMyPost" src="static/images/box.png" width="30px" onclick="openMyPost()" style="grid-column: 2; transition: transform 0.3s, box-shadow 0.3s;">
+            <span class="tooltip">This contains your list post</span>
+        </div>
+    </h2>
+    
+    <!-- CSS for Tooltip and Hover Effect -->
+
+        <!-- Modal Structure -->
+<!-- Modal Structure -->
+<div id="myPostModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeMyPost()">&times;</span>
+        <p>List of Posted</p>
+
+        <div id="myListPosted_Filter" class="filter-container">
+            <!-- Input fields for filters -->
+            <input type="text" id="filterTitle" placeholder="Title" class="filter-input">
+            <input type="text" id="filterPosition" placeholder="Position" class="filter-input">
+            <input type="text" id="filterCompany" placeholder="Company" class="filter-input">
+            <input type="text" id="filterSkills" placeholder="Skills" class="filter-input">
+        
+            <!-- Button to apply filter -->
+            <button onclick="applyListPostButton()" class="apply-filter-btn">Apply Filter</button>
+        </div>
+
+        <div id="fetch_myListPosted">
+        <!-- THIS AREA WILL BE DYNAMICALLY INSERTED -->
+        </div>
+
+        <div id="myListPostedPagination">
+            <button onclick="myListPostedPreviousPage()" id="mylistedposted_prevPageBtn" disabled>Previous</button>
+            <span id="currentPageDisplay">Page: 1</span>
+            <button onclick="myListPostedNextPage()" id="mylistedposted_nextPageBtn">Next</button>
+        </div>
+    </div>
+</div>
+
+
+
+            
+<!-- JavaScript for Modal -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let myListPostedCurrentPage = 1; // Start with page 1
+        const jobsPerPage = 6; // Maximum number of jobs per page
+        let totalJobs = 0; // To keep track of the total jobs fetched
+
+        // Open modal and load the first batch of job listings
+        window.openMyPost = function() {
+            console.log("Opening modal. Fetching jobs for page:", myListPostedCurrentPage);
+            document.getElementById("myPostModal").style.display = "flex";
+            fetchMyListPosted(myListPostedCurrentPage); // Fetch jobs with pagination starting from page 1
+        };
+
+        // Close the modal
+        window.closeMyPost = function() {
+            console.log("Closing modal.");
+            document.getElementById("myPostModal").style.display = "none";
+        };
+
+        // Close the modal if the user clicks outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById("myPostModal");
+            if (event.target == modal) {
+                console.log("Clicked outside modal. Closing modal.");
+                modal.style.display = "none";
+            }
+            const employer_modal = document.getElementById("employer_logout_modal");
+        if (event.target == employer_modal) {
+            console.log("Modal closed by clicking outside."); 
+            employercloseLogout();
+        };
+
+            
+        };
+
+        // Fetch all job postings for the current page
+        function fetchMyListPosted(page = 1) {
+            console.log("Fetching job list for page:", page);
+            $.ajax({
+                url: '/fetch_myListPosted', // The route to call in your Flask app
+                method: 'GET',
+                success: function(response) {
+                    totalJobs = response.jobs.length; // Store total jobs count
+                    console.log("Total jobs fetched:", totalJobs);
+                    paginateJobs(response.jobs, page); // Call function to paginate job list
+                    updatePaginationControls(); // Update pagination controls immediately
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching job list:", error);
+                    document.getElementById("fetch_myListPosted").innerHTML = "<p>Error fetching job list.</p>";
+                }
+            });
+        }
+
+        // Populate job list with pagination
+        function paginateJobs(jobs, page) {
+            console.log("Paginating jobs. Current page:", page);
+            const container = document.getElementById("fetch_myListPosted");
+            container.innerHTML = ""; // Clear previous content
+
+            // Calculate start and end index for the current page
+            const start = (page - 1) * jobsPerPage;
+            const end = Math.min(start + jobsPerPage, jobs.length);
+            const paginatedJobs = jobs.slice(start, end);
+
+            // Populate the job list (reuse existing logic)
+            paginatedJobs.forEach(job => {
+                const jobContainer = document.createElement("div");
+                jobContainer.classList.add("job-container");
+
+                const jobDetails = {
+                    "Title": job.title,
+                    "Position": job.position,
+                    "Description": job.description,
+                    "Location": job.location,
+                    "Nature of Work": job.natureOfWork,
+                    "Salary": job.salary,
+                    "Job Status": job.jobStatus === "Unavailable" ? `<span style="color:red;">${job.jobStatus}</span>` : `<span style="color:green;">${job.jobStatus}</span>`,
+                    "Company": job.Company,
+                    "Closing Date": job.closingDate,
+                    "Skills": job.skills,
+                    "Request": job.request
+                };
+
+                const table = document.createElement("table");
+                table.classList.add("vertical-job-list");
+
+                for (const [label, value] of Object.entries(jobDetails)) {
+                    const row = document.createElement("tr");
+                    row.style.wordBreak = "break-all";
+
+                    const labelCell = document.createElement("td");
+                    labelCell.innerText = `${label}:`;
+                    labelCell.classList.add("job-label");
+
+                    const valueCell = document.createElement("td");
+                    valueCell.innerHTML = value;
+
+                    row.appendChild(labelCell);
+                    row.appendChild(valueCell);
+
+                    table.appendChild(row);
+                }
+
+                jobContainer.appendChild(table);
+                container.appendChild(jobContainer);
+            });
+            console.log("Paginated jobs displayed for page:", page);
+        }
+
+        // Update pagination controls (enable/disable buttons)
+        function updatePaginationControls() {
+            const maxPage = Math.ceil(totalJobs / jobsPerPage); // Calculate the maximum number of pages
+            document.getElementById("mylistedposted_prevPageBtn").disabled = myListPostedCurrentPage === 1; // Disable previous if on the first page
+            document.getElementById("mylistedposted_nextPageBtn").disabled = myListPostedCurrentPage >= maxPage; // Disable next if on the last page
+
+            // Update current page display
+            document.getElementById("currentPageDisplay").innerText = `Page: ${myListPostedCurrentPage}`;
+            console.log("Updated pagination controls. Current page:", myListPostedCurrentPage, "Max page:", maxPage);
+        }
+
+        // Handle 'Next' button click
+        window.myListPostedNextPage = function() {
+            const maxPage = Math.ceil(totalJobs / jobsPerPage);
+            if (myListPostedCurrentPage < maxPage) {
+                myListPostedCurrentPage++;
+                console.log("Next page clicked. New page:", myListPostedCurrentPage);
+                fetchMyListPosted(myListPostedCurrentPage); // Fetch jobs for the next page
+            }
+        };
+
+        // Handle 'Previous' button click
+        window.myListPostedPreviousPage = function() {
+            if (myListPostedCurrentPage > 1) {
+                myListPostedCurrentPage--;
+                console.log("Previous page clicked. New page:", myListPostedCurrentPage);
+                fetchMyListPosted(myListPostedCurrentPage); // Fetch jobs for the previous page
+            }
+        };
+
+        // Filter job listings and apply pagination
+        window.applyListPostButton = function() {
+            const title = document.getElementById('filterTitle').value;
+            const position = document.getElementById('filterPosition').value;
+            const company = document.getElementById('filterCompany').value;
+            const skills = document.getElementById('filterSkills').value;
+
+            console.log("Applying filter. Title:", title, "Position:", position, "Company:", company, "Skills:", skills);
+
+            $.ajax({
+                url: '/filter_myListPosted',
+                method: 'GET',
+                data: {
+                    title: title,
+                    position: position,
+                    company: company,
+                    skills: skills
+                },
+                success: function(response) {
+                    totalJobs = response.jobs.length; // Store filtered job count
+                    myListPostedCurrentPage = 1; // Reset to page 1 after filter is applied
+                    console.log("Filter applied. Total jobs after filter:", totalJobs);
+                    paginateJobs(response.jobs, myListPostedCurrentPage); // Reset to page 1 after filter is applied
+                    updatePaginationControls(); // Update pagination controls after filtering
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error applying filter:", error);
+                    document.getElementById("fetch_myListPosted").innerHTML = "<p>Error applying filter.</p>";
+                }
+            });
+        };
+    });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <form class="abc" action="/post_job" method="POST" enctype="multipart/form-data">
         <div class="container9 form-group">

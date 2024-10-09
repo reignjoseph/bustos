@@ -308,3 +308,17 @@ function uploadFile(formData) {
         applyFilter();
     });
 </script>
+<script>
+    // Track if the user has interacted with the document
+    let userInteracted = false; // Default to false
+
+    // Event listener for user interaction on the job vacancy section
+    document.querySelector('.container-announcement').addEventListener('click', function() {
+        userInteracted = true; // Set to true when the user interacts
+    });
+
+    // Optionally, you can also add interaction tracking to the filter button
+    document.getElementById('filter-button').addEventListener('click', function() {
+        userInteracted = true; // Set to true when the filter button is clicked
+    });
+</script>

@@ -29,7 +29,7 @@ def internal_error(error):
 
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
-app.permanent_session_lifetime = timedelta(minutes=3)
+app.permanent_session_lifetime = timedelta(minutes=30)
 
 app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','pdf'}
@@ -163,13 +163,13 @@ def retrieve_application_status():
 
         print("Database connection established.")
 
-        # Query to get application status and related information where 'popup' is empty or null
+        # Query to get application status and related information where 'jobseeker_popup' is empty or null
         cursor.execute('''  
             SELECT a.status_id, a.applicant_id, a.job_id, a.jobseeker_id, a.employer_id, a.status_description, 
                    a.status_type, a.company, u.profile, u.fname, a.date_posted
             FROM application_status a
             JOIN users u ON a.employer_id = u.User_ID
-            WHERE (a.popup IS NULL OR a.popup = '') AND a.jobseeker_id = ?
+            WHERE (a.jobseeker_popup IS NULL OR a.jobseeker_popup = '') AND a.jobseeker_id = ?
         ''', (user_id,))  # Filter by jobseeker_id
 
         status_list = cursor.fetchall()
@@ -274,7 +274,7 @@ def update_popup_status():
         # Update the popup field in the application_status table
         cursor.execute('''
             UPDATE application_status
-            SET popup = ?
+            SET jobseeker_popup = ?
             WHERE applicant_id = ?
         ''', (popup_value, applicant_id))
 
@@ -640,68 +640,49 @@ def jobseeker_status():
 
 
 
-@app.route('/jobseeker/notification')
-def jobseeker_notification():
+
+
+
+@app.route('/jobseeker_fetch_all_notification')
+def jobseeker_fetch_all_notification():
     if 'user_id' in session and session['user_type'] == 'Jobseeker':
         user_id = session['user_id']
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Fetch user data
-        cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
-        user_data = cursor.fetchone()
-
-
-            # Ensure profile image is set to default if missing
-        if user_data and (user_data[6] is None or user_data[6] == ''):
-            user_data = list(user_data)  # Convert tuple to list to modify
-            user_data[6] = 'images/profile.png'  # Default profile image path
-
-        # Fetch notifications for the jobseeker where popup is NULL or empty
-        cursor.execute('SELECT * FROM jobseeker_notifications WHERE popup IS NULL OR popup = ""')
+        # Fetch notifications for the jobseeker where popup is NULL or empty, sorted by date_created DESC
+        cursor.execute('''SELECT * FROM jobseeker_notifications WHERE popup IS NULL OR popup = "" ORDER BY date_created DESC''')
         notifications = cursor.fetchall()
-        
-        # Print notifications for debugging
-        print("Fetched Notifications:")
-        for notification in notifications:
-            print(dict(notification))
 
         # Generate notification texts
         notifications_with_text = []
         for notification in notifications:
             employer_id = notification['employer_id']
-            
-            # Fetch the employer's profile picture
             cursor.execute('SELECT profile FROM users WHERE User_ID = ?', (employer_id,))
             employer_data = cursor.fetchone()
-            if employer_data and employer_data['profile']:
-                profile_picture = f'/static/images/employer-images/{employer_data["profile"]}'
-            else:
-                profile_picture = '/static/images/employer-images/avatar.png'
             
-            company = notification['company']
-            job_title = notification['job_title']
-            text = notification['text']
-            date_created = notification['date_created']
+            profile_picture = employer_data['profile'] if employer_data and employer_data['profile'] else '/static/images/employer-images/avatar.png'
+            
             notifications_with_text.append({
                 'employer_fname': notification['employer_fname'],
-                'text': text,
-                'company': company,
-                'job_title': job_title,
-                'date_created': date_created,
+                'text': notification['text'],
+                'date_created': notification['date_created'],
                 'profile_picture': profile_picture,
-                'NotifID': notification['NotifID']  # Ensure NotifID is included
+                'NotifID': notification['NotifID']
             })
 
         # Close the cursor and connection
         cursor.close()
         conn.close()
 
-        # Pass the notifications to the template
-        return render_template('jobseeker/notification.html', user_data=user_data, notifications=notifications_with_text)
-    
-    return redirect(url_for('signin'))
+        # Return the notifications as JSON
+        return jsonify({
+            'count': len(notifications_with_text),
+            'notifications': notifications_with_text
+        })
 
+    return jsonify({'error': 'User not authenticated'}), 401
 
 
 @app.route('/jobseeker/notification/close/<int:notif_id>', methods=['POST'])
@@ -720,6 +701,10 @@ def close_jobseeker_notification(notif_id):
     cursor.close()
     conn.close()
     return jsonify({'success': True}), 200
+
+
+
+
 
 
 
@@ -771,39 +756,59 @@ def update_job_statuses():
 
 @app.route('/jobseeker')
 def jobseeker():
-    update_job_statuses()
-    if 'user_id' in session and session['user_type'] == 'Jobseeker':
-        user_id = session['user_id']
-        # Connect to the database and fetch job announcements
+    print("Entering jobseeker route")  # Debugging line
+    if 'user_id' not in session or session['user_type'] != 'Jobseeker':
+        return redirect(url_for('signin'))
+
+    # Set session start time if it doesn't exist
+    if 'session_start' not in session:
+        session['session_start'] = datetime.now(timezone)  # Make this timezone-aware
+
+    # Check for session timeout (30 minutes)
+    session_start = session['session_start']
+    session_expiry = session_start + timedelta(minutes=30)  # Calculate session expiration time
+    print(f"Session start: {session_start}, Current time: {datetime.now(timezone)}")  # Print session times
+    if datetime.now(timezone) - session_start > timedelta(minutes=30):
+        # Print the session expiration time
+        print(f"The session will expire at {session_expiry.strftime('%Y-%m-%d %H:%M:%S')} {timezone.zone}")
+        
+        # Update currentState to Inactive
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        
-        
-        # Query to fetch jobs (you may need to adjust the query based on your table structure)
-        cursor.execute('SELECT * FROM jobs')
-        jobs = cursor.fetchall()
-        
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
-        user_data = cursor.fetchone()
-
-        if user_data and (user_data[6] is None or user_data[6] == ''):
-            user_data = list(user_data)  # Convert to list to modify
-            user_data[6] = 'images/profile.png'
-        
-
-        # Close the cursor and connection
+        cursor.execute('''UPDATE users SET currentState = 'Inactive' WHERE User_ID = ?''', (session['user_id'],))
+        conn.commit()
         cursor.close()
         conn.close()
-        
-        # Pass the jobs to the template
-        return render_template('/jobseeker/jobseeker.html', jobs=jobs, user_data=user_data)
+
+        # Clear session data
+        session.clear()
+        return redirect(url_for('signin'))
+
+    # Proceed to fetch job announcements and user data if session is valid
+    update_job_statuses()
+    user_id = session['user_id']
     
-    return redirect(url_for('signin'))
+    # Connect to the database and fetch job announcements
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Query to fetch jobs
+    cursor.execute('SELECT * FROM jobs')
+    jobs = cursor.fetchall()
+    
+    cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
+    user_data = cursor.fetchone()
 
-
-
+    if user_data and (user_data[6] is None or user_data[6] == ''):
+        user_data = list(user_data)  # Convert to list to modify
+        user_data[6] = 'images/profile.png'
+    
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+    
+    # Pass the jobs and user data to the template
+    return render_template('/jobseeker/jobseeker.html', jobs=jobs, user_data=user_data)
 
 
 

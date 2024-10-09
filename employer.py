@@ -28,7 +28,7 @@ def internal_error(error):
     return "Internal Server Error", 500
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
-app.permanent_session_lifetime = timedelta(minutes=3)
+app.permanent_session_lifetime = timedelta(minutes=30)  # Set session timeout to 30 minutes
 
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
@@ -63,7 +63,7 @@ def employer():
 
     # Retrieve session start time and check for timeout (e.g., 3 minutes)
     session_start = session['session_start']
-    if datetime.now(timezone) - session_start > timedelta(minutes=3):
+    if datetime.now(timezone) - session_start > timedelta(minutes=30):
         # Update currentState to Inactive in the database
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
@@ -91,6 +91,153 @@ def employer():
 
     # If session is still active, render the employer page
     return render_template('employer/employer.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/fetch_myListPosted', methods=['GET'])
+def fetch_myListPosted():
+    employer_id = session.get('user_id')  # Get employer ID from session
+
+    # Print for debugging
+    print(f"Fetching jobs for employer ID: {employer_id}")
+
+    # Establish a database connection
+    conn = get_db_connection()
+
+    # Build the query to fetch all jobs for the employer
+    query = "SELECT * FROM jobs WHERE employer_ID = ?"
+    params = [employer_id]
+
+    # Fetch all jobs for the specific employer
+    jobs = conn.execute(query, params).fetchall()
+
+    # Debugging: Print all jobs in the table
+    all_jobs_query = "SELECT * FROM jobs"
+    all_jobs = conn.execute(all_jobs_query).fetchall()
+    # print("All jobs in the table:")
+    # for job in all_jobs:
+        # print(dict(job))  # Print each job as a dictionary
+
+    conn.close()
+
+    # Prepare data for JSON response
+    jobs_list = [dict(job) for job in jobs]  # Convert to list of dicts
+
+    # Print the fetched jobs for debugging
+    print(f"Fetched {len(jobs_list)} jobs for employer ID {employer_id}.")  # Debugging print
+
+    return jsonify({"jobs": jobs_list})
+
+@app.route('/filter_myListPosted', methods=['GET'])
+def filter_myListPosted():
+    employer_id = session.get('user_id')  # Get employer ID from session
+    
+    # Get filter parameters from the request
+    title = request.args.get('title', '')  # Default to an empty string if not provided
+    position = request.args.get('position', '')
+    company = request.args.get('company', '')
+    skills = request.args.get('skills', '')
+
+    # Establish a database connection
+    conn = get_db_connection()
+
+    # Build the query to fetch all jobs for the employer
+    query = """
+    SELECT * FROM jobs 
+    WHERE employer_ID = ? 
+    AND (title LIKE ? OR ? = '') 
+    AND (position LIKE ? OR ? = '')
+    AND (Company LIKE ? OR ? = '')
+    AND (skills LIKE ? OR ? = '')
+    """
+
+    # Parameters for the query
+    params = [
+        employer_id,
+        f'%{title}%', title,
+        f'%{position}%', position,
+        f'%{company}%', company,
+        f'%{skills}%', skills
+    ]
+
+    # Execute the query and fetch jobs
+    jobs = conn.execute(query, params).fetchall()
+    conn.close()
+
+    # Prepare data for JSON response
+    jobs_list = [dict(job) for job in jobs]  # Convert to list of dicts
+
+    # Print for debugging
+    print(f"Fetched {len(jobs_list)} jobs with filters: title={title}, position={position}, company={company}, skills={skills}.")
+
+    return jsonify({"jobs": jobs_list})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -129,31 +276,68 @@ def fetch_educational_attainment():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Fetch counts for each educational attainment level
+    # Fetch all data from form101
     cursor.execute("""
-        SELECT 
-            COUNT(CASE WHEN elementary IS NOT NULL AND elementary <> '' THEN 1 END) AS elementary_count,
-            COUNT(CASE WHEN senior_high IS NOT NULL AND senior_high <> '' THEN 1 END) AS senior_high_count,
-            COUNT(CASE WHEN tertiary IS NOT NULL AND tertiary <> '' THEN 1 END) AS tertiary_count,
-            COUNT(CASE WHEN graduate_studies IS NOT NULL AND graduate_studies <> '' THEN 1 END) AS graduate_studies_count,
-            COUNT(CASE WHEN vocational_training IS NOT NULL AND vocational_training <> '' THEN 1 END) AS vocational_training_count
+        SELECT form101_id, elementary, senior_high, tertiary, graduate_studies, vocational_training
         FROM form101
     """)
-    result = cursor.fetchone()
+    rows = cursor.fetchall()
+
+    # Prepare the data for the frontend
+    data = {
+        'elementary': 0,
+        'senior_high': 0,
+        'tertiary': 0,
+        'graduate_studies': 0,
+        'vocational_training': 0
+    }
+    
+    # Iterate through each row to find the highest attainment and count the valid entries
+    for row in rows:
+        form101_id = row[0]
+        elementary = row[1]
+        senior_high = row[2]
+        tertiary = row[3]
+        graduate_studies = row[4]
+        vocational_training = row[5]
+
+        # Determine the highest attainment
+        attainment_levels = [
+            ('elementary', elementary),
+            ('senior_high', senior_high),
+            ('tertiary', tertiary),
+            ('graduate_studies', graduate_studies),
+            ('vocational_training', vocational_training),
+        ]
+        
+        highest_attainment = None
+        
+        for level, value in attainment_levels:
+            if value and value.strip():  # Ignore NULL or empty string
+                if highest_attainment is None or attainment_levels.index((level, value)) > attainment_levels.index(highest_attainment):
+                    highest_attainment = (level, value)
+
+        # Print the highest attainment per form101_id
+        if highest_attainment:
+            print(f"form101_id: {form101_id}, Highest attainment: {highest_attainment[0]}")
+
+            # Increment the count for the corresponding educational attainment
+            data[highest_attainment[0]] += 1
 
     # Close the database connection
     conn.close()
 
-    # Prepare the data for the frontend
-    data = {
-        'elementary': result[0],
-        'senior_high': result[1],
-        'tertiary': result[2],
-        'graduate_studies': result[3],
-        'vocational_training': result[4]
+    # Count totals for each educational attainment level
+    data_counts = {
+        'elementary': data['elementary'],
+        'senior_high': data['senior_high'],
+        'tertiary': data['tertiary'],
+        'graduate_studies': data['graduate_studies'],
+        'vocational_training': data['vocational_training']
     }
-    
-    return jsonify(data)
+
+    # Return the counts in the desired format
+    return jsonify(data_counts)
 
 
 
@@ -643,6 +827,7 @@ def fetch_approved_applicants():
             cursor = conn.cursor()
 
             # Fetch applicants with "Approved" status and their corresponding company where employer_id matches
+            # Add condition for emloyer_popup to be NULL or an empty string
             cursor.execute('''
                 SELECT 
                     applicant.Applicant_ID, 
@@ -658,7 +843,7 @@ def fetch_approved_applicants():
                     applicant.date_request, 
                     jobs.Company,  -- Assuming "Company" is a field in the jobs table
                     users.profile,
-                    application_status.interviewed  -- Add this line to fetch the interviewed status
+                    application_status.interviewed  -- Fetch the interviewed status
                 FROM 
                     applicant
                 JOIN 
@@ -675,17 +860,16 @@ def fetch_approved_applicants():
                     applicant.Applicant_ID = application_status.applicant_id
                 WHERE 
                     applicant.status = ? AND
-                    applicant.employer_id = ?  -- Add the employer_id match condition
+                    applicant.employer_id = ? AND
+                    (application_status.employer_popup IS NULL OR application_status.employer_popup = '')  -- Restrict employer_popup to be NULL or empty
             ''', ('Approved', employer_id))
 
             applicants = cursor.fetchall()
-            # print("Fetched applicants with Approved status and Company from DB:", applicants)  # Debug the SQL response
 
             conn.close()
 
             approved_applicant_list = []
             for row in applicants:
-                # print(f"Processing row: {row}")  # Debug each row as it's processed
                 approved_applicant_list.append({
                     'Applicant_ID': row[0],
                     'job_id': row[1],
@@ -698,7 +882,7 @@ def fetch_approved_applicants():
                     'schedule': row[8],
                     'status': row[9],
                     'date_request': row[10],
-                    'Company': row[11],  # Add the company information
+                    'Company': row[11],
                     'profile': row[12],
                     'interviewed': row[13]  # Add the interviewed information
                 })
@@ -711,6 +895,48 @@ def fetch_approved_applicants():
     except Exception as e:
         print(f"Error fetching applicants: {e}")
         return jsonify({'error': 'An error occurred while fetching applicants'}), 500
+
+
+@app.route('/close_applicant_history/<int:applicant_id>', methods=['POST'])
+def close_applicant_history(applicant_id):
+    try:
+        # Connect to the database
+        conn = sqlite3.connect('trabahanap.db')
+        cursor = conn.cursor()
+
+        # Update the 'popup' field in the application_status table to 'false' for the given applicant_id
+        cursor.execute('''
+            UPDATE application_status 
+            SET employer_popup = 'false'
+            WHERE applicant_id = ?
+        ''', (applicant_id,))
+        conn.commit()
+
+        # Check if any row was updated
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({'error': 'No such applicant or popup already closed'}), 404
+
+        conn.close()
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"Error closing applicant popup: {e}")
+        return jsonify({'error': 'An error occurred while closing the popup'}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/fetch_applicants', methods=['GET'])
@@ -1131,6 +1357,7 @@ def change_password():
 @app.route('/post_job', methods=['POST'])
 def post_job():
     try:
+        # Get form data
         company = request.form['company']
         title = request.form['title']
         description = request.form['description']
@@ -1141,25 +1368,30 @@ def post_job():
         closingDate = request.form['closingDate']
         jobStatus = request.form['jobStatus']
         skills = request.form.getlist('skills[]')
+        
+        # Current time in Philippine timezone
         philippine_tz = pytz.timezone('Asia/Manila')
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-
+        # Join skills into a string
         skills_str = ','.join(skills)
     except KeyError as e:
         flash(f'Missing form field: {e}')
         return redirect(request.url)
 
+    # Validate closing date
     try:
         closing_date = datetime.strptime(closingDate, '%Y-%m-%d %H:%M')
     except ValueError:
         flash('Invalid date format. Please use YYYY-MM-DD HH:MM.')
         return redirect(request.url)
 
+    # Validate job status
     if jobStatus not in ['Available', 'Unavailable']:
         flash('Invalid job status. Please select either "Available" or "Unavailable".')
         return redirect(request.url)
 
+    # Validate image upload
     if 'image' not in request.files:
         flash('No file part')
         return redirect(request.url)
@@ -1177,43 +1409,28 @@ def post_job():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Fetch the employer's name and profile picture
+        # Fetch employer's data using the session ID
         cursor.execute('SELECT fname, profile FROM users WHERE User_ID = ?', (session['user_id'],))
         employer_data = cursor.fetchone()
         if employer_data:
             employer_fname = employer_data[0]
-            # Use default profile image if profile field is empty
-            employer_profile = employer_data[1] if employer_data[1] else 'static/images/employer-images/avatar.png'
+            employer_profile = employer_data[1] if employer_data[1] and employer_data[1].strip() else 'static/images/employer-images/avatar.png'
         else:
             employer_fname = 'Unknown'
             employer_profile = 'static/images/employer-images/avatar.png'
 
-        # Insert job details into jobs table including employer_ID
+        # Insert job details into the jobs table, including the employer's session ID
         conn.execute(
-            'INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID,request,skills,date_posted) VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)',
-            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'],"Pending",skills_str,current_time_pht)
+            '''INSERT INTO jobs (title, position, description, image, location, natureOfWork, salary, Company, closingDate, jobStatus, employer_ID, request, skills, date_posted) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            (title, position, description, image_path, location, natureOfWork, salary, company, closing_date, jobStatus, session['user_id'], "Pending", skills_str, current_time_pht)
         )
 
-        # Fetch jobseekers' details
+        # Fetch jobseekers' details (if needed)
         cursor.execute('SELECT User_ID FROM users WHERE userType = "Jobseeker"')
         jobseekers = cursor.fetchall()
 
-        # Get current time in Philippine Time (PHT)
-        # philippine_tz = pytz.timezone('Asia/Manila')
-        # current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
-
-        # Generate notification text
-        notification_text = generate_notification_text(company, title)
-        
-        # Create notifications for each jobseeker
-        for jobseeker in jobseekers:
-            user_id = jobseeker[0]
-            conn.execute(
-                'INSERT INTO jobseeker_notifications (employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                (session['user_id'], notification_text, company, title, employer_fname, employer_profile, current_time_pht)
-            )
-        
-        # INSERT THE applicant_notifications table with the same data
+        # Create notification text
         cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (session['user_id'],))
         user = cursor.fetchone()
 
@@ -1222,10 +1439,9 @@ def post_job():
             fname = user[1]    # fname
             userType = user[2] # userType
 
-            # Now fetch the rating using the last inserted `rating_id`
-            notification_text = f"{fname} requesting permission to post about the company{company} as they are currently hiring. "
+            notification_text = f"{fname} is requesting permission to post about the company {company} as they are currently hiring."
 
-            # Insert notification into `admin_notification` table
+            # Insert notification into `admin_notification` table with session user ID
             cursor.execute('''
                 INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -1236,7 +1452,7 @@ def post_job():
         conn.commit()
         conn.close()
 
-        # Redirect to a different page depending on the user type
+        # Redirect based on user type
         if session.get('user_type') == 'Employer':
             return redirect(url_for('employer'))
         else:
@@ -1259,44 +1475,6 @@ def post_job():
 
 
 
-
-def generate_notification_text(company, job_title):
-    # Define consistent and varied structures
-    structures = [
-        f"Amazing Opportunity for {company} at {job_title}",
-        f"{company} is offering an exciting opportunity for a {job_title}",
-        f"{company} offers exciting opportunities at {job_title}",
-        f"Exciting opportunity for {job_title} at {company}",
-        f"New {job_title} position available at {company}",
-        f"Don't miss out on the {job_title} role at {company}",
-        f"Join {company} as a {job_title} and be part of something big",
-        f"{company} is looking for a talented {job_title}",
-        f"Great opening for a {job_title} at {company}",
-        f"Explore the {job_title} position at {company} today"
-    ]
-
-    # Ensure adjectives and opportunities are correctly used
-    adjectives = ["amazing", "exciting", "great", "unique"]
-    opportunities = ["opportunity", "vacancy", "position", "opening"]
-
-    # Templates with corrected adjective usage
-    template1 = f"{random.choice(adjectives).capitalize()} {random.choice(opportunities)} at {company} as a {job_title}"
-    template2 = f"{company} has a {random.choice(adjectives)} {random.choice(opportunities)} for a {job_title}"
-    template3 = f"Apply now for a {job_title} role at {company} – an {random.choice(adjectives)} {random.choice(opportunities)}"
-    template4 = f"{company} is offering a {random.choice(adjectives)} {random.choice(opportunities)} for the role of {job_title}"
-    template5 = f"Looking for a {job_title}? Check out the {random.choice(adjectives)} {random.choice(opportunities)} at {company}"
-    template6 = f"Exciting {job_title} role available at {company} – {random.choice(adjectives).capitalize()} {random.choice(opportunities)}"
-    template7 = f"{company} has a fantastic {random.choice(adjectives)} {random.choice(opportunities)} for {job_title}"
-    template8 = f"Apply for the {job_title} position at {company} – an {random.choice(adjectives)} {random.choice(opportunities)} awaits"
-    template9 = f"{company} is looking for a {job_title} – discover the {random.choice(adjectives)} {random.choice(opportunities)} available"
-    template10 = f"Join {company} as a {job_title} and seize this {random.choice(adjectives)} {random.choice(opportunities)}"
-
-    templates = structures + [template1, template2, template3, template4, template5, template6, template7, template8, template9, template10]
-
-    # Randomly select a template but keep it consistent for this combination
-    notification_text = random.choice(templates)
-
-    return notification_text
 
 
 

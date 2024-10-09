@@ -1,82 +1,199 @@
-{% extends 'jobseeker/header.html' %}
-{% block title %}Jobseeker{% endblock %}
-{% block content %}
-{% include 'jobseeker/rating.html' %}
-{% include 'jobseeker/profile.html' %}
-<div class="notifications-container">
-    {% for notif in notifications %}
-        <div class="notification_notification" id="notification-{{ notif['NotifID'] }}">
-            <img src="/static/images/close.png" style="position: relative; place-self: end;" width="30px" onclick="close_jobseeker_notification_popup(this)">
-
-
-
-            <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
-                <div class="profile_notification">
-                    <img src="{{ notif['profile_picture'] }}" class="profile-picture-small" alt="Employer Profile Picture">
-                </div>
-                <div class="notification-content_notification">
-                    <div class="fname_notification">{{ notif['employer_fname'] }}</div>
-                    <div class="text_notification">
-                        {{ notif['text'] }}
-                    </div>
-                    <!-- Display the created date with an ID -->
-                    <div class="time_notification" data-time="{{ notif['date_created'] }}"></div>
-                </div>
-            </div>
-        </div>
-    {% endfor %}
+<!-- Notification Modal -->
+<div id="notificationModal" class="modal-jobseeker-notification">
+    <div class="modal-notification-content">
+        <h2>Notification</h2>
+        <div class="notifications-container"></div>
+        <!-- Audio element for notification sound -->
+        <audio id="notification-sound" src="/static/sounds/Notification bell sound effect.mp3" preload="auto"></audio>
+    </div>
 </div>
 
+<style>
+    /* Style for the modal */
+    .modal-jobseeker-notification {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Black background with transparency */
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Style for modal content */
+    .modal-notification-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        max-height: 80vh; /* Set maximum height for the modal */
+        overflow-y: auto; /* Enable vertical scrolling */
+        overflow-x: hidden; /* Disable horizontal scrolling */
+    }
+
+    /* Disable body scroll */
+    .no-scroll {
+        overflow: hidden;
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
 
 <script>
-function close_jobseeker_notification_popup(imgElement) {
-    // Find the parent notification element
-    const notificationElement = imgElement.closest('.notification_notification');
+// Function to open the notification modal and disable body scroll
+function openNotifications() {
+    const modal = document.getElementById('notificationModal');
+    modal.style.display = 'flex';
+    document.body.classList.add('no-scroll'); // Disable body scroll
+}
 
-    // Extract the NotifID from the parent element's ID
-    const notif_id = notificationElement.id.split('-')[1]; // Assuming the ID is like 'notification-2'
+// Function to close the modal when clicking outside of the content and re-enable body scroll
+document.getElementById('notificationModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        this.style.display = 'none'; // Close the modal
+        document.body.classList.remove('no-scroll'); // Re-enable body scroll
+    }
+});
 
-    console.log("Closing notification ID:", notif_id);
-    
-    fetch(`/jobseeker/notification/close/${notif_id}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            console.log(`Notification ${notif_id} closed successfully.`);
-            notificationElement.remove(); // Remove the notification from the DOM
-        } else {
-            console.error(`Failed to close notification: ${response.statusText}`);
-        }
+// Function to update notification times
+function updateNotificationTimes() {
+    const elements = document.querySelectorAll('.time_notification');
+    elements.forEach(element => {
+        const time = element.getAttribute('data-time');
+        element.textContent = moment(time).fromNow();
+    });
+}
+
+// Function to play the notification sound
+function playNotificationSound() {
+    const notificationSound = document.getElementById('notification-sound');
+    notificationSound.play()
+    .then(() => {
+        console.log("Notification sound played successfully.");
     })
     .catch(error => {
-        console.error('Error closing notification:', error);
+        console.error("Error playing notification sound:", error);
     });
 }
 
 
-    document.addEventListener("DOMContentLoaded", function() {
-        const elements = document.querySelectorAll('.time_notification');
-        elements.forEach(element => {
-            const time = element.getAttribute('data-time');
-            element.textContent = moment(time).fromNow();
+// Function to fetch new notifications
+function fetchNotifications() {
+    console.log("Fetching notifications...");
+
+    const lastNotificationID = localStorage.getItem('lastNotificationID') || 0; // Default to 0 if not set
+    console.log("Last Notification ID from local storage:", lastNotificationID);
+
+    fetch('/jobseeker_fetch_all_notification')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json(); // Get response as JSON
+    })
+    .then(data => {
+        console.log("Fetched notifications data:", data); // Log the data fetched
+        const notificationsContainer = document.querySelector('.notifications-container');
+
+        // Clear existing notifications
+        notificationsContainer.innerHTML = '';
+
+        // Array to store fetched notification IDs
+        const fetchedNotificationIDs = [];
+        
+        // Append new notifications and collect their IDs
+        data.notifications.forEach(notif => {
+            fetchedNotificationIDs.push(notif.NotifID); // Store each notification ID
+            const notificationDiv = document.createElement('div');
+            notificationDiv.className = 'notification_notification';
+            notificationDiv.id = `notification-${notif.NotifID}`;
+            notificationDiv.innerHTML = `
+                <img src="/static/images/close.png" style="position: relative; place-self: end;" width="30px" onclick="close_jobseeker_notification_popup(this)">
+                <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
+                    <div class="profile_notification">
+                        <img src="${notif.profile_picture}" class="profile-picture-small" alt="Employer Profile Picture">
+                    </div>
+                    <div class="notification-content_notification">
+                        <div class="fname_notification">${notif.employer_fname}</div>
+                        <div class="text_notification">${notif.text}</div>
+                        <div class="time_notification" data-time="${notif.date_created}"></div>
+                    </div>
+                </div>
+            `;
+            notificationsContainer.appendChild(notificationDiv);
         });
 
-        // Optionally, update every minute
-        setInterval(() => {
-            elements.forEach(element => {
-                const time = element.getAttribute('data-time');
-                element.textContent = moment(time).fromNow();
-            });
-        }, 60000);
-    });
+        // Log the fetched Notification IDs
+        console.log("Fetched Notification IDs:", fetchedNotificationIDs);
 
+        // Determine the highest fetched notification ID
+        const newLastNotificationID = Math.max(...fetchedNotificationIDs); // Find the highest ID in fetched notifications
+        console.log("New Last Notification ID:", newLastNotificationID);
+
+        // Play sound only if the new highest ID is greater than the last stored ID
+        if (newLastNotificationID > lastNotificationID) {
+            playNotificationSound(); // Play sound if there is a new notification
+            localStorage.setItem('lastNotificationID', newLastNotificationID); // Update the last notification ID in local storage
+            console.log("Sound played and last notification ID updated.");
+        } else {
+            console.log("No new notifications or notification ID is the same.");
+        }
+
+        // Update times after fetching new notifications
+        updateNotificationTimes();
+        console.log("Notifications updated in the DOM."); // Log successful update
+    })
+    .catch(error => {
+        console.error('Error fetching notifications:', error);
+    });
+}
+
+
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    fetchNotifications();
+    setInterval(fetchNotifications, 5000); // Fetch notifications every minute
+});
+</script>
+
+<script>
+// Function to close jobseeker notification popup
+function close_jobseeker_notification_popup(element) {
+    // Get the notification ID from the element's parent div ID
+    const notificationDiv = element.closest('.notification_notification');
+    const notifID = notificationDiv.id.split('-')[1]; // Extract ID from 'notification-{notifID}'
+
+    console.log("Closing notification with ID:", notifID);
+
+    // Send a POST request to the Flask endpoint
+    fetch(`/jobseeker/notification/close/${notifID}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Remove the notification from the DOM if successfully closed
+            notificationDiv.remove();
+            console.log("Notification closed successfully:", data);
+        } else {
+            console.error("Error closing notification:", data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
-
-{% endblock %}

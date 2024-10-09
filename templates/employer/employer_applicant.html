@@ -154,6 +154,8 @@ $(document).ready(function() {
                     <div id="result-section-${applicant.Applicant_ID}" style="text-align:center; grid-column: 8; display: ${displayResultSection};">
                         <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
                         <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
+                        <img src="/static/images/close.png" alt="Close Popup" style="width: 20px; display: none;" id="closeapplicantpopup-${applicant.Applicant_ID}" data-applicant-id="${applicant.Applicant_ID}" onclick="closeApplicantButton(${applicant.Applicant_ID})">
+                        
                     </div>
                 </div>
             `;
@@ -289,4 +291,41 @@ $(document).ready(function() {
     window.approvedSearchApplicants = approvedSearchApplicants;
     window.fetchApprovedApplicants =fetchApprovedApplicants;
 });
+</script>
+
+<script>
+    function closeApplicantButton(applicantId) {
+    // Confirm the action if necessary
+    if (confirm('Are you sure you want to close this applicant popup?')) {
+        $.ajax({
+            url: `/close_applicant_history/${applicantId}`, // Update the URL to your endpoint
+            method: 'POST',
+            success: function(response) {
+                // Handle successful response
+                // alert('Applicant popup closed successfully.');
+                fetchApprovedApplicants();                
+                // Optionally, hide the result section or do any other necessary UI updates
+                $(`#result-section-${applicantId}`).hide(); // Assuming you want to hide the result section
+            },
+            error: function(xhr) {
+                // Handle error response
+                alert('Error closing applicant popup: ' + xhr.responseJSON.error);
+            }
+        });
+    }
+}
+$(document).on('change', `input[name^="result-"]`, function() {
+    let applicantId = $(this).attr('name').split('-')[1]; // Extract applicant ID
+    console.log(`Applicant ID: ${applicantId}`); // Debugging line
+
+    // Check if either radio button is checked
+    if ($(`input[name="result-${applicantId}"]:checked`).length > 0) {
+        $(`#closeapplicantpopup-${applicantId}`).css('display', 'inline'); // Show the close button if a result is marked
+        console.log(`Close button displayed for applicant ID: ${applicantId}`);
+    } else {
+        $(`#closeapplicantpopup-${applicantId}`).css('display', 'none'); // Hide the close button if no result is marked
+        console.log(`Close button hidden for applicant ID: ${applicantId}`);
+    }
+});
+
 </script>

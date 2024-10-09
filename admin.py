@@ -29,7 +29,7 @@ def internal_error(error):
     return "Internal Server Error", 500
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
-app.permanent_session_lifetime = timedelta(minutes=3)
+app.permanent_session_lifetime = timedelta(minutes=30)
 
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
@@ -59,7 +59,7 @@ def admin():
 
     # Check for session timeout (e.g., 3 minutes)
     session_start = session['session_start']
-    if datetime.now(timezone) - session_start > timedelta(minutes=3):
+    if datetime.now(timezone) - session_start > timedelta(minutes=30):
         # Update currentState to Inactive
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
@@ -303,8 +303,10 @@ def retrieve_admin_notification():
                 "notification_id": notification[0],
                 "userType": notification[1],
                 "picture": (
-                    f"static/{notification[2]}" if notification[1] == "Jobseeker" 
-                    else f"/static/images/employer-images/{notification[2]}" if notification[1] == "Employer" 
+                    f"static/images/jobseeker-images/man.png" if notification[1] == "Jobseeker" and notification[2] is None 
+                    else f"static/{notification[2]}" if notification[1] == "Jobseeker" 
+                    else f"/static/images/employer-images/{notification[2]}" if notification[1] == "Employer" and notification[2] is not None 
+                    else f"/static/images/employer-images/woman.png" if notification[1] == "Employer" and notification[2] is None
                     else f"/static/{notification[2]}" if notification[1] == "Admin" 
                     else notification[2]  # Default case if not Jobseeker, Employer, or Admin
                 ),
@@ -312,7 +314,7 @@ def retrieve_admin_notification():
                 "notification_text": notification[4],
                 "notification_date": notification[5]
             }
-            for notification in notifications
+            for notification in notifications  # Assuming 'notifications' is your data source
         ]
 
         print("Processed notification data:", data)
@@ -544,7 +546,6 @@ def retrieve_types_of_users():
 
 
 
-
 @app.route('/get_all_ratings', methods=['GET'])
 def get_all_ratings():
     conn = get_db_connection()
@@ -560,8 +561,9 @@ def get_all_ratings():
         WHERE strftime('%Y', date_created) = ?
     """, (str(current_year),))
     result_current_year = cursor.fetchone()
-    total_ratings_current_year = result_current_year['total_ratings']
-    total_stars_current_year = result_current_year['total_stars'] or 0  # Handle case where no ratings exist
+
+    total_ratings_current_year = result_current_year['total_ratings'] or 0  # Handle case where no ratings exist
+    total_stars_current_year = result_current_year['total_stars'] or 0
     average_ratings_current_year = total_stars_current_year / total_ratings_current_year if total_ratings_current_year > 0 else 0
 
     # Total ratings for the previous year
@@ -571,11 +573,16 @@ def get_all_ratings():
         WHERE strftime('%Y', date_created) = ?
     """, (str(previous_year),))
     result_previous_year = cursor.fetchone()
-    total_ratings_previous_year = result_previous_year['total_ratings']
+
+    total_ratings_previous_year = result_previous_year['total_ratings'] or 0
     total_stars_previous_year = result_previous_year['total_stars'] or 0
     average_ratings_previous_year = total_stars_previous_year / total_ratings_previous_year if total_ratings_previous_year > 0 else 0
 
-    # Calculate the percentage change in total ratings and average ratings
+    # Debugging logs
+    print("Total Ratings Current Year:", total_ratings_current_year)
+    print("Total Ratings Previous Year:", total_ratings_previous_year)
+
+    # Calculate the percentage change
     percentage_change_ratings = ((total_ratings_current_year - total_ratings_previous_year) / total_ratings_previous_year) * 100 if total_ratings_previous_year > 0 else 0
     percentage_change_average = ((average_ratings_current_year - average_ratings_previous_year) / average_ratings_previous_year) * 100 if average_ratings_previous_year > 0 else 0
 
@@ -600,6 +607,7 @@ def get_all_ratings():
         'percentage_change_average': percentage_change_average,
         'ratings_by_star': ratings_dict
     })
+
 
 
 
@@ -677,7 +685,73 @@ def fetch_admin_announcements():
 
 
 
+@app.route('/get_announcement/<int:announcementID>', methods=['GET'])
+def get_announcement(announcementID):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM announcement WHERE announcementID = ?', (announcementID,))
+    announcement = cursor.fetchone()
+    conn.close()
+    
+    if announcement:
+        return jsonify({
+            'announcementID': announcement[0],  # Index 0: announcementID
+            'What': announcement[2],              # Index 2: What
+            'Where': announcement[4],             # Index 4: Where
+            'When': announcement[3],              # Index 3: When
+            'Requirement': announcement[5],       # Index 5: Requirement
+            'Description': announcement[6],       # Index 6: Description
+            'date_posted': announcement[7],       # Index 7: date_posted
+            'status': announcement[8]              # Index 8: status
+        })
+    else:
+        return jsonify({'error': 'Announcement not found'}), 404
 
+        
+@app.route('/apply_edit_announcement', methods=['POST'])
+def apply_edit_announcement():
+    try:
+        data = request.get_json()
+        announcementID = data.get('announcementID')
+        what = data.get('What')
+        where = data.get('Where')
+        when = data.get('When')
+        requirement = data.get('Requirement')
+        description = data.get('Description')
+        status = data.get('status')  # If you want to update the status as well
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE announcement 
+            SET "What" = ?, "Where" = ?, "When" = ?, "Requirement" = ?, "Description" = ?, "status" = ?
+            WHERE announcementID = ?
+        ''', (what, where, when, requirement, description, status, announcementID))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error updating announcement: {e}")
+        return jsonify(success=False), 500
+
+@app.route('/apply_delete_announcement', methods=['POST'])
+def apply_delete_announcement():
+    try:
+        announcementID = request.form['announcementID']
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM announcement WHERE announcementID = ?', (announcementID,))
+        
+        conn.commit()
+        conn.close()
+
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error deleting announcement: {e}")
+        return jsonify(success=False), 500
 
 
 
@@ -742,23 +816,9 @@ def insert_announcement():
         current_date_ph = datetime.now(timezone)
         print(f"Current date in PH timezone: {current_date_ph}")
 
-        # Calculate status based on 'when' field
-        # Split the 'when' field to get the start and end dates
-        date_range = when.split(' to ')
-        start_date = datetime.strptime(date_range[0], '%Y-%m-%d')
-        end_date = datetime.strptime(date_range[1], '%Y-%m-%d') if len(date_range) > 1 else start_date
-
-        # Make start_date and end_date timezone-aware
-        start_date = timezone.localize(start_date)
-        end_date = timezone.localize(end_date)
-        print(f"Parsed and localized date range: start_date={start_date}, end_date={end_date}")
-
-        # Determine status: "Available" if today is in the range, otherwise "Unavailable"
-        if start_date <= current_date_ph <= end_date:
-            status = "Available"
-        else:
-            status = "Unavailable"
-        print(f"Calculated status: {status}")
+        # Set status to "Available" directly
+        status = "Available"
+        print(f"Assigned status: {status}")
 
         # Insert data into the database
         conn = get_db_connection()
@@ -812,8 +872,14 @@ def admin_fetched_jobs():
 
     conn = get_db_connection()
 
-    # Base query
-    query = "SELECT * FROM jobs WHERE 1=1"
+    # Base query with JOIN to fetch employer details
+    query = """
+    SELECT j.*, u.fname, u.profile 
+    FROM jobs j 
+    LEFT JOIN users u ON j.employer_ID = u.User_ID 
+    WHERE 1=1
+    """
+    
     count_query = "SELECT COUNT(*) FROM jobs WHERE 1=1"
     params = []
 
@@ -866,6 +932,10 @@ def admin_fetched_jobs():
     # Convert jobs to a list of dictionaries
     jobs_list = [{
         'Job_ID': job['Job_ID'],
+        'employer': {
+            'fname': job['fname'] or 'Unknown',  # Fallback if fname is None
+            'profile': job['profile'] if job['profile'] else 'static/images/employer-images/woman.png'
+        },
         'title': job['title'],
         'position': job['position'],
         'description': job['description'],
@@ -884,14 +954,105 @@ def admin_fetched_jobs():
 
 
 
+click_count = 0  # Global variable to track the number of clicks
 
 @app.route('/admin_fetched_jobs/approve/<int:job_id>', methods=['POST'])
 def approve_job(job_id):
     conn = get_db_connection()
-    conn.execute("UPDATE jobs SET request = 'Approved' WHERE Job_ID = ?", (job_id,))
+    cursor = conn.cursor()
+
+    # Update the job request status to 'Approved'
+    cursor.execute("UPDATE jobs SET request = 'Approved' WHERE Job_ID = ?", (job_id,))
+
+    # Fetch job details for the approved job
+    cursor.execute('SELECT company, title, employer_ID FROM jobs WHERE Job_ID = ?', (job_id,))
+    job_data = cursor.fetchone()
+
+    if job_data:
+        company = job_data[0]
+        title = job_data[1]
+        employer_id = job_data[2]
+
+        # Fetch the employer's name and profile picture
+        cursor.execute('SELECT fname, profile FROM users WHERE User_ID = ?', (employer_id,))
+        employer_data = cursor.fetchone()
+        
+        employer_fname = employer_data[0] if employer_data else 'Unknown'
+        employer_profile = employer_data[1] if employer_data and employer_data[1] else 'static/images/employer-images/avatar.png'
+
+        # Fetch jobseekers' details
+        cursor.execute('SELECT User_ID FROM users WHERE userType = "Jobseeker"')
+        jobseekers = cursor.fetchall()
+
+        # Get current time in Philippine Time (PHT)
+        philippine_tz = pytz.timezone('Asia/Manila')
+        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Generate notification text using the function
+        jobseeker_notification_text = generate_notification_text(company, title)
+
+        # Insert a single notification for all jobseekers
+        cursor.execute(
+            'INSERT INTO jobseeker_notifications (employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, current_time_pht)
+        )
+
+        # Print how many notifications were inserted
+        print("1 jobseeker notification(s) were sent.")
+
     conn.commit()
     conn.close()
-    return jsonify({'message': 'Job approved successfully'})
+
+    return jsonify({'message': 'Job approved successfully and notification sent to jobseekers'})
+
+
+
+
+def generate_notification_text(company, job_title):
+    # Define consistent and varied structures
+    structures = [
+        f"Amazing Opportunity for {company} at {job_title}",
+        f"{company} is offering an exciting opportunity for a {job_title}",
+        f"{company} offers exciting opportunities at {job_title}",
+        f"Exciting opportunity for {job_title} at {company}",
+        f"New {job_title} position available at {company}",
+        f"Don't miss out on the {job_title} role at {company}",
+        f"Join {company} as a {job_title} and be part of something big",
+        f"{company} is looking for a talented {job_title}",
+        f"Great opening for a {job_title} at {company}",
+        f"Explore the {job_title} position at {company} today"
+    ]
+
+    # Ensure adjectives and opportunities are correctly used
+    adjectives = ["amazing", "exciting", "great", "unique"]
+    opportunities = ["opportunity", "vacancy", "position", "opening"]
+
+    # Templates with corrected adjective usage
+    template1 = f"{random.choice(adjectives).capitalize()} {random.choice(opportunities)} at {company} as a {job_title}"
+    template2 = f"{company} has a {random.choice(adjectives)} {random.choice(opportunities)} for a {job_title}"
+    template3 = f"Apply now for a {job_title} role at {company} – an {random.choice(adjectives)} {random.choice(opportunities)}"
+    template4 = f"{company} is offering a {random.choice(adjectives)} {random.choice(opportunities)} for the role of {job_title}"
+    template5 = f"Looking for a {job_title}? Check out the {random.choice(adjectives)} {random.choice(opportunities)} at {company}"
+    template6 = f"Exciting {job_title} role available at {company} – {random.choice(adjectives).capitalize()} {random.choice(opportunities)}"
+    template7 = f"{company} has a fantastic {random.choice(adjectives)} {random.choice(opportunities)} for {job_title}"
+    template8 = f"Apply for the {job_title} position at {company} – an {random.choice(adjectives)} {random.choice(opportunities)} awaits"
+    template9 = f"{company} is looking for a {job_title} – discover the {random.choice(adjectives)} {random.choice(opportunities)} available"
+    template10 = f"Join {company} as a {job_title} and seize this {random.choice(adjectives)} {random.choice(opportunities)}"
+
+    templates = structures + [template1, template2, template3, template4, template5, template6, template7, template8, template9, template10]
+
+    # Randomly select a template but keep it consistent for this combination
+    jobseeker_notification_text = random.choice(templates)
+
+    return jobseeker_notification_text
+
+
+
+
+
+
+
+
 
 @app.route('/admin_fetched_jobs/deny/<int:job_id>', methods=['POST'])
 def deny_job(job_id):
@@ -900,6 +1061,9 @@ def deny_job(job_id):
     conn.commit()
     conn.close()
     return jsonify({'message': 'Job denied successfully'})
+
+
+
 
 
 

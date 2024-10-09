@@ -36,3 +36,118 @@
 .container9{position: relative;max-width: 500px;margin-right: 30px;}
 .container10{position: relative;max-width: 160px;margin-right: 30px;}
 .container11{position: relative;}
+
+
+
+/* Job listing table */
+.job-list-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.job-list-table th, .job-list-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.job-list-table th {
+    background-color: #f2f2f2;
+}
+
+/* Hover effects */
+.openMyPost {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.openMyPost:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip {
+    visibility: hidden;
+    width: max-content;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px;
+    z-index: 1;
+    left: 80%;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.openMyPost:hover + .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Vertical job list */
+.vertical-job-list {
+    width: fit-content;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    white-space: inherit;
+}
+
+.vertical-job-list td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    width: auto;
+}
+
+.job-label {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Container for job listings */
+.job-container {
+    margin-bottom: 20px;
+    border: 1px solid;
+    border-radius: 5px;
+    width: -webkit-fill-available;
+}
+
+#fetch_myListPosted {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Adjust to ensure responsive grid */
+    gap: 20px;
+    background: beige;
+    border-radius: 7px;
+    padding: 20px;
+    font-size: 0.8rem;
+    overflow-wrap: break-word; /* Break long words to prevent overflow */
+    place-items: center;
+    align-items: stretch;
+}
+
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filter-input {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.apply-filter-btn {
+    padding: 6px 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.apply-filter-btn:hover {
+    background-color: #218838;
+}

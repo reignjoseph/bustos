@@ -1,3 +1,39 @@
 .status-time{/* position:relative; */text-align:right;margin-top: 30px;}
 .status-card{width: -webkit-fill-available;}
 .status-info{width:-webkit-fill-available}
+.status-container {
+    width: 100%;
+}
+
+.loading-bar {
+    height: 20px;
+    width: 100%;
+    background: #accbe4;
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+@keyframes waveEffect {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 50px 50px;
+    }
+}
+
+.status-card {
+    background-color: #cfe1ff;
+    color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+.animate-bar {
+    animation: animateBar 2s ease-in-out;
+}
+
+.close-img { cursor: pointer; width: 30px; transition: transform 0.3s ease; align-self: self-end; } .close-img:hover { transform: scale(1.2); }
+
+.status-frame1{margin: 30px;    width: fit-content;}

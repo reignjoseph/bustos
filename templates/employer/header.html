@@ -45,13 +45,23 @@
                 <img src="/static/images/user.png" style="max-width: 40px;" alt="Logo">
                 <span>Applicant</span>
             </div>
-            <a href="/logout" class="menu-item">
+            <a class="box menu-item" onclick="employeropenLogout()">
                 <img src="/static/images/signin.png" style="max-width: 40px;" alt="Logo">
                 <span>Logout</span>
             </a>
         </div>
     </div>
     <main>
+<!-- Modal Structure -->
+<div id="employer_logout_modal" class="employer_modal" style="display: none;">
+    <div class="employer_modal-content employer_logout_modal">
+        <h1>Are you sure you want to sign out?</h1>
+        <div class="employer_logout_button">
+            <a href="/logout" class="btn btn-danger">Yes</a>
+            <button class="btn btn-primary" onclick="employercloseLogout()">No</button> 
+        </div>
+    </div>
+</div>        
         {% block content %}
         {% endblock %}
     </main>
@@ -83,5 +93,67 @@
         }
     </script>
 
+
+<style>
+    /* Modal Styles */
+    .employer_modal {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        z-index: 999; /* Ensure it appears on top */
+    }
+
+    .employer_modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        width: fit-content; /* Adjust width */
+    }
+
+    /* Button Styles */
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+    }
+
+    /* Hover Effects */
+    .btn-danger {
+        background-color: red;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: darkred; /* Darker shade on hover */
+    }
+    .btn-primary {
+        background-color: green;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: darkgreen; /* Darker shade on hover */
+    }
+</style>
+    <script>
+    // Open logout modal
+    function employeropenLogout() {
+        document.getElementById("employer_logout_modal").style.display = "flex"; // Show modal
+    }
+    
+    // Close logout modal
+    function employercloseLogout() {
+        document.getElementById("employer_logout_modal").style.display = "none"; // Hide modal
+    }
+    
+    // Close the modal if the user clicks outside of it
+    </script>
 </body>
 </html>

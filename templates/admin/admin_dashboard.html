@@ -142,23 +142,31 @@
         fetch('/get_all_ratings')
             .then(response => response.json())
             .then(data => {
-                console.log("Rating data: ", data);  // Debugging log
+                console.log("Rating data: ", data);  // Debugging log for fetched data
+                
                 // Update total and average ratings
                 document.getElementById('totalRatings').textContent = data.total_ratings;
                 document.getElementById('averageRatings').textContent = data.average_ratings;
-    
+                
+                console.log("Total Ratings: ", data.total_ratings);  // Debugging log for total ratings
+                console.log("Average Rating: ", data.average_ratings);  // Debugging log for average rating
+
                 // Display percentage change in total ratings
                 const percentageChangeText = data.percentage_change_ratings >= 0 
                     ? `+${data.percentage_change_ratings.toFixed(2)}% from last year`
                     : `${data.percentage_change_ratings.toFixed(2)}% from last year`;
                 document.getElementById('totalRatingComparison').textContent = percentageChangeText;
-    
+
+                console.log("Percentage Change in Total Ratings: ", percentageChangeText);  // Debugging log
+
                 // Display percentage change in average rating
                 const percentageChangeAverageText = data.percentage_change_average >= 0 
                     ? `+${data.percentage_change_average.toFixed(2)}% from last year`
                     : `${data.percentage_change_average.toFixed(2)}% from last year`;
                 document.getElementById('averageRatingComparison').textContent = percentageChangeAverageText;
-    
+
+                console.log("Percentage Change in Average Rating: ", percentageChangeAverageText);  // Debugging log
+
                 // Prepare data for the chart
                 const ratingLabels = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
                 const ratingValues = [
@@ -168,7 +176,9 @@
                     data.ratings_by_star[4] || 0,  // Very Good
                     data.ratings_by_star[5] || 0   // Excellent
                 ];
-    
+                
+                console.log("Rating Values: ", ratingValues);  // Debugging log for rating values
+
                 // Create the horizontal bar chart
                 const ctx = document.getElementById('ratingChart').getContext('2d');
                 new Chart(ctx, {
@@ -211,7 +221,13 @@
             })
             .catch(error => console.error('Error fetching ratings:', error));  // Debugging log
     });
-    </script>
+</script>
+
+
+
+
+
+
 
 
 

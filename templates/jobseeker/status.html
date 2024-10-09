@@ -1,159 +1,169 @@
-{% extends 'jobseeker/header.html' %}
-{% block title %}Jobseeker{% endblock %}
-{% block content %}
-{% include 'jobseeker/rating.html' %}
-{% include 'jobseeker/profile.html' %}
-
-<div class="status-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
-    <!-- Dynamic status cards will be injected here -->
+<!-- Status Modal Background -->
+<div id="modal-status" class="modal-status fixed inset-0 bg-gray-800 bg-opacity-50 justify-center items-center" style="display: none;">
+    <!-- Status Modal Container -->
+    <div class="status-frame1 bg-white p-8 rounded-lg shadow-lg w-full mx-auto relative">
+        <!-- Close Button -->
+        <button id="close-status-btn" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" style="transform: translate(-5px, 5px);">
+            <img src="{{ url_for('static', filename='images/close.png') }}" alt="Close" class="w-6 h-6">
+        </button>
+        
+        <!-- Status Message -->
+        <h2 class="text-left font-bold">Status</h2>
+        <div class="status-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <!-- Dynamic status cards will be injected here -->
+        </div>
+        <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
+        
+        <script>
+            let lastStatus = JSON.parse(localStorage.getItem('lastStatus')) || {}; // Retrieve the last status from localStorage or initialize it as an empty object
+        
+            document.addEventListener('DOMContentLoaded', function() {
+                fetchApplicationStatus();
+                // Refresh status data every 60 seconds
+                setInterval(fetchApplicationStatus, 10000);
+            });
+        
+            function fetchApplicationStatus() {
+                $.ajax({
+                    url: '/retrieve_application_status',
+                    method: 'GET',
+                    success: function(data) {
+                        console.log("Received status data: ", data);
+        
+                        let newStatus = {}; // To store new statuses
+                        let statusChanged = false; // To check if the status has changed
+        
+                        let statusHtml = '';
+        
+                        // Create a style element for the keyframes dynamically
+                        const styleSheet = document.createElement("style");
+                        document.head.appendChild(styleSheet);
+        
+                        data.forEach(status => {
+                            const relativeTime = moment(status.date_posted).fromNow();
+        
+                            let progressLevel = 0;
+                            if (status.status_type === 'Approved') progressLevel = 25;
+                            else if (status.status_type === 'Scheduled') progressLevel = 50;
+                            else if (status.status_type === 'Interviewed') progressLevel = 75;
+                            else if (status.status_type === 'Passed') progressLevel = 100;
+        
+                            // Store the current status in the newStatus object
+                            newStatus[status.status_id] = progressLevel;
+        
+                            // Compare with lastStatus, and if they differ, set statusChanged to true
+                            if (lastStatus[status.status_id] !== progressLevel) {
+                                statusChanged = true;
+                            }
+        
+                            const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
+        
+                            styleSheet.sheet.insertRule(`
+                                @keyframes ${uniqueAnimationName} {
+                                    0% { width: 0%; }
+                                    100% { width: ${progressLevel}%; }
+                                }
+                            `, styleSheet.sheet.cssRules.length);
+        
+                            statusHtml += `
+                                <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                                    <img class="close-img" src="/static/images/close.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close">
+                                    <div style="display: grid; align-items: flex-start; grid-template-columns: min-content;">
+                                        <div class="profile-picture" style="overflow: hidden; border: 1px solid black; display: flex; border-radius: 50%; width: 5rem; height: 5rem;">
+                                            <img src="${status.profile_picture}" alt="Profile">
+                                        </div>
+                                        <div class="status-info" style="margin: 0px 20px; display: flex; flex-direction: column; grid-column: 2;">
+                                            <div class="employer-name" style="font-weight: bold;color:black;">${status.employer_name}</div>
+                                            <div class="status-description" style="color: #000000; margin-top: 10px;">${status.status_description}</div>
+                                            <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
+                                        </div>
+                                    </div>
+                                    <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
+                                        <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
+                                            <span style="color: white; display: block; text-align: center; z-index: 2;transform:translate(0.1vw,-0.1vw);">
+                                                ${progressLevel}% ${status.status_type}
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+        
+                        document.querySelector('.status-container').innerHTML = statusHtml;
+                        updateRelativeTimes();
+        
+                        // If any status changed, play the notification sound
+                        if (statusChanged) {
+                            playNotificationSound();
+                        }
+        
+                        // Update lastStatus to reflect the new status and store it in localStorage
+                        localStorage.setItem('lastStatus', JSON.stringify(newStatus));
+                        lastStatus = { ...newStatus };
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error fetching status data: " + error);
+                    }
+                });
+            }
+        
+            function updateRelativeTimes() {
+                document.querySelectorAll('.status-time').forEach(element => {
+                    const time = element.getAttribute('data-time');
+                    element.textContent = moment(time).fromNow();
+                });
+            }
+        
+            function hidePopUp(applicantId, statusId) {
+                $.ajax({
+                    url: '/update_popup_status',
+                    method: 'POST',
+                    data: {
+                        id: applicantId,
+                        popup: 'false'
+                    },
+                    success: function(response) {
+                        console.log("Popup status updated:", response);
+                        $(`#status-card-${statusId}`).remove();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error updating popup status:", error);
+                    }
+                });
+            }
+        
+            function playNotificationSound() {
+                const audio = new Audio('/static/sounds/Notification bell sound effect.mp3');
+                audio.play();
+            }
+        </script>
+        
+    </div>
 </div>
-<style>.close-img { cursor: pointer; width: 30px; transition: transform 0.3s ease; align-self: self-end; } .close-img:hover { transform: scale(1.2); }</style>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
+
+
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    fetchApplicationStatus();
-    // Refresh status data every 60 seconds
-    // setInterval(fetchApplicationStatus, 60000);
+// Function to open the status modal
+function openStatus() {
+    document.getElementById('modal-status').style.display = 'block';
+    document.body.classList.add('hidden-scroll'); // Disable scrolling on body
+}
+
+// Close button functionality
+document.getElementById('close-status-btn').addEventListener('click', () => {
+    document.getElementById('modal-status').style.display = 'none';
+    document.body.classList.remove('hidden-scroll'); // Re-enable scrolling on body
 });
 
-function fetchApplicationStatus() {
-    $.ajax({
-        url: '/retrieve_application_status',
-        method: 'GET',
-        success: function(data) {
-            console.log("Received status data: ", data);
+// Close modal when clicking outside of it
+document.getElementById('modal-status').addEventListener('click', function(event) {
+    if (event.target === this) {
+        this.style.display = 'none';
+        document.body.classList.remove('hidden-scroll'); // Re-enable scrolling on body
+    }
+});
 
-            let statusHtml = '';
-
-            // Create a style element for the keyframes dynamically
-            const styleSheet = document.createElement("style");
-            document.head.appendChild(styleSheet);
-
-            data.forEach(status => {
-                // Assuming status.date_posted contains the timestamp
-                const relativeTime = moment(status.date_posted).fromNow();
-
-                // Determine the progress level based on status_type
-                let progressLevel = 0;
-                if (status.status_type === 'Approved') progressLevel = 25;
-                else if (status.status_type === 'Scheduled') progressLevel = 50;
-                else if (status.status_type === 'Interviewed') progressLevel = 75;
-                else if (status.status_type === 'Passed') progressLevel = 100;
-
-                // Create a unique keyframe name using status.id and status_type to avoid conflicts
-                const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
-
-                // Add keyframes rule to the style sheet
-                styleSheet.sheet.insertRule(`
-                    @keyframes ${uniqueAnimationName} {
-                        0% {
-                            width: 0%;
-                        }
-                        100% {
-                            width: ${progressLevel}%;
-                        }
-                    }
-                `, styleSheet.sheet.cssRules.length);
-
-                statusHtml += `
-                    <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                        <img class="close-img"  src="/static/images/close.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close">
-                        <div style="display: grid; align-items: flex-start; grid-template-columns: min-content;">
-                            <div class="profile-picture" style="overflow: hidden; border: 1px solid black; display: flex; border-radius: 50%; width: 5rem; height: 5rem;">
-                                <img src="${status.profile_picture}" alt="Profile">
-                            </div>
-                            <div class="status-info" style="margin: 0px 20px; display: flex; flex-direction: column; grid-column: 2;">
-                                <div class="employer-name" style="font-weight: bold;color:black;">${status.employer_name} </div>
-                                
-                                <div class="status-description" style="color: #000000; margin-top: 10px;">${status.status_description}</div>
-                                <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
-                            </div>
-                        </div>
-                        <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
-                            <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
-                                <span style="color: white; display: block; text-align: center; z-index: 2;transform:translate(0.1vw,-0.1vw);">
-                                    ${progressLevel}% ${status.status_type}
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.querySelector('.status-container').innerHTML = statusHtml;
-            updateRelativeTimes(); // Update times after HTML is injected
-        },
-        error: function(xhr, status, error) {
-            console.error("Error fetching status data: " + error);
-        }
-    });
-}
-
-function updateRelativeTimes() {
-    // Update all relative times on the page
-    document.querySelectorAll('.status-time').forEach(element => {
-        const time = element.getAttribute('data-time');
-        element.textContent = moment(time).fromNow();
-    });
-}
-
-function hidePopUp(applicantId, statusId) {
-    $.ajax({
-        url: '/update_popup_status',
-        method: 'POST',
-        data: {
-            id: applicantId,
-            popup: 'false' // or 'true', depending on your requirement
-        },
-        success: function(response) {
-            console.log("Popup status updated:", response);
-            // Remove the status card from the DOM
-            $(`#status-card-${statusId}`).remove();
-        },
-        error: function(xhr, status, error) {
-            console.error("Error updating popup status:", error);
-        }
-    });
-}
 </script>
-
-<!-- CSS for the animated progress bar -->
-<style>
-.status-container {
-    width: 100%;
-}
-
-.loading-bar {
-    height: 20px;
-    width: 100%;
-    background: #accbe4;
-    border-radius: 50px;
-    overflow: hidden;
-}
-
-@keyframes waveEffect {
-    0% {
-        background-position: 0 0;
-    }
-    100% {
-        background-position: 50px 50px;
-    }
-}
-
-.status-card {
-    background-color: #cfe1ff;
-    color: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-}
-
-.animate-bar {
-    animation: animateBar 2s ease-in-out;
-}
-</style>
-
-{% endblock %}

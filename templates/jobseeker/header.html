@@ -23,6 +23,55 @@
     <title>{% block title %}Jobseeker{% endblock %}</title>
     
 </head>
+<style>
+/* Button Styles */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+/* Hover Effects */
+.btn-danger {
+    background-color: red;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: darkred; /* Darker shade on hover */
+}
+
+.btn-primary {
+    background-color: green;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: darkgreen; /* Darker shade on hover */
+}  
+.jobseeker_logout_modal{width: fit-content; height: fit-content;}  
+</style>
+<script>
+// Open logout modal
+function openLogout() {
+    document.getElementById("jobseeker_logout_modal").style.display = "flex"; // Show modal
+}
+
+// Close logout modal
+function closeLogout() {
+    document.getElementById("jobseeker_logout_modal").style.display = "none"; // Hide modal
+}
+
+// Close the modal if the user clicks outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById("jobseeker_logout_modal");
+    if (event.target == modal) {
+        closeLogout();
+    }
+};    
+</script>
 <body>
     <header style="padding: 10px;">
         <div class="container" style="max-width: -webkit-fill-available;">
@@ -35,10 +84,11 @@
                     <a href="/jobseeker" class="box">
                         <img class="image" src="/static/images/home.png" alt="Logo">
                     Home</a>
-                    <a href="/jobseeker/notification" class="box">
+                    <!-- <a href="/jobseeker/notification" class="box"> -->
+                    <a class="box" onclick="openNotifications()">
                         <img class="image" src="/static/images/notification.png" alt="Logo">
                     Notification</a>
-                    <a href="/jobseeker/status" class="box">
+                    <a class="box" onclick="openStatus()">
                         <img class="image" src="/static/images/status.png" alt="Logo">
                     Status</a>
                     <a class="box" onclick="openRate()">
@@ -47,7 +97,7 @@
                     <a class="box" onclick="openProfile()">
                         <img class="image" src="/static/images/profile.png" alt="Logo">
                     Profile</a>
-                    <a href="/logout" class="box">
+                    <a class="box" onclick="openLogout()">
                         <img class="image" src="/static/images/logout.png" alt="Logo">
                     Log Out</a>
                 </div>
@@ -55,6 +105,17 @@
         </div>
     </header>
     <main>
+<!-- Modal Structure -->
+<div id="jobseeker_logout_modal" class="modal" style="display: none;">
+    <div class="modal-content jobseeker_logout_modal">
+        <h1>Are you sure you want to sign out?</h1>
+        <div class="jobseeker_logout_button">
+            <a href="/logout" class="btn btn-danger">Yes</a>
+            <button class="btn btn-primary" onclick="closeLogout()">No</button> 
+        </div>
+    </div>
+</div>
+
         {% block content %}
         <!-- Page specific content will go here -->
         {% endblock %}

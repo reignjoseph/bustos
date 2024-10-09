@@ -58,6 +58,92 @@
 </div>
 
 
+<!-- EDIT MODAL -->
+<!-- Edit Announcement Modal -->
+<div id="editModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Announcement</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editAnnouncementForm">
+                    <input type="hidden" id="editAnnouncementID">
+                    <div class="form-group">
+                        <label for="editWhat">What</label>
+                        <input type="text" class="form-control" id="editWhat">
+                    </div>
+                    <div class="form-group">
+                        <label for="editWhere">Where</label>
+                        <input type="text" class="form-control" id="editWhere">
+                    </div>
+                    <div class="form-group">
+                        <label for="editWhen">When</label>
+                        <input type="text" class="form-control" id="editWhen">
+                    </div>
+                    <div class="form-group">
+                        <label for="editRequirement">Requirement</label>
+                        <input type="text" class="form-control" id="editRequirement">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">Description</label>
+                        <textarea class="form-control" id="editDescription"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStatus">Status</label>
+                        <select class="form-control" id="editStatus">
+                            <option value="Available" selected>Available</option>
+                            <option value="Unavailable">Unavailable</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditAnnouncement()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function submitEditAnnouncement() {
+        const announcementID = $('#editAnnouncementID').val();
+        const what = $('#editWhat').val();
+        const where = $('#editWhere').val();
+        const when = $('#editWhen').val();
+        const requirement = $('#editRequirement').val();
+        const description = $('#editDescription').val();
+        const status = $('#editStatus').val();
+
+        $.ajax({
+            url: '/apply_edit_announcement',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                announcementID: announcementID,
+                What: what,
+                Where: where,
+                When: when,
+                Requirement: requirement,
+                Description: description,
+                status: status
+            }),
+            success: function(response) {
+                alert("Announcement updated successfully.");
+                $('#editModal').modal('hide');  // Hide modal after saving
+                announcement_applyFilter();  // Refresh the announcement list
+            },
+            error: function(err) {
+                console.error('Error updating announcement:', err);
+            }
+        });
+    }
+</script>
+<!--  -->
 
  <!-- Table to display announcements -->
  <table id="announcement_table" >
@@ -71,6 +157,7 @@
             <th>Description</th>
             <th>Date</th>
             <th>Status</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody class="fetched_announcement">
@@ -130,6 +217,14 @@
             <td data-label="Description">${announcement.Description}</td>
             <td data-label="Date">${formattedDate}</td>
             <td data-label="Status">${announcement.status}</td>
+            <td data-label="Action" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <button style="background: white; border: none; border-radius: 6px;display: flex; align-items: center; width:min-content; padding:10px;" class="announcement_edit" onclick="editAnnouncement(${announcement.announcementID})">
+                                    <img width="30px" src="static/images/announcement_edit.png"> Edit
+                                </button>
+                                <button style="background: white; border: none; border-radius: 6px;display: flex; align-items: center; width:min-content; padding:10px;" class="announcement_delete" onclick="deleteAnnouncement(${announcement.announcementID})">
+                                    <img width="30px" src="static/images/announcement_delete.png"> Delete
+                                </button>
+                            </td>
         </tr>
                         `);
                     });
@@ -144,6 +239,70 @@
             }
         });
     }
+
+
+
+    function editAnnouncement(announcementID) {
+        // Open a modal or a form to edit the announcement
+        // For example, you might populate a form with the current announcement data
+        $.ajax({
+            url: `/get_announcement/${announcementID}`,  // API to fetch current announcement data
+            type: 'GET',
+            success: function(announcement) {
+                // Populate your edit form here
+                $('#editAnnouncementID').val(announcement.announcementID);
+                $('#editWhat').val(announcement.What);
+                $('#editWhere').val(announcement.Where);
+                $('#editWhen').val(announcement.When);
+                $('#editRequirement').val(announcement.Requirement);
+                $('#editDescription').val(announcement.Description);
+                $('#editStatus').val(announcement.status); // if needed
+
+                // Show the modal or form for editing
+                $('#editModal').modal('show');
+            },
+            error: function(err) {
+                console.error('Error fetching announcement for editing:', err);
+            }
+        });
+    }
+
+    function deleteAnnouncement(announcementID) {
+        if (confirm("Are you sure you want to delete this announcement?")) {
+            $.ajax({
+                url: '/apply_delete_announcement',  // Your API endpoint to delete
+                type: 'POST',
+                data: {
+                    announcementID: announcementID
+                },
+                success: function(response) {
+                    alert("Announcement deleted successfully.");
+                    announcement_applyFilter();  // Refresh the list after deletion
+                },
+                error: function(err) {
+                    console.error('Error deleting announcement:', err);
+                }
+            });
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function announcement_changePage(direction) {
         if (direction === 'back') {

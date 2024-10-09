@@ -50,6 +50,7 @@
                 <thead>
                     <tr>
                         <th>Job ID</th>
+                        <th>Employer</th>
                         <th>Title</th>
                         <th>Position</th>
                         <th>Description</th>
@@ -172,6 +173,10 @@ function fetchJobs(page = 1) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${job.Job_ID}</td>
+                    <td>
+                    <img src="${job.employer.profile}" alt="${job.employer.fname}" style="width:30px; height:30px;"/>
+                    ${job.employer.fname}
+                    </td>
                     <td>${job.title}</td>
                     <td>${job.position}</td>
                     <td>${job.description}</td>

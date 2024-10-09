@@ -9,37 +9,51 @@
 <body style="display: flex; justify-content: center; margin: 0px 315px 0px 315px;">
     <div class="reports" style="flex-direction: column; display: none; width: -webkit-fill-available; height: -webkit-fill-available; margin: 30px 200px 0px 200px; border: 1px solid;">
         <button class="PDF" onclick="generatePDF()">Download PDF</button>
+        <!-- <button id="toggleJobseeker" style="margin-bottom: 10px;">Toggle Jobseeker</button> -->
+        <div></div>
         <script>
-            function generatePDF() {
-                // Get the element to print
-                const element = document.querySelector('.mainframe');
+ function generatePDF() {
+        // Toggle Jobseeker visibility before generating PDF
+
+
+        // Get the element to print
+        const element = document.querySelector('.mainframe');
+
+        // Check if the element exists and has content
+        if (!element || !element.innerHTML.trim()) {
+            alert("No content available for PDF generation.");
+            return;
+        }
+
+        // Options for the PDF with best quality settings
+        const options = {
+            margin: 0.45,
+            filename: 'peso_report.pdf',
+            image: { type: 'jpeg', quality: 1 }, // Best quality for images
+            html2canvas: { scale: 4 }, // Higher scale for better resolution
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        setTimeout(() => {
+            html2pdf()
+                .from(element)
+                .set(options)
+                .save()
+                .catch(err => {
+                    console.error('Error generating PDF:', err);
+                    alert('An error occurred while generating the PDF.');
+                });
+        }, 3000);
+    }
+//     window.onload = function() {
+//     const registrationChart = Chart.getChart('registrationChart'); // Get the chart instance
+//     if (registrationChart) {
+//         const meta = registrationChart.getDatasetMeta(0); // Assuming Jobseekers is the first dataset
+//         meta.hidden = !meta.hidden; // Toggle visibility
+//         registrationChart.update();
+//     }
+// };
             
-                // Check if the element exists and has content
-                if (!element || !element.innerHTML.trim()) {
-                    alert("No content available for PDF generation.");
-                    return;
-                }
-            
-                // Options for the PDF with best quality settings
-                const options = {
-                    margin: 0.45,
-                    filename: 'peso_report.pdf',
-                    image: { type: 'jpeg', quality: 1 }, // Best quality for images
-                    html2canvas: { scale: 4 }, // Higher scale for better resolution
-                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-                };
-            
-                setTimeout(() => {
-                    html2pdf()
-                        .from(element)
-                        .set(options)
-                        .save()
-                        .catch(err => {
-                            console.error('Error generating PDF:', err);
-                            alert('An error occurred while generating the PDF.');
-                        });
-                }, 3000); 
-            }
             </script>
             
         <main class="mainframe">
@@ -190,6 +204,8 @@
                     // Create the paragraph and append it to the DOM
                     const message = `The graph portrays that ${highestJobseekerCount} Jobseeker(s) registered to find a job on ${highestJobseekerYear} ${jobseekerComparisonText} ${employerMessage}`;
                     $('<p style="font-size: 10px;">').text(message).appendTo('.noRegistered');
+                    
+                                                // Logic to handle the button click for the "Jobseekers" label
 
                 },
                 error: function (error) {
@@ -263,6 +279,9 @@
                     const message = `The highest number of hired applicants was ${highestApplicantCount} in ${highestApplicantYear}.`;
                     $('<p style="font-size: 10px;">').text(message).appendTo('.noApplicant');
                 },
+
+
+                
                 error: function (error) {
                     console.error("Error fetching the applicants data: ", error);
                 }

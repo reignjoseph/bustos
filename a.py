@@ -3,29 +3,24 @@ import sqlite3
 # Path to your SQLite database
 DATABASE = 'trabahanap.db'
 
-def print_jobseeker_notifications():
+def count_available_jobs():
+    """Count and print the number of available jobs from the jobs table."""
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()  # Create a cursor
     try:
-        # Connect to the database
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
+        # Query to count available jobs
+        cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Available'")
+        count = cursor.fetchone()[0]  # Fetch the first element from the result
+        
+        # Print the count
+        print(f"Number of available jobs: {count}")
 
-        # Execute a query to select all data from jobseeker_notifications
-        # cursor.execute('SELECT * FROM application_status')
-        cursor.execute('SELECT * FROM users')
-        # Fetch all rows
-        rows = cursor.fetchall()
-
-        # Print each row
-        for row in rows:
-            print(row)
-
-    except sqlite3.Error as e:
-        print(f"An error occurred: {e}")
+    except sqlite3.DatabaseError as e:
+        print(f"Database error: {e}")
 
     finally:
-        # Close the database connection
-        if conn:
-            conn.close()
+        cursor.close()  # Close the cursor
+        connection.close()  # Close the connection
 
 if __name__ == '__main__':
-    print_jobseeker_notifications()
+    count_available_jobs()  # Call the function

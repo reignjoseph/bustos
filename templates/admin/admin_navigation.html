@@ -49,8 +49,7 @@
                 <span>Rating</span>
             </li>
         </ul>
-
-        <a href="/logout" class="navigation_sign-out">
+        <a class="box navigation_sign-out" onclick="adminopenLogout()">
             Sign Out
             <img src="static/images/logout.png" alt="Sign Out Icon" class="navigation_sign-out-icon">
         </a>
@@ -91,6 +90,85 @@
     }
 </script>
 
+<!-- Modal Structure -->
+<div id="admin_logout_modal" class="admin_modal" style="display: none;">
+    <div class="admin_modal-content admin_logout_modal">
+        <h1>Are you sure you want to sign out?</h1>
+        <div class="admin_logout_button">
+            <a href="/logout" class="btn btn-danger">Yes</a>
+            <button class="btn btn-primary" onclick="admincloseLogout()">No</button> 
+        </div>
+    </div>
+</div>        
+
+<style>
+    /* Modal Styles */
+    .admin_modal {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        z-index: 999; /* Ensure it appears on top */
+    }
+
+    .admin_modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        width: fit-content; /* Adjust width */
+    }
+
+    /* Button Styles */
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+    }
+
+    /* Hover Effects */
+    .btn-danger {
+        background-color: red;
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: darkred; /* Darker shade on hover */
+    }
+    .btn-primary {
+        background-color: green;
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: darkgreen; /* Darker shade on hover */
+    }
+</style>
+<script>
+    // Open logout modal
+    function adminopenLogout() {
+        document.getElementById("admin_logout_modal").style.display = "flex"; // Show modal
+    }
+    
+    // Close logout modal
+    function admincloseLogout() {
+        document.getElementById("admin_logout_modal").style.display = "none"; // Hide modal
+    }
+    
+    // Close the modal if the user clicks outside of it
+    window.onclick = function(event) {
+        const admin_modal = document.getElementById("admin_logout_modal");
+        if (event.target == admin_modal) {
+            console.log("Modal closed by clicking outside."); // Log message
+            admincloseLogout();
+        }
+    };    
+</script>
 <!-- <script>
 function generatePDF() {
     // Get the element to print
