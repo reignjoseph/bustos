@@ -17,6 +17,19 @@ import pdfkit
 
 
 
+import smtplib
+from email.mime.text import MIMEText
+#___________________________________
+
+
+
+
+
+
+
+
+
+
 # Configure logging
 if not app.debug:
     file_handler = FileHandler('error.log')
@@ -47,6 +60,39 @@ def get_db_connection():
     conn = sqlite3.connect('trabahanap.db')
     conn.row_factory = sqlite3.Row
     return conn
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -1198,11 +1244,45 @@ def update_user_status():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET status = ? WHERE User_ID = ?", (status, user_id))
-    conn.commit()
-    conn.close()
 
+    # Fetch user details (including email)
+    cursor.execute("SELECT email FROM users WHERE User_ID = ?", (user_id,))
+    user = cursor.fetchone()
+
+    if user:
+        email = user['email']
+
+        # Update user status in the database
+        cursor.execute("UPDATE users SET status = ? WHERE User_ID = ?", (status, user_id))
+        conn.commit()
+
+        # Send an email notification to the user
+        send_status_update_email(email, status)  # Function to send the email
+
+    conn.close()
     return jsonify({"success": True})
+
+
+def send_status_update_email(email, status):
+    sender_email = "reignjosephc.delossantos@gmail.com"
+    password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+    message = f"Subject: BustosPESO - Application Status Update\n\nDear User,\n\nWe wanted to inform you that your application at BustosPESO has been {status}.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
+
+
+
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message)
+            print(f"Status update email sent to {email}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
+
+
 
 
 

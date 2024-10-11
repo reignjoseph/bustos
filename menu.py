@@ -56,7 +56,10 @@ def send_otp(email):
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
             server.starttls()
             server.login(sender_email, password)
-            message = f"Subject: Your OTP Code\n\nYour OTP code is {otp}."
+            # message = f"Subject: Your OTP Code\n\nYour OTP code is {otp}."
+            message = f"Subject: BustosPESO - Password Reset Request\n\nDear Valued User,\n\nWe received a request to reset your password for your BustosPESO account. Please use the following OTP to proceed:\n\nYour OTP Code: {otp}\n\nFor security purposes, this code will expire in 3 minutes. If you did not request this change, please ignore this message or contact our support team immediately.\n\nThank you for using BustosPESO!\n\nBest regards,\nBustosPESO Support Team"
+
+
             server.sendmail(sender_email, email, message)
             otp_storage[email] = {'otp': otp, 'timestamp': time.time()}  # Store OTP with timestamp
             print(f"Sent OTP: {otp} to {email}")
@@ -64,7 +67,6 @@ def send_otp(email):
     except Exception as e:
         print(f"Error sending email: {e}")
         return False  # Return False on error
-
 
 @app.route('/send_otp', methods=['POST'])
 def request_otp():
@@ -78,16 +80,85 @@ def request_otp():
     
     # Check if email exists in the users table with status "Approved"
     user = conn.execute('SELECT * FROM users WHERE email = ? AND status = ?', (email, "Approved")).fetchone()
-    conn.close()
 
     if user:
+        # Get the current cooldown time from the database
+        current_cooldown = user['cooldown']  # Assuming 'cooldown' is the column name
+        current_time = datetime.now(timezone)  # Get current time in Philippine timezone
+
+        if current_cooldown:
+            cooldown_time = datetime.strptime(current_cooldown, "%Y-%m-%d %H:%M:%S")  # Convert from string to datetime
+            cooldown_time = timezone.localize(cooldown_time)  # Make cooldown_time timezone-aware
+
+            if current_time < cooldown_time:
+                remaining_time = (cooldown_time - current_time).total_seconds()
+                return jsonify({"error": f"Cooldown active. Please wait {remaining_time:.0f} seconds."}), 400  # Handle active cooldown
+
+        # Send the OTP
         print(f"Received request to send OTP to email: {email}")
         send_otp(email)
-        print(f"OTP sent and updated in temporary storage for email: {email}")
+
+        # Set new cooldown time (3 minutes from now)
+        new_cooldown = current_time + timedelta(minutes=3)
+        conn.execute('UPDATE users SET cooldown = ? WHERE email = ?', (new_cooldown.strftime("%Y-%m-%d %H:%M:%S"), email))
+        conn.commit()  # Commit the changes
+
         return jsonify({"message": "OTP sent successfully!"}), 200
     else:
         print(f"No user found with email: {email}")
         return jsonify({"error": "Email not found or not approved."}), 404
+
+@app.route('/forgot_password_update', methods=['POST'])
+def forgot_password_update():
+    data = request.get_json()  # Use get_json to parse the JSON body
+    email = data.get('forgot_password_email')
+    otp_entered = data.get('otp')
+    new_password = data.get('forgot_password_new')
+
+    print(f"Received request to update password for email: {email}")
+    print(f"Entered OTP: {otp_entered}")
+    print(f"New Password: {new_password}")
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE email = ? AND status = ?', (email, "Approved")).fetchone()
+
+    if user:
+        print(f"User found: {user}")
+
+        # Validate the OTP
+        if email in otp_storage:
+            stored_data = otp_storage[email]
+            current_time = time.time()
+
+            if stored_data['otp'] != otp_entered:
+                print("Entered OTP does not match the stored OTP.")
+                return jsonify({"error": "Wrong OTP!"}), 400  # Return wrong OTP error
+            elif current_time - stored_data['timestamp'] >= 180:
+                print("OTP has expired.")
+                return jsonify({"error": "OTP expired!"}), 400  # Return expired OTP error
+
+            # If OTP is valid, proceed to update the password
+            del otp_storage[email]  # Invalidate the OTP
+            conn.execute('UPDATE users SET password = ?, otp = NULL WHERE email = ?', (new_password, email))  # Clear OTP after use
+            conn.commit()
+            print(f"Password updated for email: {email}")
+            conn.close()
+            return jsonify({"message": "Password updated successfully!"}), 200
+        else:
+            print("No OTP found for the provided email.")
+            return jsonify({"error": "Invalid OTP!"}), 400  # No OTP found error
+    else:
+        print("No user found with the provided email.")
+        return jsonify({"error": "Email not found or not approved."}), 404
+
+
+
+
+
+
+
+
+
 
 
 def validate_otp(email, entered_otp):
@@ -96,7 +167,7 @@ def validate_otp(email, entered_otp):
         current_time = time.time()
         
         if stored_data['otp'] == entered_otp:
-            if current_time - stored_data['timestamp'] < 10:  # Check for expiration
+            if current_time - stored_data['timestamp'] < 180:  # Check for expiration
                 del otp_storage[email]  # Invalidate the OTP
                 print(f"OTP validation successful for {email}. OTP is valid.")
                 return True  # OTP is valid
@@ -134,67 +205,42 @@ def forgot_password_check_email():
         return jsonify({'message': 'Please enter the email first'})
 
     conn = get_db_connection()
-    cursor = conn.execute('SELECT email, status FROM users WHERE email = ?', (email,))
+    cursor = conn.execute('SELECT email, status, cooldown FROM users WHERE email = ?', (email,))
     row = cursor.fetchone()
     conn.close()
 
     if not row:
         print(f"No registered email found for: {email}")  # Debugging print statement
         return jsonify({'message': 'No registered email was found'})
-    elif row['status'] == 'Pending':
+    
+    email_status = row['status']
+    current_cooldown = row['cooldown']
+    current_time = datetime.now(timezone)  # Get current time in Philippine timezone
+
+    if email_status == 'Pending':
         print(f"Email {email} is pending")  # Debugging print statement
         return jsonify({'message': 'Registered email is pending'})
-    elif row['status'] == 'Approved':
+    
+    elif email_status == 'Approved':
         print(f"Email {email} is approved")  # Debugging print statement
-        return jsonify({'message': 'Approved'})
+        
+        if current_cooldown:
+            cooldown_time = datetime.strptime(current_cooldown, "%Y-%m-%d %H:%M:%S")  # Convert from string to datetime
+            cooldown_time = timezone.localize(cooldown_time)  # Make cooldown_time timezone-aware
+
+            if current_time < cooldown_time:
+                remaining_time = (cooldown_time - current_time).total_seconds()
+                return jsonify({
+                    'cooldown': f'This email cannot request a password reset for {remaining_time:.0f} seconds.'
+                }), 200  # Return cooldown message
+
+        return jsonify({'message': 'Approved'})  # Proceed if no cooldown
     else:
         print(f"Unknown status for email: {email}")  # Debugging print statement
         return jsonify({'message': 'Unknown status'})
 
 
 
-@app.route('/forgot_password_update', methods=['POST'])
-def forgot_password_update():
-    data = request.get_json()  # Use get_json to parse the JSON body
-    email = data.get('forgot_password_email')
-    otp_entered = data.get('otp')
-    new_password = data.get('forgot_password_new')
-
-    print(f"Received request to update password for email: {email}")
-    print(f"Entered OTP: {otp_entered}")
-    print(f"New Password: {new_password}")
-
-    conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE email = ? AND status = ?', (email, "Approved")).fetchone()
-
-    if user:
-        print(f"User found: {user}")
-
-        # Validate the OTP
-        if email in otp_storage:
-            stored_data = otp_storage[email]
-            current_time = time.time()
-
-            if stored_data['otp'] != otp_entered:
-                print("Entered OTP does not match the stored OTP.")
-                return jsonify({"error": "Wrong OTP!"}), 400  # Return wrong OTP error
-            elif current_time - stored_data['timestamp'] >= 10:
-                print("OTP has expired.")
-                return jsonify({"error": "OTP expired!"}), 400  # Return expired OTP error
-
-            # If OTP is valid, proceed to update the password
-            del otp_storage[email]  # Invalidate the OTP
-            conn.execute('UPDATE users SET password = ?, otp = NULL WHERE email = ?', (new_password, email))  # Clear OTP after use
-            conn.commit()
-            print(f"Password updated for email: {email}")
-            conn.close()
-            return jsonify({"message": "Password updated successfully!"}), 200
-        else:
-            print("No OTP found for the provided email.")
-            return jsonify({"error": "Invalid OTP!"}), 400  # No OTP found error
-    else:
-        print("No user found with the provided email.")
-        return jsonify({"error": "Email not found or not approved."}), 404
 
 
 

@@ -93,6 +93,7 @@
 function forgotPasswordBtn() {
     const emailInput = document.querySelector('input[name="email"]');  // Find the email input field
     const errorMessageDiv = document.getElementById('error_forgot_password_message');  // Error message div
+    const cooldownErrorMessageDiv = document.getElementById('cooldown_error_message');  // New cooldown error message div
     const forgotPasswordFormDiv = document.getElementById('forgot_password_form_div');  // Forgot password form div
     const forgotPasswordEmailInput = document.createElement('input'); // Dynamically create email input
     
@@ -106,6 +107,7 @@ function forgotPasswordBtn() {
 
     // Clear any previous error messages and hide the forgot password form
     errorMessageDiv.textContent = '';
+    cooldownErrorMessageDiv.textContent = '';  // Clear cooldown error message
     forgotPasswordFormDiv.style.display = 'none';  // Initially hide the forgot password form
 
     // Check if email is empty
@@ -130,8 +132,12 @@ function forgotPasswordBtn() {
         if (data.message === 'Approved') {
             // If email is approved, display the forgot password form
             forgotPasswordFormDiv.style.display = 'block';  // Show forgot password form
+            forgotPasswordFormDiv.style.position = "absolute";
             forgotPasswordEmailInput.value = email;  // Set the email in the hidden field
             forgotPasswordEmailInput.readOnly = true;  // Make the email field readonly
+        } else if (data.cooldown) {
+            // If the cooldown message is returned, display it
+            cooldownErrorMessageDiv.textContent = data.cooldown;  // Show cooldown error message
         } else {
             // Display the message from the backend in the error div
             errorMessageDiv.textContent = data.message;
@@ -142,6 +148,9 @@ function forgotPasswordBtn() {
         errorMessageDiv.textContent = 'An error occurred. Please try again later.';  // Display general error message
     });
 }
+
+
+
 
 function closeForgotPassword() {
     document.getElementById('forgot_password_form_div').style.display = 'none';  // Hide the forgot password form
@@ -159,7 +168,7 @@ function validateOtp(email, enteredOtp) {
         // Validate the entered OTP against the stored OTP
         if (storedData['otp'] === enteredOtp) {
             // Check if the OTP is still valid (not expired)
-            if (currentTime - storedData['timestamp'] < 10) {  // Check for expiration
+            if (currentTime - storedData['timestamp'] < 180) {  // Check for expiration
                 delete otp_storage[email]; // Invalidate the OTP
                 console.log(`OTP validation successful for ${email}. OTP is valid.`);
                 return true; // OTP is valid
@@ -215,65 +224,48 @@ document.getElementById('forgot_password_form').onsubmit = function(event) {
     clearErrorMessage(); // Clear previous error messages
 
     fetch('/forgot_password_update', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        forgot_password_email: email,
-        otp: otpEntered,
-        forgot_password_new: newPassword
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            forgot_password_email: email,
+            otp: otpEntered,
+            forgot_password_new: newPassword
+        })
     })
-})
-.then(response => {
-    if (!response.ok) {
-        return response.json().then(errorData => {
-            throw new Error(errorData.error || 'Unknown error occurred');
-        });
-    }
-    return response.json();
-})
-.then(data => {
-    // Handle success
-    console.log(data.message);
-})
-.catch(error => {
-    // Display error message
-    const errorMessageDiv = document.getElementById('requesterrormessage');
-    errorMessageDiv.innerText = error.message; // Display the error message
-})
-
-
-
-
-
-
-
-
-
-
     .then(response => {
         if (!response.ok) {
             return response.json().then(errorData => {
-                throw new Error(errorData.error);
+                throw new Error(errorData.error || 'Unknown error occurred');
             });
         }
         return response.json(); // Expect a JSON response for success
     })
     .then(data => {
+        // Handle success
         alert(data.message); // Show success message
         closeForgotPassword(); // Close the form after success
         resetForm(); // Reset input fields
     })
     .catch(error => {
-        displayErrorMessage(error.message); // Display error message
+        // Display error message
+        const errorMessageDiv = document.getElementById('requesterrormessage');
+        errorMessageDiv.innerText = error.message; // Display the error message
         console.error('Error:', error);
     });
 };
 
+// Clear previous error messages
+function clearErrorMessage() {
+    const errorMessageDiv = document.getElementById('requesterrormessage');
+    errorMessageDiv.innerText = ''; // Clear previous messages
+}
+
 // Function to close the forgot password form
 function closeForgotPassword() {
     document.getElementById('forgot_password_form_div').style.display = 'none'; // Hide the form
+    resetForm();
 }
 
 // Utility functions for error message handling
@@ -293,8 +285,21 @@ function resetForm() {
     document.getElementById('otp').value = '';
     document.getElementById('forgot_password_new').value = '';
     document.getElementById('forgot_password_confirm').value = '';
+    document.getElementById('login_email').value = ''; // Clear the login_email field
+    localStorage.removeItem('forgot_password_email'); // Remove from local storage
 }
+
     </script>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -313,9 +318,10 @@ function resetForm() {
             {% endif %}
         
         <div class="error_message_forgotpassword" id="error_forgot_password_message" style="color: red;"></div> <!-- Error message div -->
+        <div id="cooldown_error_message" style="color: red;"></div>
         <form action="/signin" method="post">
             <div class="input-box-login">
-                <input type="email" name="email" placeholder="Enter email" required>
+                <input type="email" id="login_email" name="email" placeholder="Enter email" required>
             </div>
             <div class="input-box-login">
                 <input  type="password" name="password" placeholder="Enter password" id="password" required>
