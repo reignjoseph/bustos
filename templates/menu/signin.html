@@ -3,229 +3,304 @@
 <main class="base_signin">
 
     
-    <div class="forgot_password-form" style="display:none;">
-        <img id="close_forgot_password" src="static/images/close.png" alt="Close" style="cursor: pointer; width: 30px; float: right; place-self: end; margin: 5px; position: relative;" onclick="closeForgotPassword()" />
-        <div style="padding: 0px 20px 20px 20px; display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px;">
-        
-        
-        <div class="error_message_forgotpassword" id="error_message_forgotpassword" style="color: red;">
-        </div> <!-- Added id for error display -->
-        <h2>Forgot Password</h2>
-        <form id="forgot_password_form" action="/forgot_password_update" method="post">
-            <label for="forgot_password_email">Email:</label>
-            <input type="email" id="forgot_password_email" name="forgot_password_email" required><br>
+    <div class="forgot_password-form" id="forgot_password_form_div" style="display: none;">
+        <img id="close_forgot_password" src="static/images/close.png" alt="Close" style="cursor: pointer; width: 30px;" onclick="closeForgotPassword()">
+        <div style="padding: 0px 20px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
+            <h2>Forgot Password</h2>
+            <form id="forgot_password_form" action="/forgot_password_update" method="post">
+                <div id="requesterrormessage" style="color: red;"></div>
+
+                <label for="otp">OTP:</label>
+                <input type="text" id="otp" name="otp" placeholder="Enter OTP" required=""><br>
     
-            <label for="otp">OTP:</label>
-            <input type="text" id="otp" name="otp" placeholder="Enter OTP" required><br>
-            
-            <button type="button" id="send_otp" onclick="requestOtp()">Send OTP</button>
+                <button type="button" id="send_otp" onclick="requestOtp()">Send OTP</button>
     
-            <label for="forgot_password_new">New Password:</label>
-            <input type="password" id="forgot_password_new" name="forgot_password_new" required><br>
+                <label for="forgot_password_new">New Password:</label>
+                <input type="password" id="forgot_password_new" name="forgot_password_new" required=""><br>
     
-            <label for="forgot_password_confirm">Confirm New Password:</label>
-            <input type="password" id="forgot_password_confirm" name="forgot_password_confirm" required><br>
+                <label for="forgot_password_confirm">Confirm New Password:</label>
+                <input type="password" id="forgot_password_confirm" name="forgot_password_confirm" required=""><br>
     
-            <button id="forgot_password_submit" type="submit" onclick="validateForgotPassword()">Update Password</button>
-            
-        </form>
+                <button id="forgot_password_submit" type="submit" onclick="validateForgotPassword()">Update Password</button>
+            </form>
+        </div>
     </div>
-    </div>    
 
-  <div class="container-login">
-<!-- Forgot Password Form -->
+    
 
 
-<script>
-    let otpCooldown = false; // Flag for cooldown state
-    let cooldownEndTime = null; // Store the time when cooldown ends
 
-    // Function to check cooldown status on page load
-    function checkCooldown() {
-        const storedEmail = localStorage.getItem('forgot_password_email');
-        const storedCooldownEndTime = localStorage.getItem('otp_cooldown_end_time');
 
-        if (storedCooldownEndTime) {
-            cooldownEndTime = new Date(storedCooldownEndTime); // Convert string back to date
-            const currentTime = new Date();
 
-            // Check if cooldown is still active
-            if (currentTime < cooldownEndTime) {
-                otpCooldown = true; // Set cooldown state
-                const remainingTime = Math.ceil((cooldownEndTime - currentTime) / 1000); // Calculate remaining time in seconds
-                startCooldown(remainingTime); // Start cooldown with remaining time
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+        // Function to handle sending OTP
+        function requestOtp() {
+            const email = document.getElementById('forgot_password_email').value;
+            clearErrorMessage(); // Clear previous error messages
+        
+            if (!email) {
+                displayErrorMessage('Please enter your email.');
+                return;
             }
+        
+            fetch('/send_otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ forgot_password_email: email }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        displayErrorMessage(errorData.error || "No email was found on the table, no OTP was sent.");
+                    });
+                }
+                alert("OTP has been sent to your email!"); // Show success message
+                localStorage.setItem('forgot_password_email', email); // Save email in localStorage
+            })
+            .catch(error => {
+                console.log('Caught error:', error.message); // Log it as a normal message
+            });
         }
-        // Restore email in input field if available
-        if (storedEmail) {
-            document.getElementById('forgot_password_email').value = storedEmail;
-        }
-    }
+        </script>
+        
 
-    // Function to request OTP
-    function requestOtp() {
-    const email = document.getElementById('forgot_password_email').value;
-    const errorMessageDiv = document.getElementById('error_message_forgotpassword');
-    errorMessageDiv.innerText = '';  // Clear previous error messages
 
-    if (otpCooldown) {
-        errorMessageDiv.innerText = 'Please wait for the cooldown period before requesting a new OTP.';
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+
+function forgotPasswordBtn() {
+    const emailInput = document.querySelector('input[name="email"]');  // Find the email input field
+    const errorMessageDiv = document.getElementById('error_forgot_password_message');  // Error message div
+    const forgotPasswordFormDiv = document.getElementById('forgot_password_form_div');  // Forgot password form div
+    const forgotPasswordEmailInput = document.createElement('input'); // Dynamically create email input
+    
+    forgotPasswordEmailInput.type = 'email';
+    forgotPasswordEmailInput.id = 'forgot_password_email';
+    forgotPasswordEmailInput.name = 'forgot_password_email';
+    forgotPasswordEmailInput.style.display = 'none';  // Hide the input
+    forgotPasswordFormDiv.appendChild(forgotPasswordEmailInput); // Append the input to the form
+
+    const email = emailInput.value.trim();  // Get the email value
+
+    // Clear any previous error messages and hide the forgot password form
+    errorMessageDiv.textContent = '';
+    forgotPasswordFormDiv.style.display = 'none';  // Initially hide the forgot password form
+
+    // Check if email is empty
+    if (!email) {
+        errorMessageDiv.textContent = 'Please enter your email first';  // Display error for empty email
         return;
     }
 
-    if (email) {
-        fetch('/send_otp', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ forgot_password_email: email }),
-        })
-        .then(response => {
-            if (!response.ok) {
-                // Handle non-200 status without throwing a console error
-                return response.json().then(errorData => {
-                    errorMessageDiv.innerText = errorData.error || "No email was found on the table, no OTP was sent.";  // Friendly message
-                    console.log('No email was found, no OTP sent.');  // Log the event without error severity
-                });
+    // Send POST request to check the email
+    fetch('/forgot_password_check_email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);  // Log the message from the server
+
+        // Check if the email is approved
+        if (data.message === 'Approved') {
+            // If email is approved, display the forgot password form
+            forgotPasswordFormDiv.style.display = 'block';  // Show forgot password form
+            forgotPasswordEmailInput.value = email;  // Set the email in the hidden field
+            forgotPasswordEmailInput.readOnly = true;  // Make the email field readonly
+        } else {
+            // Display the message from the backend in the error div
+            errorMessageDiv.textContent = data.message;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorMessageDiv.textContent = 'An error occurred. Please try again later.';  // Display general error message
+    });
+}
+
+function closeForgotPassword() {
+    document.getElementById('forgot_password_form_div').style.display = 'none';  // Hide the forgot password form
+}
+// Function to validate the OTP
+function validateOtp(email, enteredOtp) {
+    const errorMessageDiv = document.getElementById('requesterrormessage'); // Get the error message div
+    errorMessageDiv.innerText = ''; // Clear previous messages
+
+    // Check if the email exists in otp_storage
+    if (email in otp_storage) {
+        const storedData = otp_storage[email];
+        const currentTime = Date.now() / 1000; // Get current time in seconds
+
+        // Validate the entered OTP against the stored OTP
+        if (storedData['otp'] === enteredOtp) {
+            // Check if the OTP is still valid (not expired)
+            if (currentTime - storedData['timestamp'] < 10) {  // Check for expiration
+                delete otp_storage[email]; // Invalidate the OTP
+                console.log(`OTP validation successful for ${email}. OTP is valid.`);
+                return true; // OTP is valid
+            } else {
+                // OTP expired
+                console.log(`OTP for ${email} has expired.`);
+                errorMessageDiv.innerText = "OTP expired."; // Display error message
+                return false; // OTP expired
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data) {
-                alert(data.message);  // Show success message
-                startCooldown();  // Start the cooldown timer
-                localStorage.setItem('forgot_password_email', email);  // Save the email in localStorage
-            }
-        })
-        .catch(error => {
-            console.log('Caught error:', error.message);  // Log it as a normal message
-        });
+        } else {
+            // OTP does not match
+            console.log(`Entered OTP for ${email} does not match the stored OTP.`);
+            errorMessageDiv.innerText = "Wrong OTP."; // Display error message
+            return false; // OTP invalid
+        }
     } else {
-        errorMessageDiv.innerText = 'Please enter your email.';  // Display error for missing email
+        // No OTP found for the given email
+        console.log(`No OTP found for ${email}.`);
+        errorMessageDiv.innerText = "No OTP found for this email."; // Display error message
+        return false; // No OTP found
     }
+}
+
+// Validate password entries function
+function validateForgotPassword() {
+    const newPassword = document.getElementById('forgot_password_new').value;
+    const confirmPassword = document.getElementById('forgot_password_confirm').value;
+    const errorMessageDiv = document.getElementById('requesterrormessage'); // Get the error message div
+    errorMessageDiv.innerText = ''; // Clear previous messages
+
+    if (newPassword !== confirmPassword) {
+        errorMessageDiv.innerText = 'New password does not match.'; // Display error message
+        return false; // Prevent form submission
+    }
+    return true; // Allow form submission
 }
 
 
 
-    // Function to start the cooldown
-    function startCooldown(remainingTime = 180) {
-        otpCooldown = true; // Set cooldown state
-        const sendOtpButton = document.getElementById('send_otp');
-        sendOtpButton.disabled = true; // Disable button
+// Event listener for form submission
+document.getElementById('forgot_password_form').onsubmit = function(event) {
+    event.preventDefault(); // Prevent the default form submission
 
-        // Calculate the end time
-        cooldownEndTime = new Date(new Date().getTime() + remainingTime * 1000);
-        localStorage.setItem('otp_cooldown_end_time', cooldownEndTime); // Store end time in localStorage
+    const email = document.getElementById('forgot_password_email').value;
+    const otpEntered = document.getElementById('otp').value;
+    const newPassword = document.getElementById('forgot_password_new').value;
 
-        const cooldownInterval = setInterval(() => {
-            remainingTime--;
-            sendOtpButton.innerText = `Send OTP (${remainingTime}s)`; // Update button text with remaining time
-
-            if (remainingTime <= 0) {
-                clearInterval(cooldownInterval); // Stop the interval
-                sendOtpButton.innerText = 'Send OTP'; // Reset button text
-                sendOtpButton.disabled = false; // Re-enable button
-                otpCooldown = false; // Reset cooldown state
-                localStorage.removeItem('otp_cooldown_end_time'); // Clear cooldown end time from localStorage
-            }
-        }, 1000); // Update every second
+    // Validate the new password and confirmation before proceeding
+    if (!validateForgotPassword()) {
+        return; // Stop execution if validation fails
     }
 
-    function validateForgotPassword() {
-        const newPassword = document.getElementById('forgot_password_new').value;
-        const confirmPassword = document.getElementById('forgot_password_confirm').value;
-        const errorMessageDiv = document.getElementById('error_message_forgotpassword');
-        errorMessageDiv.innerText = ''; // Clear previous error messages
+    clearErrorMessage(); // Clear previous error messages
 
-        if (newPassword !== confirmPassword) {
-            errorMessageDiv.innerText = 'Passwords do not match.'; // Display error if passwords do not match
-            return false; // Prevent form submission
-        }
-        return true; // Allow form submission
-    }
-
-    document.getElementById('forgot_password_form').onsubmit = function(event) {
-        event.preventDefault(); // Prevent the default form submission
-
-        const email = document.getElementById('forgot_password_email').value;
-        const otpEntered = document.getElementById('otp').value;
-        const newPassword = document.getElementById('forgot_password_new').value;
-
-        // Validate the new password and confirmation before proceeding
-        if (!validateForgotPassword()) {
-            return; // Stop execution if validation fails
-        }
-
-        const errorMessageDiv = document.getElementById('error_message_forgotpassword');
-        errorMessageDiv.innerText = ''; // Clear previous error messages
-
-        fetch('/forgot_password_update', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                forgot_password_email: email,
-                otp: otpEntered,
-                forgot_password_new: newPassword
-            }),
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.error);
-                });
-            }
-            return response.json(); // Expect a JSON response for success
-        })
-        .then(data => {
-            alert(data.message); // Show success message
-
-            // Clear input fields and error messages
-            document.getElementById('forgot_password_email').value = '';
-            document.getElementById('otp').value = '';
-            document.getElementById('forgot_password_new').value = '';
-            document.getElementById('forgot_password_confirm').value = '';
-            errorMessageDiv.innerText = ''; // Clear error message display
-
-            closeForgotPassword(); // Optionally close the form after success
-        })
-        .catch(error => {
-            errorMessageDiv.innerText = error.message; // Display error message
-            console.error('Error:', error);
+    fetch('/forgot_password_update', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        forgot_password_email: email,
+        otp: otpEntered,
+        forgot_password_new: newPassword
+    })
+})
+.then(response => {
+    if (!response.ok) {
+        return response.json().then(errorData => {
+            throw new Error(errorData.error || 'Unknown error occurred');
         });
-    };
-
-    // Function to close the forgot password form
-    function closeForgotPassword() {
-        document.querySelector('.forgot_password-form').style.display = 'none'; // Hide the form
     }
-
-    // Wait for the DOM to fully load
-    document.addEventListener('DOMContentLoaded', function() {
-    checkCooldown(); // Check for cooldown status on page load
-
-    // Show the forgot password form and hide the login form when "Forgot password?" is clicked
-    document.getElementById('forgot_password_link').onclick = function() {
-        document.querySelector('.forgot_password-form').style.display = 'flex'; // Show the forgot password form
-        document.querySelector('.container-login').style.display = 'none'; // Hide the login container
-    };
-
-    // Assign the close button functionality
-    document.getElementById('close_forgot_password').onclick = function() {
-        document.querySelector('.forgot_password-form').style.display = 'none'; // Hide the forgot password form
-        document.querySelector('.container-login').style.display = 'block'; // Show the login container again
-    };
-});
-
-
-</script>
+    return response.json();
+})
+.then(data => {
+    // Handle success
+    console.log(data.message);
+})
+.catch(error => {
+    // Display error message
+    const errorMessageDiv = document.getElementById('requesterrormessage');
+    errorMessageDiv.innerText = error.message; // Display the error message
+})
 
 
 
 
 
+
+
+
+
+
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error);
+            });
+        }
+        return response.json(); // Expect a JSON response for success
+    })
+    .then(data => {
+        alert(data.message); // Show success message
+        closeForgotPassword(); // Close the form after success
+        resetForm(); // Reset input fields
+    })
+    .catch(error => {
+        displayErrorMessage(error.message); // Display error message
+        console.error('Error:', error);
+    });
+};
+
+// Function to close the forgot password form
+function closeForgotPassword() {
+    document.getElementById('forgot_password_form_div').style.display = 'none'; // Hide the form
+}
+
+// Utility functions for error message handling
+function displayErrorMessage(message) {
+    const errorMessageDiv = document.getElementById('error_forgot_password_message');
+    errorMessageDiv.innerText = message; // Display the error message
+}
+
+function clearErrorMessage() {
+    const errorMessageDiv = document.getElementById('error_forgot_password_message');
+    errorMessageDiv.innerText = ''; // Clear the error message
+}
+
+// Function to reset the form fields
+function resetForm() {
+    document.getElementById('forgot_password_email').value = '';
+    document.getElementById('otp').value = '';
+    document.getElementById('forgot_password_new').value = '';
+    document.getElementById('forgot_password_confirm').value = '';
+}
+    </script>
+
+
+
+
+  <div class="container-login">
+<!-- Forgot Password Form -->
     <div class="form-box-login">
         <h2>Sign in to your account</h2>
         {% if error_message %}
@@ -236,6 +311,8 @@
                     </button>
                 </div>
             {% endif %}
+        
+        <div class="error_message_forgotpassword" id="error_forgot_password_message" style="color: red;"></div> <!-- Error message div -->
         <form action="/signin" method="post">
             <div class="input-box-login">
                 <input type="email" name="email" placeholder="Enter email" required>
@@ -247,7 +324,8 @@
                 </span>
             </div>
             <div class="forgot-password-login">
-                <a id="forgot_password_link">Forgot password?</a>
+                <!-- <a id="forgot_password_link">Forgot password?</a> -->
+                <a id="forgot_password_link" onclick="forgotPasswordBtn()">Forgot password?</a>
             </div>
             <button type="submit" class="btn-login">SIGN IN</button>
         </form>

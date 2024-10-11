@@ -14,11 +14,11 @@
             </div>
         </div>
 
-        <div style="width: -webkit-fill-available;height: -webkit-fill-available;"id="stats-container">
+        <div style="width: 33rem; justify-self: center;"id="stats-container">
             <canvas id="applicantStatsChart" width="400" height="200"></canvas>
         </div>
 
-        <div id="educational-attainment-chart" style="width: -webkit-fill-available; height: -webkit-fill-available;">
+        <div id="educational-attainment-chart" style="width: 33rem; justify-self: center;">
             <canvas id="attainmentChart"></canvas>
         </div>
 
@@ -265,13 +265,14 @@ function openNotePopup(event, dateString) {
     console.log(`Opening note popup for date: ${dateString}`);
     selectedDateInput.value = dateString;
 
-    // Get the note for the selected date from the backend
+    // Get the notes for the selected date from the backend
     fetch(`/get_notes?date=${dateString}`)
         .then(response => response.json())
         .then(data => {
             console.log(`Received note data: ${JSON.stringify(data)}`);
-            noteTextInput.value = data.note || '';
-            calendarIdInput.value = data.calendar_id || ''; // Set the calendar_id
+            // Combine the notes into the text area
+            noteTextInput.value = data.notes || ''; // Show all combined notes
+            calendarIdInput.value = data.calendar_ids.join(', ') || ''; // Show all calendar IDs as a comma-separated string
             notePopup.style.display = 'block';
             notePopup.style.top = `${event.clientY + window.scrollY}px`;
             notePopup.style.left = `${event.clientX + window.scrollX}px`;
@@ -282,7 +283,7 @@ function openNotePopup(event, dateString) {
 function saveNote() {
     const date = selectedDateInput.value;
     const noteText = noteTextInput.value;
-    const calendarId = calendarIdInput.value;
+    const calendarIds = calendarIdInput.value.split(',').map(id => id.trim());
 
     if (date && noteText) {
         console.log(`Saving note for date: ${date}, Note: ${noteText}`);
@@ -293,7 +294,7 @@ function saveNote() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                calendar_id: calendarId || null,
+                calendar_id: calendarIds.length ? calendarIds[0] : null,  // Only save the first calendar_id for now
                 date: date,
                 note: noteText.trim(),
             }),

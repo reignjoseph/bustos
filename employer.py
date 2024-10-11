@@ -429,17 +429,34 @@ def count_applicant_and_jobs():
 def get_notes():
     date = request.args.get('date')
     print(f"Fetching notes for date: {date}")  # Debugging print statement
+
     conn = get_db_connection()
     cursor = conn.execute('SELECT calendar_id, note FROM calendar WHERE date = ?', (date,))
-    row = cursor.fetchone()
+    rows = cursor.fetchall()
     conn.close()
-    
-    if row:
-        print(f"Found note: calendar_id={row['calendar_id']}, note={row['note']}")  # Debugging print statement
-        return jsonify({'calendar_id': row['calendar_id'], 'note': row['note']})
+
+    if rows:
+        # Concatenate all notes into a single string
+        combined_notes = "\n".join([row['note'] for row in rows])
+        # Return all calendar IDs for the date
+        calendar_ids = [row['calendar_id'] for row in rows]
+
+        print(f"Found notes: {combined_notes}")  # Debugging print statement
+        return jsonify({'calendar_ids': calendar_ids, 'notes': combined_notes})
     else:
         print("No note found for the given date")  # Debugging print statement
-        return jsonify({'calendar_id': None, 'note': ''})
+        return jsonify({'calendar_ids': [], 'notes': ''})
+
+
+
+
+
+
+
+
+
+
+
 
 @app.route('/save_note', methods=['POST'])
 def save_note():
@@ -485,7 +502,6 @@ def get_calendar_notes():
 def remove_note():
     data = request.get_json()
     calendar_id = data.get('calendar_id')
-    date = data.get('date')
 
     if calendar_id:
         # Establish a connection to the database
@@ -522,16 +538,23 @@ def update_applicant_schedule():
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
     # Fetch the company and jobseeker_id associated with the applicant from application_status table
-    cursor.execute("SELECT company, jobseeker_id FROM application_status WHERE applicant_id = ?", (applicant_id,))
+    cursor.execute("SELECT company, jobseeker_id,employer_id FROM application_status WHERE applicant_id = ?", (applicant_id,))
     result = cursor.fetchone()
 
     if result:
-        company, jobseeker_id = result  # Extract the company and jobseeker_id from the result
+        # company, jobseeker_id = result  
+        company, jobseeker_id, employer_id = result
         
-        # Fetch the fname from the users table using jobseeker_id
-        cursor.execute("SELECT fname FROM users WHERE User_ID = ?", (jobseeker_id,))
+        # Fetch the fname of the jobseeker where userType is "Jobseeker"
+        cursor.execute("SELECT fname FROM users WHERE User_ID = ? AND userType = 'Jobseeker'", (jobseeker_id,))
         user_result = cursor.fetchone()
         fname = user_result[0] if user_result else 'Unknown'
+
+        # Fetch the fname of the employer where userType is "Employer"
+        cursor.execute("SELECT fname FROM users WHERE User_ID = ? AND userType = 'Employer'", (employer_id,))
+        employer_result = cursor.fetchone()
+        employer_name = employer_result[0] if employer_result else 'Unknown'
+
 
         # Extract date from the new_schedule
         scheduled_date = new_schedule.split(' ')[0]  # Get 'YYYY-MM-DD'
@@ -547,13 +570,14 @@ def update_applicant_schedule():
                 UPDATE calendar 
                 SET date = ?, note = ? 
                 WHERE calendar_id = ?
-            """, (scheduled_date, f"Your applicant {fname} was scheduled for {company}", calendar_id))
+            """, (scheduled_date, f"{employer_name} set a schedule for his/her applicant{fname} for {company}", calendar_id))
+            
         else:
             # Insert a new calendar entry
             cursor.execute(""" 
                 INSERT INTO calendar (applicant_id, date, note) 
                 VALUES (?, ?, ?)
-            """, (applicant_id, scheduled_date, f"Your applicant {fname} was scheduled for {company}"))
+            """, (applicant_id, scheduled_date,f"{employer_name} set a schedule for his/her applicant {fname} for {company}"))
         
         # Update the schedule in the application_status table
         cursor.execute(""" 
@@ -562,7 +586,7 @@ def update_applicant_schedule():
             WHERE applicant_id = ? 
         """, (
             new_schedule, 
-            f"Your application at {company} is scheduled at {new_schedule}",
+            f"{employer_name} set a schedule for his/her applicant {fname} for {company}",
             current_time_pht,
             applicant_id
         ))
@@ -579,6 +603,8 @@ def update_applicant_schedule():
     conn.close()
 
     return jsonify({'status': 'success'})
+
+
 
 
 

@@ -66,54 +66,6 @@ def send_otp(email):
         return False  # Return False on error
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-@app.route('/forgot_password_update', methods=['POST'])
-def forgot_password_update():
-    data = request.get_json()  # Use get_json to parse the JSON body
-    email = data.get('forgot_password_email')
-    otp_entered = data.get('otp')
-    new_password = data.get('forgot_password_new')
-
-    print(f"Received request to update password for email: {email}")
-    print(f"Entered OTP: {otp_entered}")
-    print(f"New Password: {new_password}")
-
-    conn = get_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE email = ? AND status = ?', (email, "Approved")).fetchone()
-
-    if user:
-        print(f"User found: {user}")
-
-        # Validate the OTP
-        if validate_otp(email, otp_entered):
-            conn.execute('UPDATE users SET password = ?, otp = NULL WHERE email = ?', (new_password, email))  # Clear OTP after use
-            conn.commit()
-            print(f"Password updated for email: {email}")
-            conn.close()
-            return jsonify({"message": "Password updated successfully!"}), 200
-        else:
-            print("Invalid OTP entered.")
-            return jsonify({"error": "Invalid OTP!"}), 400
-    else:
-        print("No user found with the provided email.")
-        return jsonify({"error": "Email not found or not approved."}), 404
-
-
-
-
-
-
 @app.route('/send_otp', methods=['POST'])
 def request_otp():
     data = request.get_json()
@@ -141,10 +93,128 @@ def request_otp():
 def validate_otp(email, entered_otp):
     if email in otp_storage:
         stored_data = otp_storage[email]
-        if stored_data['otp'] == entered_otp and (time.time() - stored_data['timestamp'] < 300):  # Check for expiration
-            del otp_storage[email]  # Invalidate the OTP
-            return True  # OTP is valid
+        current_time = time.time()
+        
+        if stored_data['otp'] == entered_otp:
+            if current_time - stored_data['timestamp'] < 10:  # Check for expiration
+                del otp_storage[email]  # Invalidate the OTP
+                print(f"OTP validation successful for {email}. OTP is valid.")
+                return True  # OTP is valid
+            else:
+                print(f"OTP for {email} has expired. Current time: {current_time}, Timestamp: {stored_data['timestamp']}")
+        else:
+            print(f"Entered OTP for {email} does not match the stored OTP.")
+    else:
+        print(f"No OTP found for {email}.")
+
+    print(f"OTP validation failed for {email}.")
     return False  # OTP is invalid or expired
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/forgot_password_check_email', methods=['POST'])
+def forgot_password_check_email():
+    data = request.get_json()
+    email = data.get('email')
+
+    print(f"Received email: {email}")  # Debugging print statement
+
+    # Check if the email is empty
+    if not email:
+        print("Email field is empty")  # Debugging print statement
+        return jsonify({'message': 'Please enter the email first'})
+
+    conn = get_db_connection()
+    cursor = conn.execute('SELECT email, status FROM users WHERE email = ?', (email,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        print(f"No registered email found for: {email}")  # Debugging print statement
+        return jsonify({'message': 'No registered email was found'})
+    elif row['status'] == 'Pending':
+        print(f"Email {email} is pending")  # Debugging print statement
+        return jsonify({'message': 'Registered email is pending'})
+    elif row['status'] == 'Approved':
+        print(f"Email {email} is approved")  # Debugging print statement
+        return jsonify({'message': 'Approved'})
+    else:
+        print(f"Unknown status for email: {email}")  # Debugging print statement
+        return jsonify({'message': 'Unknown status'})
+
+
+
+@app.route('/forgot_password_update', methods=['POST'])
+def forgot_password_update():
+    data = request.get_json()  # Use get_json to parse the JSON body
+    email = data.get('forgot_password_email')
+    otp_entered = data.get('otp')
+    new_password = data.get('forgot_password_new')
+
+    print(f"Received request to update password for email: {email}")
+    print(f"Entered OTP: {otp_entered}")
+    print(f"New Password: {new_password}")
+
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE email = ? AND status = ?', (email, "Approved")).fetchone()
+
+    if user:
+        print(f"User found: {user}")
+
+        # Validate the OTP
+        if email in otp_storage:
+            stored_data = otp_storage[email]
+            current_time = time.time()
+
+            if stored_data['otp'] != otp_entered:
+                print("Entered OTP does not match the stored OTP.")
+                return jsonify({"error": "Wrong OTP!"}), 400  # Return wrong OTP error
+            elif current_time - stored_data['timestamp'] >= 10:
+                print("OTP has expired.")
+                return jsonify({"error": "OTP expired!"}), 400  # Return expired OTP error
+
+            # If OTP is valid, proceed to update the password
+            del otp_storage[email]  # Invalidate the OTP
+            conn.execute('UPDATE users SET password = ?, otp = NULL WHERE email = ?', (new_password, email))  # Clear OTP after use
+            conn.commit()
+            print(f"Password updated for email: {email}")
+            conn.close()
+            return jsonify({"message": "Password updated successfully!"}), 200
+        else:
+            print("No OTP found for the provided email.")
+            return jsonify({"error": "Invalid OTP!"}), 400  # No OTP found error
+    else:
+        print("No user found with the provided email.")
+        return jsonify({"error": "Email not found or not approved."}), 404
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

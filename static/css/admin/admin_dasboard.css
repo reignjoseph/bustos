@@ -25,7 +25,7 @@
     width: -webkit-fill-available;
 }
 
-.jobseeker_employer_chart{position: relative;width: 400px;height: -webkit-fill-available;background-color: white;border-radius: 10px;border: 1px solid;grid-column: 8/span 2;grid-row: 2;justify-self: center;}
+.jobseeker_employer_chart{/* position: relative; */width: 400px;/* height: -webkit-fill-available; */background-color: white;/* border-radius: 10px; */border: 1px solid;grid-column: 8/span 2;grid-row: 2;justify-self: center;}
 
 
 
@@ -127,6 +127,6 @@
     display: flex;
     justify-content: space-evenly;
 }
-.rating_charts{position: relative;width: 400px;height: -webkit-fill-available;background-color: white;border-radius: 10px;border: 1px solid;grid-column: 8/span 2;grid-row: 2;justify-self: center;}
+.rating_charts{/* position: relative; *//* width: 400px; *//* height: -webkit-fill-available; */background-color: white;border-radius: 10px;border: 1px solid;/* grid-column: 8/span 2; *//* grid-row: 2; *//* justify-self: center; */}
 .bulacan_statistic{width: 40.4em;position: relative;border: 1px solid;grid-row: 4/span 2;grid-column: 1/span 6;border-radius: 5px;place-self: center;height: 33em;margin-top: 5%;}
 #educational-attainment-chart{background: #fefefe;grid-row: 3;grid-column: 1/span 6;display: flex;place-content: center;border: 1px solid;border-radius: 5px;padding: 4px;position: relative;margin: 0px 10px 10px 10px;}

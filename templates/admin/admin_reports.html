@@ -10,42 +10,69 @@
     <div class="reports" style="flex-direction: column; display: none; width: -webkit-fill-available; height: -webkit-fill-available; margin: 30px 200px 0px 200px; border: 1px solid;">
         <button class="PDF" onclick="generatePDF()">Download PDF</button>
         <!-- <button id="toggleJobseeker" style="margin-bottom: 10px;">Toggle Jobseeker</button> -->
-        <div></div>
+        <div class="letloadallcontents" style="width:inherit;height:inherit;padding:10px; background-color:ghostwhite;">
         <script>
- function generatePDF() {
-        // Toggle Jobseeker visibility before generating PDF
 
+// Function to check if .letloadallcontents has loaded
+function checkContentLoaded() {
+    const container = document.querySelector('.letloadallcontents');
 
-        // Get the element to print
-        const element = document.querySelector('.mainframe');
-
-        // Check if the element exists and has content
-        if (!element || !element.innerHTML.trim()) {
-            alert("No content available for PDF generation.");
-            return;
-        }
-
-        // Options for the PDF with best quality settings
-        const options = {
-            margin: 0.45,
-            filename: 'peso_report.pdf',
-            image: { type: 'jpeg', quality: 1 }, // Best quality for images
-            html2canvas: { scale: 4 }, // Higher scale for better resolution
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        setTimeout(() => {
-            html2pdf()
-                .from(element)
-                .set(options)
-                .save()
-                .catch(err => {
-                    console.error('Error generating PDF:', err);
-                    alert('An error occurred while generating the PDF.');
-                });
-        }, 3000);
+    // Ensure that the content is loaded
+    if (container && container.innerHTML.trim()) {
+        return true; // Content is loaded
     }
-//     window.onload = function() {
+    return false; // Content not loaded yet
+}
+
+// PDF generation function
+function generatePDF() {
+    // Wait until the content inside .letloadallcontents is loaded
+    if (!checkContentLoaded()) {
+        alert("Content is still loading, please wait.");
+        return;
+    }
+
+    // Get the .mainframe element to print
+    const element = document.querySelector('.mainframe');
+
+    // Check if the element exists and has content
+    if (!element || !element.innerHTML.trim()) {
+        alert("No content available for PDF generation.");
+        return;
+    }
+
+    // Options for the PDF with best quality settings
+    const options = {
+        margin: 0.45,
+        filename: 'peso_report.pdf',
+        image: { type: 'jpeg', quality: 1 },  // Best quality for images
+        html2canvas: { scale: 4 },  // Higher scale for better resolution
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Generate PDF without delay
+    html2pdf()
+        .from(element)
+        .set(options)
+        .save()
+        .catch(err => {
+            console.error('Error generating PDF:', err);
+            alert('An error occurred while generating the PDF.');
+        });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+    //     window.onload = function() {
 //     const registrationChart = Chart.getChart('registrationChart'); // Get the chart instance
 //     if (registrationChart) {
 //         const meta = registrationChart.getDatasetMeta(0); // Assuming Jobseekers is the first dataset
