@@ -55,15 +55,18 @@ def get_db_connection():
 def employer():
     # Check if user is authenticated and is an Employer
     if 'user_id' not in session or session.get('user_type') != 'Employer':
+        print('Redirecting to sign-in due to missing user session or invalid user type')  # Debugging print statement
         return redirect(url_for('signin'))
 
     # Set session start time if it doesn't exist
     if 'session_start' not in session:
         session['session_start'] = datetime.now(timezone)  # Make this aware with timezone
 
-    # Retrieve session start time and check for timeout (e.g., 3 minutes)
+    # Retrieve session start time and check for timeout (e.g., 60 minutes)
     session_start = session['session_start']
-    if datetime.now(timezone) - session_start > timedelta(minutes=30):
+    if datetime.now(timezone) - session_start > timedelta(minutes=60):
+        print('Session has timed out, updating user state and redirecting')  # Debugging print statement
+        
         # Update currentState to Inactive in the database
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
@@ -72,9 +75,12 @@ def employer():
         cursor.close()
         conn.close()
 
-        # Clear session data and redirect to sign-in page
+        # Clear session data
         session.clear()
-        return redirect(url_for('signin'))
+        print('Session cleared, redirecting to sign-in')  # Debugging print statement
+        
+        # Return JSON response to indicate session timeout
+        return jsonify({'session_timeout': True})
 
     # Fetch user profile picture
     user_id = session['user_id']
@@ -87,7 +93,6 @@ def employer():
     # Check if profile picture is NULL or empty
     if profile_picture is None or profile_picture == '':
         profile_picture = 'images/employer-images/user_1.png'  # Set default image path
-
 
     # If session is still active, render the employer page
     return render_template('employer/employer.html')

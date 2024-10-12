@@ -97,15 +97,18 @@ def get_db_connection():
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if 'user_id' not in session or session.get('user_type') != 'Admin':
+        print('Redirecting to sign-in due to missing user session or invalid user type')  # Debugging print statement
         return redirect(url_for('signin'))
 
     # Set session start time if it doesn't exist
     if 'session_start' not in session:
-        session['session_start'] = datetime.now(timezone)  # Make this aware
+        session['session_start'] = datetime.now(timezone)
 
-    # Check for session timeout (e.g., 3 minutes)
+    # Check for session timeout (e.g., 30 minutes)
     session_start = session['session_start']
-    if datetime.now(timezone) - session_start > timedelta(minutes=30):
+    if datetime.now(timezone) - session_start > timedelta(minutes=60):
+        print('Session has timed out, updating user state and redirecting')  # Debugging print statement
+        
         # Update currentState to Inactive
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
@@ -116,8 +119,12 @@ def admin():
 
         # Clear session data
         session.clear()
-        return redirect(url_for('signin'))
+        print('Session cleared, redirecting to sign-in')  # Debugging print statement
+        
+        # Return JSON response to indicate session timeout
+        return jsonify({'session_timeout': True})
 
+    print('User session is active')  # Debugging print statement
     return render_template('admin/admin.html')
 
 
@@ -1266,7 +1273,7 @@ def update_user_status():
 def send_status_update_email(email, status):
     sender_email = "reignjosephc.delossantos@gmail.com"
     password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
-    message = f"Subject: BustosPESO - Application Status Update\n\nDear User,\n\nWe wanted to inform you that your application at BustosPESO has been {status}.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
+    message = f"Subject: BustosPESO - Application Status Update\n\nDear User,\n\nWe wanted to inform you that your registration at BustosPESO has been {status}.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
 
 
 

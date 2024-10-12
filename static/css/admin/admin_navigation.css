@@ -1,19 +1,20 @@
 .navigation_container {
     display: flex;
-    height: 100vh;
+    height: min-content;
     position: fixed;
     width: min-content;
 }
 
 /* Sidebar Styles */
 .navigation_sidebar {
-    width: 200px;
+    width: 14rem;
     background-color: white;
     color: black;
     padding: 10px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: min-content;
 }
 
 .navigation_logo {
@@ -68,7 +69,7 @@
 }
 
 .navigation_nav li span {
-    font-size: 15px;
+    font-size: 0.9rem;
 }
 
 /* Active state */

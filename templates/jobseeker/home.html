@@ -21,73 +21,76 @@
 
     
 
-    <script>
-        function applyFilter() {
-            const skillFilter = document.getElementById('filter_input').value || 'Default';
-            const locationFilter = document.getElementById('location_input').value || 'Default';
-            const companyFilter = document.getElementById('company_input').value || 'Default';
-            const positionFilter = document.getElementById('position_input').value || 'Default';
-            const natureOfWorkFilter = document.getElementById('natureOfWork_input').value || 'Default';
-            const jobFilter = document.getElementById('job_input').value || 'Default';
-            $.ajax({
-                url: '/advance_filter',
-                method: 'GET',
-                data: {
-                    skill_filter: skillFilter,
-                    location_filter: locationFilter,
-                    company_filter: companyFilter,
-                    position_filter: positionFilter,
-                    natureOfWork_filter: natureOfWorkFilter,
-                    job_filter: jobFilter,
-                },
-                success: function(data) {
-                    if (Array.isArray(data)) {
-                        // Update the job list dynamically
-                        let jobListHtml = '';
-                        data.forEach(job => {
-                            jobListHtml += `
-                                <div class="col-md-4">
-                                    <div class="card mb-4 container-vacancy">
-                                        <div class="image-container">
-                                            <img src="/static/${job.image}" alt="Job Image" class="card-img-top">
-                                        </div>
-                                        <div class="card-body">
-                                            <h5 class="card-text"><strong>Company:</strong> ${job.Company}</h5>
-                                            <p class="card-title"><strong>Job: </strong>${job.title}</p>
-                                            <p class="card-text">
-                                                <strong>Location:</strong> <img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image" onclick="showLocation('${job.location}')">${job.location}
-                                                
-                                                </p>
-                                            <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
-                                            <p class="card-text"><strong>Job Status:</strong> ${job.jobStatus}</p>
-                                            <p class="card-text"><strong>Closing Date:</strong> ${job.closingDate}</p>
-                                            <a class="btn btn-primary" data-job-id="${job.Job_ID}" onclick="seeFullDetail(this)">See Full Details</a>
+<script>
+    function applyFilter() {
+        const skillFilter = document.getElementById('filter_input').value || 'Default';
+        const locationFilter = document.getElementById('location_input').value || 'Default';
+        const companyFilter = document.getElementById('company_input').value || 'Default';
+        const jobFilter = document.getElementById('job_input').value || 'Default';
+        const positionFilter = document.getElementById('position_input').value || 'Default';
+        const natureOfWorkFilter = document.getElementById('natureOfWork_input').value || 'Default';
 
+        console.log("Skill Filter: ", skillFilter);
+        console.log("Location Filter: ", locationFilter);
+        console.log("Company Filter: ", companyFilter);
+        console.log("Job Filter: ", jobFilter);
+        console.log("Position Filter: ", positionFilter);
+        console.log("Nature of Work Filter: ", natureOfWorkFilter);
 
-                                        </div>
+        $.ajax({
+            url: '/advance_filter',
+            method: 'GET',
+            data: {
+                skill_filter: skillFilter,
+                location_filter: locationFilter,
+                company_filter: companyFilter,
+                job_filter: jobFilter,
+                position_filter: positionFilter,
+                nature_of_work_filter: natureOfWorkFilter,
+            },
+            success: function(data) {
+                if (Array.isArray(data)) {
+                    console.log("Filtered Jobs: ", data);
+                    let jobListHtml = '';
+                    data.forEach(job => {
+                        jobListHtml += `
+                            <div class="col-md-4">
+                                <div class="card mb-4 container-vacancy">
+                                    <div class="image-container">
+                                        <img src="/static/${job.image}" alt="Job Image" class="card-img-top">
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-text"><strong>Company:</strong> ${job.Company}</h5>
+                                        <p class="card-title"><strong>Job: </strong>${job.title}</p>
+                                        <p class="card-text">
+                                            <strong>Location:</strong> <img src="/static/images/jobseeker-images/pin.png" alt="Location Image" class="location-image" onclick="showLocation('${job.location}')">${job.location}
+                                        </p>
+                                        <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
+                                        <p class="card-text"><strong>Job Status:</strong> ${job.jobStatus}</p>
+                                        <p class="card-text"><strong>Closing Date:</strong> ${job.closingDate}</p>
+                                        <a class="btn btn-primary" data-job-id="${job.Job_ID}" onclick="seeFullDetail(this)">See Full Details</a>
                                     </div>
                                 </div>
-                            `;
-                        });
-    
-                        // Replace the current job list with the new filtered jobs
-                        document.querySelector('.row').innerHTML = jobListHtml;
-                    } else {
-                        console.error("Error: Expected an array, but received:", data);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    // Handle the error
-                    console.error("Error: " + error + " Status: " + status);
-                    if (xhr.status === 401) {
-                        alert("You are not authorized. Please log in.");
-                    } else {
-                        alert("An error occurred while fetching the jobs. Please try again later.");
-                    }
+                            </div>
+                        `;
+                    });
+                    document.querySelector('.row').innerHTML = jobListHtml;
+                } else {
+                    console.error("Error: Expected an array, but received:", data);
                 }
-            });
-        }
-    </script>
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: " + error + " Status: " + status);
+                if (xhr.status === 401) {
+                    alert("You are not authorized. Please log in.");
+                } else {
+                    alert("An error occurred while fetching the jobs. Please try again later.");
+                }
+            }
+        });
+    }
+</script>
+
     
     
 
@@ -322,3 +325,42 @@ function uploadFile(formData) {
         userInteracted = true; // Set to true when the filter button is clicked
     });
 </script>
+
+<script>
+    function checkSession() {
+        fetch('/jobseeker', { method: 'GET' })
+            .then(response => {
+                // Check if the response is a redirect (HTML), meaning session has expired
+                if (response.redirected) {
+                    alert('Your session has timed out. You will be redirected to sign in.');
+                    window.location.href = response.url;  // Redirect to sign-in
+                    return;
+                }
+
+                // Only attempt to parse JSON if the content type is correct
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    // Handle non-JSON responses (e.g., session expired page)
+                    throw new Error('Response was not JSON');
+                }
+            })
+            .then(data => {
+                if (data && data.session_timeout) {
+                    alert('Your session has timed out. Please sign in again.');
+                    window.location.href = '/signin'; // Redirect to sign-in page
+                }
+            })
+            .catch(error => {
+                console.error('Error checking session:', error);
+            });
+    }
+
+    // Run session check on window load and every 60 seconds
+    window.onload = function() {
+        checkSession(); // Check session status when the page loads
+        setInterval(checkSession, 60000); // Check session status every 60 seconds
+    };
+</script>
+

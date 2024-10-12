@@ -303,20 +303,27 @@ def advance_filter():
     skill_filter = request.args.get('skill_filter', 'Default')
     location_filter = request.args.get('location_filter', 'Default')
     company_filter = request.args.get('company_filter', 'Default')
-    position_filter = request.args.get('position_filter', 'Default')  # Add position filter
-    natureOfWork_filter = request.args.get('natureOfWork_filter', 'Default')  # Add natureOfWork filter
-    job_filter = request.args.get('job_filter', 'Default')  # Add job filter
+    job_filter = request.args.get('job_filter', 'Default')
+    position_filter = request.args.get('position_filter', 'Default')
+    nature_of_work_filter = request.args.get('nature_of_work_filter', 'Default')
+
+    print("Skill Filter Received:", skill_filter)
+    print("Location Filter Received:", location_filter)
+    print("Company Filter Received:", company_filter)
+    print("Job Filter Received:", job_filter)
+    print("Position Filter Received:", position_filter)
+    print("Nature of Work Filter Received:", nature_of_work_filter)
 
     if 'user_id' not in session:
-        return jsonify({"error": "User is not logged in"}), 401  # Unauthorized response
+        return jsonify({"error": "User is not logged in"}), 401
 
     conn = get_db_connection()
-
-    # First, retrieve jobs where Request is "Approved" and jobStatus is "Available"
     initial_query = "SELECT * FROM jobs WHERE LOWER(request) = 'approved' AND LOWER(jobStatus) = 'available'"
     initial_jobs = conn.execute(initial_query).fetchall()
 
-    print("Initial Filtered Jobs (Approved & Available):", [job['Job_ID'] for job in initial_jobs])  # Debugging line
+    print("Initial Jobs:", [job['Job_ID'] for job in initial_jobs])
+
+    filtered_jobs = []
 
     # Skill filter logic
     if skill_filter == 'Default':
@@ -325,76 +332,22 @@ def advance_filter():
         skills_result = conn.execute(skills_query, (jobseeker_id,)).fetchone()
 
         if skills_result:
-            # Remove unwanted prefixes and standardize skills
             skills = skills_result['skills'].replace("[", "").replace("]", "").split(",")
             skills = [skill.strip().replace("Skill: ", "").lower() for skill in skills]
-            print("Extracted Skills:", skills)  # Debugging line
-
-            # Prepare the query to match jobs with any of these skills
-            skill_jobs = [job for job in initial_jobs if any(skill in job['skills'].lower() for skill in skills)]
-        else:
-            skill_jobs = []  # No skills found, return empty result
+            print("Extracted Skills:", skills)
+            filtered_jobs += [job for job in initial_jobs if any(skill in job['skills'].lower() for skill in skills)]
     else:
-        skill_jobs = [job for job in initial_jobs if skill_filter.lower() in job['skills'].lower()]
-
-    print("Skill Jobs:", [job['Job_ID'] for job in skill_jobs])  # Print Job_IDs
+        filtered_jobs += [job for job in initial_jobs if skill_filter.lower() in job['skills'].lower()]
 
     # Location filter logic
     if location_filter != 'Default':
-        location_jobs = [job for job in skill_jobs if location_filter.lower() in job['location'].lower()]
-    else:
-        location_jobs = skill_jobs
-
-    print("Location Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
+        filtered_jobs += [job for job in initial_jobs if location_filter.lower() in job['location'].lower()]
 
     # Company filter logic
     if company_filter != 'Default':
-        company_jobs = [job for job in location_jobs if company_filter.lower() in job['company'].lower()]
-        location_jobs = [job for job in location_jobs if job in company_jobs]
+        filtered_jobs += [job for job in initial_jobs if company_filter.lower() in job['Company'].lower()]
 
-    print("Company Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
-
-    # Position filter logic
-    if position_filter != 'Default':
-        position_jobs = [job for job in location_jobs if position_filter.lower() in job['position'].lower()]
-        location_jobs = [job for job in location_jobs if job in position_jobs]
-
-    print("Position Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
-
-    # Nature of Work filter logic
-    if natureOfWork_filter != 'Default':
-        natureOfWork_jobs = [job for job in location_jobs if natureOfWork_filter.lower() in job['natureOfWork'].lower()]
-        location_jobs = [job for job in location_jobs if job in natureOfWork_jobs]
-
-    print("Nature of Work Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
-
-    # Job filter logic
-    if job_filter != 'Default':
-        job_jobs = [job for job in location_jobs if job_filter.lower() in job['title'].lower()]
-        location_jobs = [job for job in location_jobs if job in job_jobs]
-
-    print("Job Jobs:", [job['Job_ID'] for job in location_jobs])  # Print Job_IDs
-
-    conn.close()
-
-    # Convert jobs to a list of dictionaries including Job_ID
-    job_list = [{
-        "Job_ID": job['Job_ID'],  # Include Job_ID
-        "employer_ID": job['employer_ID'],  # Add employer_ID to the output
-        "Company": job['Company'],
-        "title": job['title'],
-        "position": job['position'],  # Add position to the output
-        "image": job['image'],
-        "location": job['location'],
-        "natureOfWork": job['natureOfWork'],
-        "jobStatus": job['jobStatus'],
-        "closingDate": job['closingDate'],
-        "skills": job['skills']
-    } for job in location_jobs]
-
-    print("Jobs Returned:", job_list)  # Debugging line
-
-    return jsonify(job_list)
+    # Job t
 
 
 
@@ -757,56 +710,59 @@ def update_job_statuses():
 @app.route('/jobseeker')
 def jobseeker():
     print("Entering jobseeker route")  # Debugging line
-    if 'user_id' not in session or session['user_type'] != 'Jobseeker':
+    # Check if user is authenticated and is a Jobseeker
+    if 'user_id' not in session or session.get('user_type') != 'Jobseeker':
         return redirect(url_for('signin'))
 
     # Set session start time if it doesn't exist
     if 'session_start' not in session:
-        session['session_start'] = datetime.now(timezone)  # Make this timezone-aware
+        session['session_start'] = datetime.now(timezone)
 
     # Check for session timeout (30 minutes)
     session_start = session['session_start']
-    session_expiry = session_start + timedelta(minutes=30)  # Calculate session expiration time
-    print(f"Session start: {session_start}, Current time: {datetime.now(timezone)}")  # Print session times
-    if datetime.now(timezone) - session_start > timedelta(minutes=30):
-        # Print the session expiration time
-        print(f"The session will expire at {session_expiry.strftime('%Y-%m-%d %H:%M:%S')} {timezone.zone}")
-        
+    session_expiry = session_start + timedelta(minutes=60)
+
+    # Debugging session times
+    print(f"Session start: {session_start}, Current time: {datetime.now(timezone)}")
+
+    # If the session has expired, clear session data and redirect
+    if datetime.now(timezone) > session_expiry:
+        print(f"The session expired at {session_expiry.strftime('%Y-%m-%d %H:%M:%S')} {timezone.zone}")
+
         # Update currentState to Inactive
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('''UPDATE users SET currentState = 'Inactive' WHERE User_ID = ?''', (session['user_id'],))
+        cursor.execute('UPDATE users SET currentState = ? WHERE User_ID = ?', ('Inactive', session['user_id']))
         conn.commit()
         cursor.close()
         conn.close()
 
-        # Clear session data
-        session.clear()
+        session.clear()  # Clear session data
         return redirect(url_for('signin'))
 
-    # Proceed to fetch job announcements and user data if session is valid
+    # If session is valid, proceed to fetch job announcements and user data
     update_job_statuses()
     user_id = session['user_id']
-    
+
     # Connect to the database and fetch job announcements
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Query to fetch jobs
     cursor.execute('SELECT * FROM jobs')
     jobs = cursor.fetchall()
-    
+
     cursor.execute('SELECT * FROM users WHERE User_ID = ?', (user_id,))
     user_data = cursor.fetchone()
 
+    # Ensure the user has a profile image
     if user_data and (user_data[6] is None or user_data[6] == ''):
         user_data = list(user_data)  # Convert to list to modify
         user_data[6] = 'images/profile.png'
-    
+
     # Close the cursor and connection
     cursor.close()
     conn.close()
-    
+
     # Pass the jobs and user data to the template
     return render_template('/jobseeker/jobseeker.html', jobs=jobs, user_data=user_data)
 

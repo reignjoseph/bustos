@@ -3,6 +3,7 @@
 .status-info{width:-webkit-fill-available}
 .status-container {
     width: 100%;
+    white-space: nowrap;
 }
 
 .loading-bar {
@@ -36,4 +37,4 @@
 
 .close-img { cursor: pointer; width: 30px; transition: transform 0.3s ease; align-self: self-end; } .close-img:hover { transform: scale(1.2); }
 
-.status-frame1{margin: 30px;    width: fit-content;}
+.status-frame1{margin: 30px;    width: min-content; height: 35rem; overflow: auto;}
