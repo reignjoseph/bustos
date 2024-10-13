@@ -29,7 +29,7 @@ def internal_error(error):
 
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
-app.permanent_session_lifetime = timedelta(minutes=30)
+app.permanent_session_lifetime = timedelta(minutes=1800)
 
 app.config['JOBSEEKER_UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif','pdf'}
@@ -45,7 +45,6 @@ def get_db_connection():
     conn = sqlite3.connect('trabahanap.db')
     conn.row_factory = sqlite3.Row
     return conn
-
 
 
 
@@ -65,7 +64,7 @@ def insert_html2pdf_jobseeker():
         # Secure the filename and prepare for saving
         filename = secure_filename('form-content-jobseeker.pdf')
         file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
-        
+
         # Check if file already exists and rename if necessary
         base, extension = os.path.splitext(filename)
         counter = 1
@@ -75,7 +74,7 @@ def insert_html2pdf_jobseeker():
             new_filename = f"{base}({counter}){extension}"
             file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], new_filename)
             counter += 1
-        
+
         # Save the file using the unique filename
         file.save(file_path)
         print(f"PDF saved to {file_path}")
@@ -83,23 +82,26 @@ def insert_html2pdf_jobseeker():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        
-        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+        # Assuming you have the user's email in the request data
+        user_email = request.form.get('email')  # Get the email from the form data
 
-        # Insert into the `pdf` table with the unique filename
+        if not user_email:
+            print("Email not provided in the request.")
+            return redirect('/signin')
+
+        # Update the `pdf_form` field in the `users` table based on email
         cursor.execute('''
-            INSERT INTO pdf (pdf_form)
-            VALUES (?)
-        ''', (new_filename,))
+            UPDATE users
+            SET pdf_form = ?
+            WHERE email = ?
+        ''', (new_filename, user_email))
 
         conn.commit()
         conn.close()
 
-        print(f"PDF filename '{new_filename}' inserted into the database.")
+        print(f"PDF filename '{new_filename}' updated in the users table for email {user_email}.")
 
     return redirect('/signin')
-
-
 
 
 
@@ -347,8 +349,39 @@ def advance_filter():
     if company_filter != 'Default':
         filtered_jobs += [job for job in initial_jobs if company_filter.lower() in job['Company'].lower()]
 
-    # Job t
+    # Job title filter logic
+    if job_filter != 'Default':
+        filtered_jobs += [job for job in initial_jobs if job_filter.lower() in job['title'].lower()]
 
+    # Position filter logic
+    if position_filter != 'Default':
+        filtered_jobs += [job for job in initial_jobs if position_filter.lower() in job['position'].lower()]
+
+    # Nature of work filter logic
+    if nature_of_work_filter != 'Default':
+        filtered_jobs += [job for job in initial_jobs if nature_of_work_filter.lower() in job['natureOfWork'].lower()]
+
+    # Remove duplicates by converting list to a dictionary (keyed by Job_ID)
+    final_jobs = list({job['Job_ID']: job for job in filtered_jobs}.values())
+
+    print("Final Filtered Jobs:", [job['Job_ID'] for job in final_jobs])
+
+    conn.close()
+
+    job_list = [{
+        "Job_ID": job['Job_ID'],
+        "Company": job['Company'],
+        "title": job['title'],
+        "image": job['image'],
+        "location": job['location'],
+        "natureOfWork": job['natureOfWork'],
+        "jobStatus": job['jobStatus'],
+        "closingDate": job['closingDate'],
+    } for job in final_jobs]
+
+    print("Final Filtered Jobs Returned:", job_list)
+
+    return jsonify(job_list)
 
 
 
@@ -720,7 +753,7 @@ def jobseeker():
 
     # Check for session timeout (30 minutes)
     session_start = session['session_start']
-    session_expiry = session_start + timedelta(minutes=60)
+    session_expiry = session_start + timedelta(minutes=1800)
 
     # Debugging session times
     print(f"Session start: {session_start}, Current time: {datetime.now(timezone)}")

@@ -28,7 +28,7 @@ def internal_error(error):
     return "Internal Server Error", 500
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
-app.permanent_session_lifetime = timedelta(minutes=30)  # Set session timeout to 30 minutes
+app.permanent_session_lifetime = timedelta(minutes=1800)  # Set session timeout to 30 minutes
 
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
@@ -64,7 +64,7 @@ def employer():
 
     # Retrieve session start time and check for timeout (e.g., 60 minutes)
     session_start = session['session_start']
-    if datetime.now(timezone) - session_start > timedelta(minutes=60):
+    if datetime.now(timezone) - session_start > timedelta(minutes=1800):
         print('Session has timed out, updating user state and redirecting')  # Debugging print statement
         
         # Update currentState to Inactive in the database
@@ -1531,11 +1531,13 @@ def insert_html2pdf_employer():
         print("No selected file")
         return redirect('/signin')
 
+    email_input = request.form.get('email')  # Get email from the form data
+
     if file:
         # Secure the filename and prepare for saving
         filename = secure_filename('form-content-employer.pdf')
         file_path = os.path.join(app.config['EMPLOYER_UPLOAD_FOLDER'], filename)
-        
+
         # Check if file already exists and rename if necessary
         base, extension = os.path.splitext(filename)
         counter = 1
@@ -1553,19 +1555,35 @@ def insert_html2pdf_employer():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Fetch the existing email from the database for comparison
+        cursor.execute(''' 
+            SELECT email 
+            FROM users 
+            WHERE email = ? 
+        ''', (email_input,))
         
-        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+        existing_email = cursor.fetchone()  # Get the existing email from the database
 
-        # Insert into the `pdf` table with the unique filename
-        cursor.execute('''
-            INSERT INTO pdf (pdf_form)
-            VALUES (?)
-        ''', (new_filename,))
+        if existing_email:
+            # Compare emails
+            print(f"Input email: {email_input}")
+            print(f"Email from database: {existing_email[0]}")
 
-        conn.commit()
+            if email_input == existing_email[0]:  # Check if both emails match
+                # Update the `pdf_form` field in the `users` table
+                cursor.execute(''' 
+                    UPDATE users 
+                    SET pdf_form = ? 
+                    WHERE email = ?  -- Use email instead of User_ID
+                ''', (new_filename, email_input))  # Insert the filename as text
+
+                conn.commit()
+                print(f"PDF filename '{new_filename}' updated in the users table for email {email_input}.")
+            else:
+                print("Emails do not match. PDF not updated.")
+        else:
+            print("Email not found in the database.")
+
         conn.close()
 
-        print(f"PDF filename '{new_filename}' inserted into the database.")
-
     return redirect('/signin')
- 

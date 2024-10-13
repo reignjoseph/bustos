@@ -401,6 +401,87 @@ def check_session():
 
 
 
+
+
+
+@app.route('/send_otp_for_signin', methods=['POST'])
+def send_otp_for_signin():
+    email = request.form['email']
+    password = request.form['password']
+
+    conn = sqlite3.connect('trabahanap.db')
+    cursor = conn.cursor()
+
+    try:
+        # Check if the user exists with the given email
+        cursor.execute('''SELECT * FROM users WHERE email = ?''', (email,))
+        user = cursor.fetchone()
+        print(f"Attempting to sign in user: {email}")  # Debugging print
+
+        if user:
+            print(f"User found: {user}")
+
+            # Check if the password matches
+            if user[2] != password:  # Assuming user[2] is the password column
+                return jsonify({"success": False, "error_message": 'Cannot send OTP, wrong password or email.'}), 403
+            
+            if user[7] == 'Pending':
+                return jsonify({"success": False, "error_message": 'Your account is pending approval.'}), 403
+            
+            # Generate a 4-digit OTP
+            otp = str(random.randint(1000, 9999))
+            
+            # Send OTP via email
+            sender_email = "reignjosephc.delossantos@gmail.com"
+            app_password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+
+            # Update the email message
+            # message = f"Subject: BustosPESO - Request OTP Login at BustosPESO \n\nYour OTP for signing in is: {otp}"
+            message = f"Subject: BustosPESO - Request OTP Login at BustosPESO\n\nDear User,\n\nYour OTP for signing in is: {otp}\n\nIf you did not request this OTP code, please ignore this email.\n\nRegards,\nThe BustosPESO Team"
+
+            
+            try:
+                # Connect to the email server and send the OTP
+                with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                    server.starttls()
+                    server.login(sender_email, app_password)
+                    server.sendmail(sender_email, email, message)  # Use sendmail instead of send_message
+                
+                # Store OTP in session for verification
+                session['otp'] = otp
+                session['user_email'] = email  # Store the email in session if needed
+                return jsonify({"success": True}), 200
+            
+            except Exception as e:
+                print("Error sending OTP:", e)
+                return jsonify({"success": False, "error_message": "Failed to send OTP. Please try again."}), 500
+        
+        else:
+            # If user does not exist, return this message
+            return jsonify({"success": False, "error_message": 'The email is not registered.'}), 404
+            
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+@app.route('/confirm_signin_otp', methods=['POST'])
+def confirm_signin_otp():
+    entered_otp = request.form['otp']
+    email = request.form['email']  # Get email if you want to use it later
+    password = request.form['password']  # Get password if needed
+    
+    if 'otp' not in session:
+        return jsonify({"success": False, "error_message": "No OTP generated."}), 400
+    
+    if entered_otp == session['otp']:
+        # If OTP is valid, clear OTP from session
+        session.pop('otp', None)  # Clear the OTP from the session
+        return jsonify({"success": True}), 200  # Indicate success
+    else:
+        return jsonify({"success": False, "error_message": "Invalid OTP."}), 400
+
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
     if request.method == 'POST':
@@ -466,6 +547,58 @@ def signin():
             conn.close()
     
     return render_template('/menu/signin.html')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

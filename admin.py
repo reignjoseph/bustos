@@ -42,7 +42,7 @@ def internal_error(error):
     return "Internal Server Error", 500
 
 app.secret_key = 'your_secret_key'  # Add a secret key for flashing messages
-app.permanent_session_lifetime = timedelta(minutes=30)
+app.permanent_session_lifetime = timedelta(minutes=1800)
 
 
 app.config['EMPLOYER_UPLOAD_FOLDER'] = 'static/images/employer-uploads'
@@ -106,7 +106,7 @@ def admin():
 
     # Check for session timeout (e.g., 30 minutes)
     session_start = session['session_start']
-    if datetime.now(timezone) - session_start > timedelta(minutes=60):
+    if datetime.now(timezone) - session_start > timedelta(minutes=1800):
         print('Session has timed out, updating user state and redirecting')  # Debugging print statement
         
         # Update currentState to Inactive

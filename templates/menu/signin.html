@@ -319,22 +319,130 @@ function resetForm() {
         
         <div class="error_message_forgotpassword" id="error_forgot_password_message" style="color: red;"></div> <!-- Error message div -->
         <div id="cooldown_error_message" style="color: red;"></div>
-        <form action="/signin" method="post">
-            <div class="input-box-login">
-                <input type="email" id="login_email" name="email" placeholder="Enter email" required>
-            </div>
-            <div class="input-box-login">
-                <input  type="password" name="password" placeholder="Enter password" id="password" required>
-                <span class="toggle-password-login" onclick="togglePasswordVisibility()">
-                    <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password">
-                </span>
-            </div>
-            <div class="forgot-password-login">
-                <!-- <a id="forgot_password_link">Forgot password?</a> -->
-                <a id="forgot_password_link" onclick="forgotPasswordBtn()">Forgot password?</a>
-            </div>
-            <button type="submit" class="btn-login">SIGN IN</button>
-        </form>
+
+
+
+        <!-- Modal for OTP input -->
+
+<!-- Sign-in Section -->
+<form id="signin_form" action="/signin" method="post">
+    <div id="otp_error_handler_signin" style="color: red; width: 15rem; white-space: break-spaces; text-align: center;"></div>
+    <div class="input-box-login">
+        <input type="email" id="login_email" name="email" placeholder="Enter email" required>
+    </div>
+    <div class="input-box-login">
+        <input type="password" name="password" placeholder="Enter password" id="password" required>
+        <span class="toggle-password-login" onclick="togglePasswordVisibility()">
+            <img class="eye" src="/static/images/eye-open.png" alt="Toggle Password">
+        </span>
+    </div>
+    <div class="forgot-password-login">
+        <a id="forgot_password_link" onclick="forgotPasswordBtn()">Forgot password?</a>
+    </div>
+    <!-- Change SIGN IN button to open modal -->
+    <div class="btn-login" id="signin_button" onclick="openOtpModal()">SIGN IN</div>
+    
+    <!-- OTP Modal -->
+    <div id="modal_signin_otp" style="display: none;flex-direction: column;justify-content: center;align-items: center;">
+        <label style="align-self: baseline;padding: 10px;background: #ccf4e6;border-radius: 5px;">OTP: <input type="text" id="otp_input" name="otp" required="" style="width: inherit;"></label>
+        <button class="btn-login" type="button" onclick="confirmOtp()" style="width: fit-content;">Confirm OTP</button> 
+        <div id="otp_error" style="color:red;"></div>
+    </div>
+</form>
+
+
+
+
+<script>
+function openOtpModal() {
+    const email = document.getElementById('login_email').value; // Get email from input
+    const password = document.getElementById('password').value; // Get password from input
+
+    $.ajax({
+        url: '/send_otp_for_signin',
+        method: 'POST',
+        data: {
+            email: email,
+            password: password
+        },
+        success: function(response) {
+            if (response.success) {
+                // Show the OTP modal
+                document.getElementById('modal_signin_otp').style.display = 'flex'; 
+                
+                // Make email and password fields read-only
+                document.getElementById('login_email').setAttribute('readonly', 'readonly');
+                document.getElementById('password').setAttribute('readonly', 'readonly');
+
+                // Hide the SIGN IN button
+                document.getElementById('signin_button').style.display = 'none';
+                // forgot_password_link
+                document.getElementById('forgot_password_link').style.display='none'
+                
+                // Clear previous error messages
+                document.getElementById('otp_error_handler_signin').textContent = ''; 
+                document.getElementById('otp_error').textContent = ''; // Clear OTP error message
+            } else {
+                // Display the error message returned from the server
+                document.getElementById('otp_error_handler_signin').textContent = response.error_message; 
+            }
+        },
+        error: function(xhr, status, error) {
+            // Use the status code to differentiate error handling if needed
+            if (xhr.status === 403) {
+                document.getElementById('otp_error_handler_signin').textContent = 'Invalid credentials. Please check your email and password.'; // General message for 403 errors
+            } else if (xhr.status === 404) {
+                document.getElementById('otp_error_handler_signin').textContent = 'The email is not registered.'; // Handle 404 specifically
+            } else {
+                document.getElementById('otp_error_handler_signin').textContent = 'Invalid OTP input.'; // General error message
+            }
+        }
+    });
+}
+
+
+function confirmOtp() {
+    const enteredOtp = document.getElementById('otp_input').value; // Get OTP input value
+
+    $.ajax({
+        url: '/confirm_signin_otp',
+        method: 'POST',
+        data: {
+            otp: enteredOtp,
+            email: document.getElementById('login_email').value, // Include email for further processing if needed
+            password: document.getElementById('password').value // Include password for final submission
+        },
+        success: function(response) {
+            if (response.success) {
+                document.getElementById('signin_form').submit(); // Submit the form if OTP is valid
+            } else {
+                document.getElementById('otp_error').textContent = response.error_message; // Display error message
+            }
+        },
+        error: function(xhr, status, error) {
+            document.getElementById('otp_error').textContent = 'An error occurred while verifying OTP.'; // General error message
+        }
+    });
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <div class="signup-link-login">
             No account? <a href="/signup">Sign up</a>
         </div>

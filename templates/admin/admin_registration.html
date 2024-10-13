@@ -89,11 +89,16 @@
                         <td>${user.status}</td>
                         <td>
                             ${user.pdf_form ? `
-                                    <a href="/static/images/${user.userType === 'Employer' ? 'employer-uploads' : user.userType === 'Jobseeker' ? 'jobseeker-uploads' : ''}/${user.pdf_form}" target="_blank">
-
-                                    <img src="/static/images/admin-images/view_file.png" alt="View PDF" style="width: 24px; height: 24px;">
-                                </a>
-                            ` : 'No Form'}
+                                ${user.userType === 'Employer' ? `
+                                    <a href="/static/images/employer-uploads/${user.pdf_form}" target="_blank">
+                                        <img src="/static/images/admin-images/view_file.png" alt="View PDF" style="width: 24px; height: 24px;">
+                                    </a>
+                                ` : user.userType === 'Jobseeker' ? `
+                                    <a href="/static/images/jobseeker-uploads/${user.pdf_form}" target="_blank">
+                                        <img src="/static/images/admin-images/view_file.png" alt="View PDF" style="width: 24px; height: 24px;">
+                                    </a>
+                                ` : ''}`
+                            : 'No Form'}
                         </td>
                         <td>${formatDate(user.dateRegister)}</td>
                         <td>

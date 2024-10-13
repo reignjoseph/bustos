@@ -204,138 +204,130 @@ function displayDetails() {
     }
 
     function validateAndSubmit() {
-        var form = document.getElementById("signupForm");
-        var email = form.querySelector("input[name='email']").value; // Adjust selector if needed
-        var selectedRole = document.querySelector('input[name="role"]:checked').value; // Get selected role (Jobseeker or Employer)
+    var form = document.getElementById("signupForm");
+    var email = form.querySelector("input[name='email']").value; // Get the email input value
+    var selectedRole = document.querySelector('input[name="role"]:checked').value; // Get the selected role (Jobseeker or Employer)
 
-        // Perform AJAX request to check email
-        $.ajax({
-            url: "/check_email",
-            method: "POST",
-            data: { email: email },
-            success: function(response) {
-                if (response.email_exists) {
-                    alert("Email is already registered. Please use a different email.");
-                } else {
-                    // Proceed with form submission if email does not exist
-                    if (form.checkValidity()) {
-                        // Check selected role and call the appropriate function
-                        if (selectedRole === "Jobseeker") {
-                            // Generate and upload Jobseeker PDF
-                            generateAndUploadPDF_jobseeker().then(() => {
-                                form.submit(); // Submit the form only after PDF operations are complete
+    console.log("Starting email validation for:", email);
+    console.log("Selected role:", selectedRole);
+
+    // Perform AJAX request to check email
+    $.ajax({
+        url: "/check_email",
+        method: "POST",
+        data: { email: email },
+        success: function(response) {
+            console.log("Email check response:", response);
+
+            if (response.email_exists) {
+                alert("Email is already registered. Please use a different email.");
+                console.log("Email already exists. Aborting process.");
+            } else {
+                console.log("Email is valid. Proceeding with form validation.");
+
+                // Proceed if the email does not exist
+                if (form.checkValidity()) {
+                    console.log("Form is valid. Proceeding with account creation.");
+
+                    // Submit the form to /create_account
+                    $.ajax({
+                        url: "/create_account",
+                        method: "POST",
+                        data: new FormData(form),
+                        contentType: false,
+                        processData: false,
+                        success: function(createAccountResponse) {
+                            console.log("Account created successfully. User ID:", createAccountResponse.user_id);
+                            
+                            // Generate and upload the PDF based on the selected role
+                            var pdfFilename = selectedRole === "Jobseeker" ? 'form-content-jobseeker.pdf' : 'form-content-employer.pdf';
+                            var uploadUrl = selectedRole === "Jobseeker" ? '/insert_html2pdf_jobseeker' : '/insert_html2pdf_employer';
+                            var formClass = selectedRole === "Jobseeker" ? '.form-container_registration_jobseeker' : '.form-container_registration_employer';
+
+                            // Pass the email for the PDF upload
+                            generateAndUploadPDF(formClass, pdfFilename, uploadUrl, email).then(() => {
+                                console.log(selectedRole + " PDF generated and uploaded successfully.");
+
+                                // Call /signin after PDF upload
+                                window.location.href = "/signin"; // Redirect to signin
+                            }).catch((error) => {
+                                alert("Error generating or uploading the " + selectedRole + " PDF. Please try again.");
+                                console.error("Error in " + selectedRole + " PDF process:", error);
                             });
-                        } else if (selectedRole === "Employer") {
-                            // Generate and upload Employer PDF
-                            generateAndUploadPDF_employer().then(() => {
-                                form.submit(); // Submit the form only after PDF operations are complete
-                            });
+                        },
+                        error: function() {
+                            alert("Error creating account.");
                         }
-                    } else {
-                        form.reportValidity(); // Display form validation errors
-                    }
+                    });
+                } else {
+                    console.log("Form validation failed.");
+                    form.reportValidity(); // Display form validation errors
                 }
-            },
-            error: function() {
-                alert("An error occurred while checking the email.");
             }
-        });
-    }
+        },
+        error: function() {
+            alert("An error occurred while checking the email.");
+            console.error("Error during email validation.");
+        }
+    });
+}
 
-    
-    function generateAndUploadPDF_jobseeker() {
+
+function generateAndUploadPDF(elementSelector, filename, uploadUrl, email) {
     return new Promise((resolve, reject) => {
-        const element = document.querySelector('.form-container_registration_jobseeker'); // Adjust the selector to your form container class or ID
-        // Define custom options for pdf generation
+        const element = document.querySelector(elementSelector);
+
         const options = {
-            margin: [0.25, 0.25, 0.25, 0.25],  // Top, right, bottom, left (inches)
-            filename: 'form-content-jobseeker.pdf',
+            margin: [0.25, 0.25, 0.25, 0.25],
+            filename: filename,
             image: { type: 'jpeg', quality: 1 },
             html2canvas: { scale: 4 },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
-        html2pdf().from(element).set(options).output('blob').then(blob => {
-            if (!blob.size) {
+        // Generate PDF
+        html2pdf().from(element).set(options).output('datauristring').then(dataUri => {
+            if (!dataUri) {
                 alert('No content to generate PDF.');
-                return reject(); // Reject the promise if no content is available
+                return reject();
             }
+
+            const byteString = atob(dataUri.split(',')[1]);
+            const mimeString = dataUri.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+
+            const blob = new Blob([ab], { type: mimeString });
 
             // Upload PDF to server
             const formData = new FormData();
-            formData.append('pdf', blob, 'form-content-jobseeker.pdf');
-            
-            fetch('/insert_html2pdf_jobseeker', {
+            formData.append('pdf', blob, filename); // Use the generated filename
+            formData.append('email', email);
+
+            fetch(uploadUrl, {
                 method: 'POST',
                 body: formData
             }).then(response => {
                 if (response.ok) {
-                    // alert('PDF uploaded successfully!');
-                    resolve(); // Resolve the promise to indicate completion
+                    resolve();
                 } else {
                     alert('Failed to upload PDF.');
-                    reject(); // Reject the promise if upload fails
+                    reject();
                 }
             }).catch(() => {
                 alert('An error occurred while uploading the PDF.');
-                reject(); // Reject the promise if an error occurs
+                reject();
             });
         }).catch(() => {
             alert('An error occurred while generating the PDF.');
-            reject(); // Reject the promise if PDF generation fails
+            reject();
         });
     });
 }
-
-
-
-
-
-function generateAndUploadPDF_employer() {
-    return new Promise((resolve, reject) => {
-        const element = document.querySelector('.form-container_registration_employer'); // Adjust the selector to your form container class or ID
-        // Define custom options for pdf generation
-        const options = {
-            margin: [0.25, 0.25, 0.25, 0.25],  // Top, right, bottom, left (inches)
-            filename: 'form-content-employer.pdf',
-            image: { type: 'jpeg', quality: 1 },
-            html2canvas: { scale: 4 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        html2pdf().from(element).set(options).output('blob').then(blob => {
-            if (!blob.size) {
-                alert('No content to generate PDF.');
-                return reject(); // Reject the promise if no content is available
-            }
-
-            // Upload PDF to server
-            const formData = new FormData();
-            formData.append('pdf', blob, 'form-content-employer.pdf');
-
-
-            fetch('/insert_html2pdf_employer', {
-                method: 'POST',
-                body: formData
-            }).then(response => {
-                if (response.ok) {
-                    // alert('PDF uploaded successfully!');
-                    resolve(); // Resolve the promise to indicate completion
-                } else {
-                    alert('Failed to upload PDF.');
-                    reject(); // Reject the promise if upload fails
-                }
-            }).catch(() => {
-                alert('An error occurred while uploading the PDF.');
-                reject(); // Reject the promise if an error occurs
-            });
-        }).catch(() => {
-            alert('An error occurred while generating the PDF.');
-            reject(); // Reject the promise if PDF generation fails
-        });
-    });
-}
-
 
 
 
