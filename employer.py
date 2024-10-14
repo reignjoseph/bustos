@@ -1519,6 +1519,7 @@ def post_job():
 
 
 
+
 @app.route('/insert_html2pdf_employer', methods=['POST'])
 def insert_html2pdf_employer():
     if 'pdf' not in request.files:

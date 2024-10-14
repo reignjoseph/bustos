@@ -1046,8 +1046,8 @@ def approve_job(job_id):
 
         # Insert a single notification for all jobseekers
         cursor.execute(
-            'INSERT INTO jobseeker_notifications (employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, current_time_pht)
+            'INSERT INTO jobseeker_notifications (Job_ID,employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?,?, ?, ?, ?, ?, ?, ?)',
+            (job_id, employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, current_time_pht)
         )
 
         # Print how many notifications were inserted
@@ -1136,10 +1136,10 @@ def fetch_all_users():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Update the query to select pdf_form directly from users table
     query = """
-        SELECT u.User_ID, u.email, u.fname, u.userType, u.status, u.dateRegister, p.pdf_form
+        SELECT u.User_ID, u.email, u.fname, u.userType, u.status, u.dateRegister, u.pdf_form
         FROM users u
-        LEFT JOIN pdf p ON u.User_ID = p.User_ID
         WHERE 1=1
     """
     
@@ -1185,7 +1185,6 @@ def fetch_all_users():
     # Count total users without pagination limits
     total_users_query = """
         SELECT COUNT(*) FROM users u
-        LEFT JOIN pdf p ON u.User_ID = p.User_ID
         WHERE 1=1
     """
     
@@ -1225,7 +1224,7 @@ def fetch_all_users():
             "userType": row["userType"],
             "status": row["status"],
             "dateRegister": row["dateRegister"],
-            "pdf_form": row["pdf_form"]
+            "pdf_form": row["pdf_form"]  # This now comes from the users table
         }
         for row in users
     ]

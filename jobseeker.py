@@ -48,6 +48,7 @@ def get_db_connection():
 
 
 
+
 @app.route('/insert_html2pdf_jobseeker', methods=['POST'])
 def insert_html2pdf_jobseeker():
     if 'pdf' not in request.files:
@@ -102,8 +103,6 @@ def insert_html2pdf_jobseeker():
         print(f"PDF filename '{new_filename}' updated in the users table for email {user_email}.")
 
     return redirect('/signin')
-
-
 
 
 
@@ -655,7 +654,8 @@ def jobseeker_fetch_all_notification():
                 'text': notification['text'],
                 'date_created': notification['date_created'],
                 'profile_picture': profile_picture,
-                'NotifID': notification['NotifID']
+                'NotifID': notification['NotifID'],
+                 'Job_ID': notification['Job_ID']
             })
 
         # Close the cursor and connection

@@ -3,6 +3,24 @@
     <div class="modal-notification-content">
         <h2>Notification</h2>
         <div class="notifications-container"></div>
+<div class="modal fade" id="notificationJobDetailsModal" tabindex="-1" aria-labelledby="notificationJobDetailsLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationJobDetailsLabel">Job Details</h5>
+                <button type="button" class="btn-close" onclick="closeNotificationJobDetails()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body notification_jobdetails">
+                <!-- Job details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeNotificationJobDetails()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        
         <!-- Audio element for notification sound -->
         <audio id="notification-sound" src="/static/sounds/Notification bell sound effect.mp3" preload="auto"></audio>
     </div>
@@ -80,6 +98,16 @@ function playNotificationSound() {
 }
 
 
+
+
+
+
+
+
+
+
+
+
 // Function to fetch new notifications
 function fetchNotifications() {
     console.log("Fetching notifications...");
@@ -116,7 +144,7 @@ function fetchNotifications() {
                     <div class="profile_notification">
                         <img src="${notif.profile_picture}" class="profile-picture-small" alt="Employer Profile Picture">
                     </div>
-                    <div class="notification-content_notification">
+                    <div class="notification-content_notification" onclick="showNotificationJobDetails(${notif.Job_ID})">
                         <div class="fname_notification">${notif.employer_fname}</div>
                         <div class="text_notification">${notif.text}</div>
                         <div class="time_notification" data-time="${notif.date_created}"></div>
@@ -150,6 +178,109 @@ function fetchNotifications() {
         console.error('Error fetching notifications:', error);
     });
 }
+
+
+// Function to show notification job details modal
+function showNotificationJobDetails(jobId) {
+    // Get the Job_ID from the notification
+    console.log("Job ID:", jobId); // Debugging line
+
+    // Perform an AJAX request to fetch job details
+    $.ajax({
+        url: '/job_details',
+        method: 'GET',
+        data: { job_id: jobId },
+        success: function(job) {
+            // Populate the modal with job details
+            const modalBody = document.getElementById('frameDetail');
+            modalBody.innerHTML = `
+                <div class="image-container">
+                    <img src="/static/${job.image}" alt="Job Image" class="card-img-top">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title"><strong>Company: </strong>${job.Company}</h5>
+                    <p class="card-title"><strong>Job: </strong>${job.title}</p>
+                    <p class="card-text"><strong>Description: </strong>${job.description}</p>
+                    <p class="card-text"><strong>Location: </strong>${job.location}</p>
+                    <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
+                    <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
+                    <p class="card-text"><strong>Position:</strong> ${job.position}</p>
+                    <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" action="/applicant" method="post">
+                        <input type="hidden" name="job_id" value="${job.Job_ID}" />
+                        <input type="hidden" name="employer_id" value="${job.employer_ID}" />
+                        <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
+                        <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
+                        <div id="error-message" style="color: red;"></div>
+                        <button type="submit" class="btn btn-primary">Apply Now</button>
+                    </form>
+                </div>
+            `;
+
+            // Show the details modal
+            $('#detailsModal').modal('show');
+        },
+        error: function(xhr, status, error) {
+            console.error("Error: " + error + " Status: " + status);
+            alert("An error occurred while fetching job details. Please try again later.");
+        }
+    });
+}
+
+// Function to close the notification job details modal
+function closeNotificationJobDetails() {
+    $('#notificationJobDetailsModal').modal('hide'); // Hide the modal
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
