@@ -1033,8 +1033,8 @@ def approve_job(job_id):
         employer_fname = employer_data[0] if employer_data else 'Unknown'
         employer_profile = employer_data[1] if employer_data and employer_data[1] else 'static/images/employer-images/avatar.png'
 
-        # Fetch jobseekers' details
-        cursor.execute('SELECT User_ID FROM users WHERE userType = "Jobseeker"')
+       # Fetch jobseekers' details with userType 'Jobseeker' and status 'Approved'
+        cursor.execute('SELECT User_ID FROM users WHERE userType = "Jobseeker" AND status = "Approved"')
         jobseekers = cursor.fetchall()
 
         # Get current time in Philippine Time (PHT)
@@ -1044,19 +1044,27 @@ def approve_job(job_id):
         # Generate notification text using the function
         jobseeker_notification_text = generate_notification_text(company, title)
 
-        # Insert a single notification for all jobseekers
-        cursor.execute(
-            'INSERT INTO jobseeker_notifications (Job_ID,employer_id, text, company, job_title, employer_fname, employer_profile, date_created) VALUES (?,?, ?, ?, ?, ?, ?, ?)',
-            (job_id, employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, current_time_pht)
-        )
+        # Loop through each jobseeker and insert a notification for each one
+        for jobseeker in jobseekers:
+            jobseeker_id = jobseeker[0]  # Get the User_ID of the jobseeker
+
+            cursor.execute('''
+                INSERT INTO jobseeker_notifications 
+                (jobseeker_id, Job_ID, employer_id, text, company, job_title, employer_fname, employer_profile, popup, date_created) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (jobseeker_id, job_id, employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, 'true', current_time_pht))
 
         # Print how many notifications were inserted
-        print("1 jobseeker notification(s) were sent.")
+        print(f"{len(jobseekers)} jobseeker notification(s) were sent.")
 
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Job approved successfully and notification sent to jobseekers'})
+    return jsonify({'message': 'Job approved successfully and notifications sent to jobseekers'})
+
+
+
+
 
 
 

@@ -35,11 +35,18 @@
         text-decoration: none;
         outline: none; /* Remove outline on focus */
     }
+    .location-pin img {
+    transition: transform 0.3s ease; /* Smooth transition for the scale effect */
+}
+
+.location-pin img:hover {
+    transform: scale(1.7); /* Scale the image to 1.3 times its size on hover */
+}
     </style>
 
 <div class="add-job-container" style="display: none;">
     <h2 style="column-gap: 30px; display: flex; justify-content: start; align-items: end;">
-        Post a Job Vacancy
+        Post a Job
         <div style="position: relative; display: inline-block;">
             <img class="openMyPost" src="static/images/box.png" width="30px" onclick="openMyPost()" style="grid-column: 2; transition: transform 0.3s, box-shadow 0.3s;">
             <span class="tooltip">This contains your list post</span>
@@ -337,8 +344,218 @@
 <!--  -->
         <div class="container5 form-group">
             <label for="location">Location</label>
-            <input type="text" class="form-control" id="location" name="location" required placeholder="Enter specific address">
+            <div class="location-pin" style="display: inline-block; position: relative;">
+                <img src="static/images/jobseeker-images/pin.png" width="20px" onclick="displayModalMaps()" title="Click Me to set a location">
+            </div>
+            <input type="text" class="form-control" id="location" name="location" required placeholder="Enter specific address" readonly>
         </div>
+
+
+        <style>
+            .modal {
+            z-index: 1050; /* Ensure it's higher than the backdrop */
+        }
+        
+        .modal-backdrop {
+            z-index: 1040; /* Backdrop should have a lower z-index */
+        }
+        
+        .googledialog{
+
+        max-width: 800px; /* Adjust this value to your desired width */
+        width: 100%; /* This ensures it uses the max width defined above */
+        }
+        </style>
+
+
+<!-- Google Map Modal -->
+<!-- Modal for Google Map -->
+<div id="googleMapModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="googleMapLabel" aria-hidden="true">
+    <div class="modal-dialog googledialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="googleMapLabel">Select Location</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Search input for location -->
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="form-control" 
+                        placeholder="Enter a location" 
+                        oninput="geocodeAddress()"
+                    />
+                </div>
+                
+                <!-- Google Map will be rendered here -->
+                <div id="map" style="height: 400px; width: 100%; margin-top: 10px;"></div>
+                <p><strong>Click on the map to select a location:</strong></p>
+                <input type="text" id="viewlocation" class="form-control" placeholder="Selected Location" readonly />
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMCzFzS0sXBzJXR8feeeyCGh66uzXf3QE&callback=initMap"></script>
+
+<script>
+    function displayModalMaps() {
+        $('#googleMapModal').modal('show');
+        initMap(); // Initialize the map when modal is opened
+    }
+
+    let map, geocoder, marker;
+
+    function initMap() {
+        geocoder = new google.maps.Geocoder();
+
+        // Get stored values from local storage
+        const storedLocation = localStorage.getItem('lastLocation');
+        const storedZoom = localStorage.getItem('lastZoom') || 15; // Default zoom if not set
+        const storedMapType = localStorage.getItem('lastMapType') || 'hybrid'; // Default map type if not set
+
+        // If there is a stored location, parse it, otherwise default to Bustos Heritage Park
+        let defaultLocation;
+        if (storedLocation) {
+            const parsedLocation = JSON.parse(storedLocation);
+            defaultLocation = new google.maps.LatLng(parsedLocation.lat, parsedLocation.lng);
+        } else {
+            const defaultAddress = 'Bustos Heritage Park, Bustos, Bulacan';
+            geocoder.geocode({ address: defaultAddress }, function(results, status) {
+                if (status === 'OK') {
+                    defaultLocation = results[0].geometry.location;
+                    initializeMap(defaultLocation, storedZoom, storedMapType);
+                } else {
+                    console.error("Geocode failed due to: " + status);
+                }
+            });
+            return; // Exit function to wait for geocoding
+        }
+
+        // Initialize the map with the default or stored location, zoom, and map type
+        initializeMap(defaultLocation, storedZoom, storedMapType);
+    }
+
+    function initializeMap(location, zoom, mapTypeId) {
+        // Initialize the map
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: location,
+            zoom: parseInt(zoom), // Convert zoom level to an integer
+            mapTypeId: mapTypeId // Set the map type
+        });
+
+        // Place a marker on the default location
+        marker = new google.maps.Marker({
+            position: location,
+            map: map,
+        });
+
+        // Add a click event to allow users to place a marker on the map
+        map.addListener("click", (event) => {
+            placeMarker(event.latLng);
+            console.log("Marker placed at:", event.latLng.toString());
+        });
+
+        // Add zoom and map type change listeners
+        map.addListener('zoom_changed', () => {
+            const zoomLevel = map.getZoom();
+            localStorage.setItem('lastZoom', zoomLevel);
+        });
+
+        map.addListener('maptypeid_changed', () => {
+            const mapTypeId = map.getMapTypeId();
+            localStorage.setItem('lastMapType', mapTypeId);
+        });
+    }
+
+    function placeMarker(location) {
+        if (marker) {
+            marker.setMap(null); // Remove the previous marker
+        }
+
+        marker = new google.maps.Marker({
+            position: location,
+            map: map,
+            zIndex: 1 // Set z-index to ensure the marker is on top
+        });
+
+        // Store the new location in local storage
+        const locationData = {
+            lat: location.lat(),
+            lng: location.lng()
+        };
+        localStorage.setItem('lastLocation', JSON.stringify(locationData));
+
+        // Geocode the clicked location
+        geocodeLatLng(location);
+    }
+
+    function geocodeLatLng(location) {
+        geocoder.geocode({ location: location }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                document.getElementById("location").value = results[0].formatted_address; // Update input field with new ID
+                document.getElementById("viewlocation").value = results[0].formatted_address; // Update view location input
+            } else {
+                console.error("Geocode was not successful for the following reason: " + status);
+            }
+        });
+    }
+
+    function geocodeAddress() {
+        const address = document.getElementById("searchInput").value;
+
+        if (address) {
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    // Center the map on the found location
+                    const location = results[0].geometry.location;
+                    map.setCenter(location);
+                    map.setZoom(15); // Optional: set a default zoom level
+
+                    // Place a marker on the found location
+                    if (marker) {
+                        marker.setMap(null); // Remove the previous marker
+                    }
+                    marker = new google.maps.Marker({
+                        position: location,
+                        map: map,
+                    });
+
+                    // Update the location input fields with the formatted address
+                    document.getElementById("location").value = results[0].formatted_address; 
+                    document.getElementById("viewlocation").value = results[0].formatted_address; 
+                    
+                    // Store the new location in local storage
+                    const locationData = {
+                        lat: location.lat(),
+                        lng: location.lng()
+                    };
+                    localStorage.setItem('lastLocation', JSON.stringify(locationData));
+                } else {
+                    console.error("Geocode was not successful for the following reason: " + status);
+                }
+            });
+        }
+    }
+</script>
+
+
+
+<!-- Bootstrap JavaScript -->
+
+
+
+
+
+
 <!--  -->
 
         <div class="container10 form-group">
@@ -433,3 +650,6 @@ document.getElementById('image').addEventListener('change', function(event) {
     }
 });
 </script>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>

@@ -631,13 +631,18 @@ def jobseeker_status():
 @app.route('/jobseeker_fetch_all_notification')
 def jobseeker_fetch_all_notification():
     if 'user_id' in session and session['user_type'] == 'Jobseeker':
-        user_id = session['user_id']
+        user_id = session['user_id']  # Get the jobseeker's ID from the session
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Fetch notifications for the jobseeker where popup is NULL or empty, sorted by date_created DESC
-        cursor.execute('''SELECT * FROM jobseeker_notifications WHERE popup IS NULL OR popup = "" ORDER BY date_created DESC''')
+        # Fetch notifications for the specific jobseeker where popup is NULL or empty, sorted by date_created DESC
+        cursor.execute('''
+            SELECT * FROM jobseeker_notifications 
+            WHERE jobseeker_id = ? AND (popup IS NULL OR popup = "") 
+            ORDER BY date_created DESC
+        ''', (user_id,))  # Filter by jobseeker_id
+
         notifications = cursor.fetchall()
 
         # Generate notification texts
@@ -655,7 +660,7 @@ def jobseeker_fetch_all_notification():
                 'date_created': notification['date_created'],
                 'profile_picture': profile_picture,
                 'NotifID': notification['NotifID'],
-                 'Job_ID': notification['Job_ID']
+                'Job_ID': notification['Job_ID']
             })
 
         # Close the cursor and connection
@@ -669,6 +674,7 @@ def jobseeker_fetch_all_notification():
         })
 
     return jsonify({'error': 'User not authenticated'}), 401
+
 
 
 @app.route('/jobseeker/notification/close/<int:notif_id>', methods=['POST'])
@@ -687,6 +693,8 @@ def close_jobseeker_notification(notif_id):
     cursor.close()
     conn.close()
     return jsonify({'success': True}), 200
+
+
 
 
 

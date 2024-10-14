@@ -9,6 +9,9 @@
 .page {
         page-break-after: always; /* Ensures each page div starts on a new page */
     }
+.page_image{
+        page-break-after:always;
+}
 </style>
 
 <div class="form-container_registration_employer" style="display:none">
@@ -74,144 +77,124 @@
 
     </div>
 
-    <div id="page2" class="page active">
-
-        <div class="form-group_registration1">
-            <h3 class="row1a">III.VACANCY DETAILS</h3> 
-            <div class="employer_form_group"><label class="row2a" for="employer_position_title" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Position Title:</label><input  class="row3a" type="text"  name="employer_position_title" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-            <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1 / span 2;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;align-items: flex-start;grid-row: 3/span 4;"> <label class="row2a" for="employer_job_description" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Job Description:</label> <textarea  class="row3a" type="text" name="employer_job_description" style="width: -webkit-fill-available; text-align: left; font-weight: normal; font-size: small; padding: 10px; border: none; height: -webkit-fill-available; resize: none;"></textarea> </div>
-            <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 3/span 2;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;align-items: flex-start;">
-                <label class="row2a" for="employer_nature_of_work" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Nature of Work:</label>
-                <div style="display: grid;justify-content: center;column-gap: 20px;align-self: center;"> 
-                   <div>
-                       <div style=" display: flex; flex-direction: column; margin: 10px; width: min-content; white-space: nowrap; ">
-                           <label><input type="checkbox" name="employer_permanent" value="Permanent">Permanent</label>
-                           <label><input type="checkbox" name="employer_contractual" value="Contractual">Contractual</label>
-                           <label><input type="checkbox" name="employer_project_based" value="Project Based">Project Based</label>
-                       </div></div>
-                   
-                   <div style=" grid-column: 2;">
-                       <div style=" display: flex; flex-direction: column; margin: 10px; width: min-content; white-space: nowrap; ">
-                           <label><input type="checkbox" name="employer_internship_ojt" value="Internship/OJT">Internship/OJT</label>
-                           <label><input type="checkbox" name="employer_part_time" value="Part Time">Part Time</label>
-                           <label><input type="checkbox" name="employer_work_from_home_online_job" value="Work From Home / online job">Work From Home / online job</label>
-                       </div></div>
-                   </div>
-
-            </div>
-            <div class="employer_form_group" style="grid-column: 3 / span 2;"><label class="row2a" for="employer_place_of_work" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Place of Work:</label><input  class="row3a" type="text"  name="employer_place_of_work" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-            <div class="employer_form_group" style="grid-column: 3 / span 2;"><label class="row2a" for="employer_salary" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Salary:</label><input  class="row3a" type="text"  name="employer_salary" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-            <div class="employer_form_group" style="grid-column: 3 / span 2;"><label class="row2a" for="employer_vacancy_count" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Vacancy Count:</label><input  class="row3a" type="text"  name="employer_vacancy_count" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-        </div>
-
-        
-        <div class="form-group_registration1">
-            <h3 class="row1a">IV.QUALIFICATION REQUIREMENTS</h3> 
-            <div style="flex-direction: column; align-items: baseline; font-weight: bold;" class="employer_form_group"><label class="row2a" for="employer_work_experience">Work Experience:</label><textarea class="row3a autoAdjustTextarea" rows="1" type="text"  name="employer_work_experience" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-            <div style="flex-direction: column; align-items: baseline; font-weight: bold;" class="employer_form_group"><label class="row2a" for="employer_other_qualifications">Other Qualifications:</label><textarea rows="1" class="row3a autoAdjustTextarea" type="text"  name="employer_other_qualifications" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-
-            <div class="employer_form_group" style=" font-weight: bolder; padding: 5px; display: flex; flex-direction: column; ">
-                <label style=" display: flex; flex-direction: row; width: -webkit-fill-available; white-space: nowrap; align-items: flex-start; justify-content: flex-start; gap: 20px; ">
-                    Accepts persons with disabilities (PWD)
-                    <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">
-                        Yes<input type="radio" name="employer_disability_button" value="Yes" id="employer_disability_yes">
-                    </label>
-                    <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">
-                        No<input type="radio" name="employer_disability_button" value="No" id="employer_disability_no">
-                    </label>
-                </label>
-                
-                <div style="display: flex; align-items: center; justify-content: flex-start;">
-                    <label>If "yes":</label>
-                    <div style="display: flex; margin: 10px; width: min-content; white-space: nowrap; flex-wrap: nowrap; align-content: center; justify-content: center; align-items: center; gap: 5px; flex-direction: row;">
-                        <label style=" margin: 0; display: flex; align-items: center; ">
-                            <input type="checkbox" name="employer_visual" value="Visual" class="disability_checkbox">Visual
-                        </label>
-                        <label style=" margin: 0; display: flex; align-items: center; ">
-                            <input type="checkbox" name="employer_physical" value="Physical" class="disability_checkbox">Physical
-                        </label>
-                        <label style=" margin: 0; display: flex; align-items: center; ">
-                            <input type="checkbox" name="employer_hearing" value="Hearing" class="disability_checkbox">Hearing
-                        </label>
-                        <label style=" margin: 0; display: flex; align-items: center; ">
-                            <input type="checkbox" name="employer_mental" value="Mental" class="disability_checkbox">Mental
-                        </label>
-                        <label style=" margin: 0; display: flex; align-items: center; ">
-                            <input type="checkbox" name="employer_speech" value="Speech" class="disability_checkbox">Speech
-                        </label>
-                    </div>
-                </div>
-                
-                <div style="place-self: center; width: -webkit-fill-available;">
-                    <label style="margin: 0; display: flex; align-items: center; flex-direction: row; white-space: nowrap;">
-                        <input type="checkbox" id="employer_others_checkbox"> Others: (please specify) 
-                        <input id="employer_others_input" style="outline: none; width: -webkit-fill-available; margin-left: 10px;" type="text" name="employer_others" disabled>
-                    </label>
-                </div>
-            </div>
-            
-            <!-- JavaScript to enable/disable inputs and handle checkbox clearing -->
-            <script>
-                // Select the relevant inputs and checkboxes
-                const othersCheckbox = document.getElementById('employer_others_checkbox');
-                const othersInput = document.getElementById('employer_others_input');
-                const disabilityYesRadio = document.getElementById('employer_disability_yes');
-                const disabilityNoRadio = document.getElementById('employer_disability_no');
-                const checkboxes = document.querySelectorAll('.disability_checkbox');
-            
-                // Enable or disable the "Others" input field based on checkbox
-                othersCheckbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        othersInput.disabled = false;  // Enable input
-                    } else {
-                        othersInput.disabled = true;   // Disable input
-                        othersInput.value = '';        // Clear input field
-                    }
-                });
-            
-                // Event listener for the "No" radio button
-                disabilityNoRadio.addEventListener('change', function() {
-                    if (this.checked) {
-                        // Uncheck all checkboxes
-                        checkboxes.forEach(function(checkbox) {
-                            checkbox.checked = false;
-                        });
-            
-                        // Uncheck and disable "Others" checkbox and clear input
-                        othersCheckbox.checked = false;
-                        othersInput.disabled = true;
-                        othersInput.value = '';  // Clear the "Others" text input
-                    }
-                });
-            </script>
-            
-
-            <div class="employer_form_group" style=" font-weight: bolder; padding: 5px; display: flex; flex-direction: column; "> <label style="display: flex;flex-direction: row;width: -webkit-fill-available;white-space: nowrap;align-items: flex-start;justify-content: flex-start;gap: 20px;margin: 0;"> Accepts returning (OFWs): <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">Yes<input type="radio" name="employer_returning_button" value="Yes"></label> <label style=" margin: 0; padding: 0; display: flex; align-items: center; ">No<input type="radio" name="employer_returning_button" value="No"></label> </label></div>
-            <div class="employer_form_group" style="grid-column: 1 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_education_level" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Education Level:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_education_level" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-            <div class="employer_form_group" style="grid-column: 3 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_course" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Course/SHS Strand:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_course" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-            <div class="employer_form_group" style="grid-column: 1 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_license" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">License:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_license" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-            <div class="employer_form_group" style="grid-column: 3 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_eligibility" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Eligibility:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_eligibility" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-            <div class="employer_form_group" style="grid-column: 1 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_certification" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Certification:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_certification" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-            <div class="employer_form_group" style="grid-column: 3 / span 2; display: flex; flex-direction: column; align-items: flex-start;"><label class="row2a" for="employer_language_dialect" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Language/dialect Spoken:</label><textarea  class="row3a autoAdjustTextarea" type="text"  name="employer_language_dialect" style="overflow: hidden; resize: none; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></textarea></div> 
-
-
-            
-        </div>  
-
-        <div class="form-group_registration1">
-            <h3 class="row1a">V.POSTING DETAILS</h3>
-            <div class="employer_form_group"><label class="row2a" for="employer_posting_date" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Posting Date (mm/dd/year):</label><input  class="row3a" type="text"  name="employer_posting_date" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-            <div class="employer_form_group"><label class="row2a" for="employer_valid_until" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Valid Until (mm/dd/year):</label><input  class="row3a" type="text"  name="employer_valid_until" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-        </div>
-        
+    
+    <div id="viewattachedfiles">
     </div>
+    
+    <!-- Allow multiple file upload -->
+    
 
 
 
 
 
+<script>
+function uploadBIR_BP_BC() {
+    const fileInput = document.getElementById('attach_file');
+    const fileHint = document.getElementById('fileHint');
+    const files = fileInput.files;
 
+    // Check if files are selected
+    if (files.length === 0) {
+        fileHint.innerText = 'Please select at least one file to upload.';
+        fileHint.style.display = 'block';
+        return;
+    }
 
+    const allowedExtensions = /(\.png|\.jpg|\.jpeg|\.pdf)$/i;
+    const formData = new FormData();
+
+    Array.from(files).forEach(file => {
+        const fileName = file.name;
+
+        if (!allowedExtensions.exec(fileName)) {
+            fileHint.innerText = 'Please upload valid files: PNG, JPG, or PDF.';
+            fileHint.style.display = 'block';
+            return;
+        }
+
+        formData.append('files[]', file); // Append the valid file to FormData
+    });
+
+    fileHint.style.display = 'none'; // Hide hint if file type is valid
+
+    // Example: use Fetch API to upload the files (replace with your endpoint)
+    fetch('your/upload/endpoint', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle success
+        console.log('Files uploaded successfully:', data);
+    })
+    .catch(error => {
+        // Handle error
+        console.error('Error uploading files:', error);
+    });
+}
+
+function validateBIR_BP_BC(fileInput) {
+    const files = fileInput.files; // Get the selected files
+    const validFileTypes = ['image/png', 'image/jpeg', 'application/pdf']; // Allowed file types
+    const maxSizeInMB = 2; // Maximum file size in MB
+    const maxSizeInBytes = maxSizeInMB * 1024 * 1024; // Convert to bytes
+    const fileHint = document.getElementById('fileHint');
+
+    // Clear previous file views
+    document.getElementById('viewattachedfiles').innerHTML = '';
+
+    if (files.length === 0) {
+        fileHint.innerText = "Please select at least one file.";
+        fileHint.style.display = 'block';
+        return false;
+    }
+
+    let valid = true;
+
+    Array.from(files).forEach(file => {
+        if (!validFileTypes.includes(file.type)) {
+            alert(`Invalid file type: ${file.name}. Please upload a PNG, JPG, or PDF file.`);
+            valid = false;
+        }
+
+        if (file.size > maxSizeInBytes) {
+            alert(`File size exceeds ${maxSizeInMB} MB: ${file.name}. Please upload a smaller file.`);
+            valid = false;
+        }
+
+        // Display the valid file
+        const imgContainer = document.createElement('div');
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file); // Create a URL for the uploaded file
+        img.style.width = '100%'; // Adjust size as needed
+        img.style.height = 'auto'; // Maintain aspect ratio
+
+        imgContainer.classList.add('attachedfile'); // Add a class for styling if needed
+        imgContainer.classList.add('page_image'); // Add a class for styling if needed
+        imgContainer.appendChild(img); // Append the image to the container
+        document.getElementById('viewattachedfiles').appendChild(imgContainer); // Append container to viewattachedfiles
+    });
+
+    return valid; // Return if all files are valid
+}    
+</script>
+
+<style>
+    .attachedfile {
+        width: -webkit-fill-available;
+    height: 60rem;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    }
+
+    .attachedfile img {
+        width: -webkit-fill-available;
+    height: -webkit-fill-available;
+    }
+</style>
 
 </div>
 <script>

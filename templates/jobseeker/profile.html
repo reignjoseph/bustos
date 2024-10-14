@@ -34,13 +34,15 @@
                 </div>
 
                 <!-- Profile Information -->
-                <textarea id="bio" name="bio" class="profile_bio " placeholder="Write your bio here (up to 30 words)" maxlength="50" spellcheck="false">{{user_data[9]}}</textarea>
+                <label style="align-self: center;">{{user_data[3]}}</label>
+                <input id="bio" name="bio" class="profile_bio " placeholder="Write your bio here (up to 30 words)" maxlength="30" value="{{user_data[9]}}" spellcheck="false">
 
                 <div class="PIcontainer mt-4">
                     <h6 class="email">Email:</h6>
                     <input type="email" id="email" name="email" class="profile_email  w-full h-24 p-2 border border-gray-300 rounded resize-none" spellcheck="false" placeholder="Email" value="{{user_data[1]}}" disabled>
-                    <h1 class="phone">Phone:</h1>
+                    <h6 class="phone">Phone:</h6>
                     <input type="text" id="phone" name="phone" class="profile_phone w-full p-2 border border-gray-300 rounded" placeholder="Phone" value="{{ user_data[5] }}" maxlength="11" minlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+                    <h6 class="address">Address:</h6>
                     <textarea class="address resize-none mt-4" type="text" id="address" name="address" placeholder="Address" spellcheck="false" maxlength="80">{{user_data[10]}}</textarea>
                 </div>
 

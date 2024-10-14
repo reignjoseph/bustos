@@ -30,7 +30,13 @@
                                 {% include 'menu/registration_form_jobseeker.html' %}
                                 {% include 'menu/registration_form_employer.html' %}
                             </div>
-                            <div class="modal-footer">
+                            <div class="modal-footer" style="justify-content: space-between;">
+                                <div class="exclusiveforemployeronly" style="display:none;flex-direction: column; align-content: center; justify-content: center; align-items: baseline; ">
+                                    <p style="margin-top:30px;">Upload valid file of Barangay Clearance, Business Permit, and BIR.</p>
+                                    <!-- <button type="button" onclick="uploadBIR_BP_BC()">Upload Files</button> -->
+                                    <input type="file" id="attach_file" accept=".png, .jpg, .jpeg, .pdf" onchange="validateBIR_BP_BC(this)" multiple>
+                                    <p id="fileHint" style="display:none; color: red;">Please upload a valid file: PNG, JPG, or PDF.</p>
+                                    </div>
                                 <button style="width: 20%;" type="button" onclick="validateAndSubmit()" id="generate-pdf" class="btn-signup">Submit</button>
                             </div>
                         </div>
@@ -75,15 +81,18 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+
 function toggleFormsDisplay() {
     var selectedRole = document.querySelector('input[name="role"]:checked').value;
     var jobseekerForm = document.querySelector(".form-container_registration_jobseeker");
     var employerForm = document.querySelector(".form-container_registration_employer");
+    var exclusiveSection = document.querySelector('.exclusiveforemployeronly');
 
     // Show the jobseeker form if "Jobseeker" is selected, hide the employer form
     if (selectedRole === "Jobseeker") {
         jobseekerForm.style.display = "block"; // Show Jobseeker form
         employerForm.style.display = "none";   // Hide Employer form
+        exclusiveSection.style.display = 'none'; 
 
         // Add required attribute back to specific fields in Jobseeker form
         document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
@@ -99,6 +108,7 @@ function toggleFormsDisplay() {
     else if (selectedRole === "Employer") {
         jobseekerForm.style.display = "none";  // Hide Jobseeker form
         employerForm.style.display = "block";  // Show Employer form
+        exclusiveSection.style.display = 'flex';
 
         // Add required attribute back to specific fields in Employer form
         document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"]').forEach(function(field) {
