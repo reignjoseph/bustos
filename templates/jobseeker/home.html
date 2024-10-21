@@ -89,9 +89,21 @@
             }
         });
     }
-</script>
 
     
+</script>
+
+<style>
+    .apply_now_frame {
+    background-color: #fefefe; /* Match the modal background color */
+    margin: 8% auto; /* Center the modal */
+    padding: 20px; /* Same padding */
+    border: 1px solid #888; /* Same border */
+    width: max-content; /* Same width */
+    border-radius: 8px; /* Same rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Same shadow effect */
+}
+</style>  
     
 
 
@@ -146,7 +158,21 @@ function seeFullDetail(button) {
                         <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
                         <input type="file" id="fileInput" name="file" accept=".pdf,image/*" />
                         <div id="error-message" style="color: red;"></div>
-                        <button type="submit" class="btn btn-primary">Apply Now</button>
+                        <button type="button" class="btn btn-primary" onclick="openApplyNowModal()">Apply Now</button>
+                        <div id="prompt_apply_now" class="modal" style="display: none;">
+                            <div class="apply_now_frame">
+                                <h6 style="width: -webkit-fill-available; display: flex; align-items: center;">
+                                    Are you sure you want to apply for this job? &nbsp;&nbsp;
+                                    <img src="static/images/close.png" style="width: 30px; height: 30px; position: relative; float: right;" onclick="closeApplyNowPrompt()" alt="Close">
+                                </h6>
+
+                                <div style="width: -webkit-fill-available; height: inherit; display: flex; align-items: center; justify-content: space-evenly;">
+                                <button type="submit" id="confirmApply" class="btn btn-primary" onclick="applyForJob()">Yes</button>
+                                <button type="button" class="btn btn-secondary" onclick="closeApplyNowModal()">No</button>    
+                                </div>
+                            </div>
+                        </div>
+
                     </form>
                 </div>
             `;
@@ -160,6 +186,35 @@ function seeFullDetail(button) {
         }
     });
 }
+function openApplyNowModal() {
+    document.getElementById('prompt_apply_now').style.display = 'block';
+}
+
+function closeApplyNowModal(event) {
+    // Check if the click was on the modal backdrop
+    if (event) {
+        const modal = document.getElementById('prompt_apply_now');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    } else {
+        // Close the modal directly if no event is passed
+        document.getElementById('prompt_apply_now').style.display = 'none';
+    }
+}
+// Function to open the apply now modal
+function openApplyNowPrompt() {
+    const modal = document.getElementById('prompt_apply_now');
+    modal.style.display = 'block'; // Show the modal
+}
+
+// Function to close the apply now modal
+function closeApplyNowPrompt() {
+    const modal = document.getElementById('prompt_apply_now');
+    modal.style.display = 'none'; // Hide the modal
+}
+
+// Event listener for window click to close the modal
 
 </script>
 

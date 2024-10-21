@@ -5,12 +5,16 @@
 
 
 <style>
-.employer_form_group{ border: 1px solid; width: -webkit-fill-available; grid-column: 1/span 4; text-align: left; color: black; display: flex; flex-wrap: nowrap; }
+.employer_form_group{ border: 1px solid; width: -webkit-fill-available; grid-column: 1/span 4; text-align: left; color: black; display: flex; flex-wrap: nowrap; align-items: center;}
 .page {
         page-break-after: always; /* Ensures each page div starts on a new page */
     }
 .page_image{
         page-break-after:always;
+}
+
+.error_background_color{
+    background-color: lightcoral;
 }
 </style>
 
@@ -25,10 +29,19 @@
             </p>
                 <div class="form-group_registration1"> 
                     <h3 class="row1a">I.ESTABLISHMENT DETAILS</h3> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_business" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Business Name:</label><input required class="row3a" type="text"  name="employer_business" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_trade" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Trade Name:</label><input required class="row3a" type="text"  name="employer_trade" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_acronym" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Acronym/Abbreviation:</label><input required class="row3a" type="text"  name="employer_acronym" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;"> <label style="margin: 10px 0px 0px 10px; "><input type="radio" name="office_type" value="Main Office"> Main Office</label> <label style=" margin: 0px 0px 0px 10px; "><input type="radio" name="office_type" value="Branch"> Branch</label> <label class="row2a" for="employer_tax_identifier_number" style="margin: 0;white-space: nowrap;font-weight: bolder;display: inherit;">Tax Identifier Number: <input ="" class="row3a" type="text"  name="employer_tax_identifier_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></label> </div>
+                    <div class="employer_form_group" id="business_name_group"> <label class="row2a" for="employer_business" style="background-color:inherit; margin: 0; white-space: nowrap; font-weight: bolder;">Business Name:</label> <input required class="row3a" type="text" name="employer_business" style="background-color:inherit; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateBusinessName()" title="Provide Business Name"> </div>
+                    <div class="employer_form_group" id="trade_name_group"> <label class="row2a" for="employer_trade" style="background-color:inherit; margin: 0; white-space: nowrap; font-weight: bolder;">Trade Name:</label> <input required class="row3a" type="text" name="employer_trade" style="background-color:inherit; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateTradeName()" title="Provide Trade Name"> </div>
+                    <div class="employer_form_group" id="acronym_group"> <label class="row2a" for="employer_acronym" style="background-color:inherit; margin: 0; white-space: nowrap; font-weight: bolder;">Acronym/Abbreviation:</label> <input required class="row3a" type="text" name="employer_acronym" style="background-color:inherit; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateAcronym()" title="Provide accronym or abbreviation"> </div>
+                    
+                    
+
+                    <div style="border: 1px solid; width: -webkit-fill-available; grid-column: 1/span 4; text-align: left; color: black; display: flex; flex-wrap: nowrap; flex-direction: column;"> <label style="margin: 10px 0px 0px 10px;"> <input type="radio" name="office_type" value="Main Office" required> Main Office </label> <label style="margin: 0px 0px 0px 10px;"> <input required type="radio" name="office_type" value="Branch"> Branch </label> <label class="row2a" id="taxIdentifierver1" for="employer_tax_identifier_number" style="align-items: center; margin: 0; white-space: nowrap; font-weight: bolder; display: inherit;"> Tax Identifier Number: <input required class="row3a" type="text" name="employer_tax_identifier_number" style="background-color:inherit; width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateTaxIdentifier()" title="Provide TIN number e.g 000-000-000" > </label> </div>
+
+
+
+
+
+
                     <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;flex-wrap: nowrap;flex-direction: column;">
                          <label style="margin: 10px;font-weight: bolder;">Employer Type</label> 
                          <div style=" display: grid; justify-content: center; column-gap: 20px; "> 
@@ -52,12 +65,52 @@
                                 </div></div>
                             </div>
                         </div>
-                    <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;align-items: center;flex-direction: row;"><label class="row2a" for="employer_total_work_force" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Total Work Force:</label> <div style=" display: flex; width: -webkit-fill-available; justify-content: space-evenly; align-items: center; "> <label style="display: flex;margin: 0;"><input type="checkbox" name="employer_micro" value="Micro (1-9)">Micro (1-9)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_small" value="Micro (1-9)">Small (10-99)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_medium" value="Micro (1-9)">Medium (100-999)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_large" value="Large (200 and up)">Large (200 and up)</label> </div> </div>
-                    <div class="employer_form_group"><label class="row2a" for="employer_line_of_business_industry" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Line of Business/Industry<span style="font-weight: normal;"> (check BIR 2303)</span>:</label><input  class="row3a" type="text"  name="employer_line_of_business_industry" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_street_village" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Street/Village:</label><input  class="row3a" type="text"  name="employer_street_village" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_barangay" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Barangay:</label><input  class="row3a" type="text"  name="employer_barangay" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_municipal" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Municipal/City:</label><input  class="row3a" type="text"  name="employer_municipal" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                    <div class="employer_form_group"><label class="row2a" for="employer_province" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Province:</label><input class="row3a" type="text"  name="employer_province" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                    <div style="border: 1px solid;width: -webkit-fill-available;grid-column: 1/span 4;text-align: left;color: black;display: flex;align-items: center;flex-direction: row;"><label class="row2a" for="employer_total_work_force" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Total Work Force:</label> <div style=" display: flex; width: -webkit-fill-available; justify-content: space-evenly; align-items: center; "> <label style="display: flex;margin: 0;"><input type="checkbox" name="employer_sml" required value="Micro (1-9)">Micro (1-9)</label> <label style=" display: flex; margin: 0; "><input required type="checkbox" name="employer_sml" value="Micro (1-9)">Small (10-99)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" name="employer_sml" value="Micro (1-9)">Medium (100-999)</label> <label style=" display: flex; margin: 0; "><input type="checkbox" required name="employer_sml" value="Micro (1-9)">Large (200 and up)</label> </div> </div>
+                    
+
+
+                    <div class="employer_form_group" id="lineOfBusinessContainer"> <label class="row2a" for="employer_line_of_business_industry" style="margin: 0; white-space: nowrap; font-weight: bolder;"> Line of Business/Industry <span style="font-weight: normal;">(check BIR 2303)</span>: </label> <input required class="row3a" type="text" name="employer_line_of_business_industry" style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateLineOfBusinessIndustry()"> </div>
+                    
+
+<script src="static/js/ph-address-selector_employer.js"></script>
+
+
+<div class="employer_form_group">
+    <label class="row2a" for="employer_region" style="margin: 0; white-space: nowrap; font-weight: bolder; width: 10rem; text-align: left;">Region *</label>
+    <select required style="border: none;text-align: left;" name="employer_region" class="row3a form-control form-control-md" id="employer_region"></select>
+    <input type="hidden" class="row3a form-control form-control-md" name="employer_region_text" id="employer_region-text" required>
+</div>
+
+<div class="employer_form_group">
+    <label class="row2a" for="employer_province" style="margin: 0; white-space: nowrap; font-weight: bolder; width: 10rem; text-align: left;">Province *</label>
+    <select required style="border: none;text-align: left;" name="employer_province" class="row3a form-control form-control-md" id="employer_province"></select>
+    <input type="hidden" class="row3a form-control form-control-md" name="employer_province_text" id="employer_province-text" required>
+</div>
+
+<div class="employer_form_group">
+    <label class="row2a" for="employer_city" style="margin: 0; white-space: nowrap; font-weight: bolder; width: 10rem; text-align: left;">City / Municipality *</label>
+    <select required style="border: none;text-align: left;" name="employer_city" class="row3a form-control form-control-md" id="employer_city"></select>
+    <input type="hidden" class="row3a form-control form-control-md" name="employer_city_text" id="employer_city-text" required>
+</div>
+
+<div class="employer_form_group">
+    <label class="row2a" for="employer_barangay" style="margin: 0; white-space: nowrap; font-weight: bolder; width: 10rem; text-align: left;">Barangay *</label>
+    <select required style="border: none;text-align: left;" name="employer_barangay" class="row3a form-control form-control-md" id="employer_barangay"></select>
+    <input type="hidden" class="row3a form-control form-control-md" name="employer_barangay_text" id="employer_barangay-text" required>
+</div>
+
+<div class="employer_form_group">
+    <label required for="employer_street_text" class="row2a" style="margin: 0; white-space: nowrap; font-weight: bolder; width: 10rem; text-align: left;">Street (Optional)</label>
+    <input style="border: none;text-align: left;" type="text" class="row3a form-control form-control-md" name="employer_street_text" id="employer_street_text">
+</div>
+
+
+
+
+
+
+
+
                     
 
 
@@ -65,13 +118,51 @@
 
             <div class="form-group_registration1">
                 <h3 class="row1a">II.ESTABLISHMENT CONTACT DETAILS</h3> 
-                <div class="employer_form_group"><label class="row2a" for="employer_president" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Name of Owner/President (Full Name):</label><input  class="row3a" type="text"  name="employer_president" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                <div class="employer_form_group"><label class="row2a" for="employer_contact" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Contact Person (Full Name):</label><input  class="row3a" type="text"  name="employer_contact" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                <div class="employer_form_group"><label class="row2a" for="employer_position" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Position:</label><input  class="row3a" type="text"  name="employer_position" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                <div class="employer_form_group"><label class="row2a" for="employer_telephone_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Telephone Number:</label><input  class="row3a" type="text"  name="employer_telephone_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                <div class="employer_form_group"><label class="row2a" for="employer_mobile_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Mobile Number:</label><input  class="row3a" type="text"  name="employer_mobile_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                <div class="employer_form_group"><label class="row2a" for="employer_fax_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Fax Number:</label><input  class="row3a" type="text"  name="employer_fax_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
-                <div class="employer_form_group"><label class="row2a" for="employer_email_address" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Email Address:</label><input  class="row3a" type="text"  name="employer_email_address" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div> 
+                <div class="employer_form_group" id="nameofownercontainer"> <label class="row2a" for="employer_president" style="margin: 0; white-space: nowrap; font-weight: bolder;"> Name of Owner/President (Full Name): </label> <input id="employer_president" required class="row3a" type="text" name="employer_president" style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateOwnerName()" > </div> <div class="employer_form_group" id="contactpersoncontainer"> <label class="row2a" for="employer_contact" style="margin: 0; white-space: nowrap; font-weight: bolder;"> Contact Person (Full Name): </label> <input id="employer_contact" required class="row3a" type="text" name="employer_contact" style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateContactName()" > </div> <div class="employer_form_group" id="positioncontainer"> <label class="row2a" for="employer_position" style="margin: 0; white-space: nowrap; font-weight: bolder;"> Position: </label> <input id="employer_position" required class="row3a" type="text" name="employer_position" style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validatePosition()" > </div>
+
+                <!-- <div class="employer_form_group"><label class="row2a" for="employer_telephone_number" style=" margin: 0; white-space: nowrap; font-weight: bolder; ">Telephone Number:</label><input  class="row3a" type="text"  name="employer_telephone_number" style=" width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial; "></div>  -->
+               
+                <div class="employer_form_group" id="employer_mobile_number_container"> 
+                    <label class="row2a" for="employer_mobile_number" style="margin: 0; white-space: nowrap; font-weight: bolder;"> 
+                        Mobile Number: 
+                    </label> 
+                    <input 
+                        id="employer_mobile_number" 
+                        class="row3a" 
+                        type="text" 
+                        name="employer_mobile_number" 
+                        placeholder="Enter mobile number" 
+                        required 
+                        minlength="13" 
+                        maxlength="13" 
+                        style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" 
+                        title="Please enter a mobile number (digits only, format: nnn-nnn-nnnn)"
+                        oninput="validateMobileNumber()"
+                    >
+                </div>
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <div class="employer_form_group" id="fax_number_container"> <label class="row2a" for="employer_fax_number" style="margin: 0; white-space: nowrap; font-weight: bolder;"> Fax Number: </label> <input id="employer_fax_number" class="row3a" type="text" minlength="10" maxlength="10" name="employer_fax_number" style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateFaxNumber()"> </div>
+                <div class="employer_form_group" id="employer_email_address_container"> <label class="row2a" for="employer_email_address" style="margin: 0; white-space: nowrap; font-weight: bolder;"> Email Address: </label> <input id="employer_email_address" class="row3a" type="email" name="employer_email_address" required style="width: -webkit-fill-available; height: inherit; border: none; text-align: left; font-weight: normal; font-size: initial;" oninput="validateEmailAddress()"> </div>
             </div>
 
 

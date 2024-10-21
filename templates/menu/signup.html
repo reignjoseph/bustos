@@ -4,7 +4,6 @@
         <form id="signupForm" class="signup-form" method="POST">
         <div class="signup-container">
             <h2>Sign Up As</h2>
-
             <div id="js-error-message" class="alert alert-danger alert-dismissible fade show" role="alert" style="text-align: center; display: none; padding-left: 2rem; padding-right: 2rem;">
                 <span id="js-error-text"></span>
                 <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="right: 0px; top: -15px; width: 0; height: 0; outline:none;"> -->
@@ -150,25 +149,79 @@ function displayDetails() {
     var password = document.getElementById("password");
     var terms = document.querySelector('input[name="terms"]');
 
-    // Check if all required fields are filled based on the selected role
-    if (selectedRole === "Jobseeker") {
-        if (name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === "" || !terms.checked) {
-            errorMessageDiv.style.display = "block";
-            errorMessageText.innerHTML = "Please complete all required<br>fields for Jobseeker.";
-            return; // Exit if validation fails
+    let errorMessages = [];
+
+    // Validate name and trigger default validation message
+    if (!name.checkValidity()) {
+        name.focus(); // Set focus on the name input
+        name.reportValidity(); // Trigger the default validation message
+        return; // Exit if name is invalid
+    }
+
+    // Validate email and trigger the default validation message
+    if (!email.checkValidity()) {
+        email.focus(); // Set focus on the email input
+        email.reportValidity(); // Trigger the default validation message
+        return; // Exit if email is invalid
+    }
+
+    // Validate password and trigger default validation message
+    if (!password.checkValidity()) {
+        password.focus(); // Set focus on the password input
+        password.reportValidity(); // Trigger the default validation message
+        return; // Exit if password is invalid
+    } else {
+        const minLength = 8;
+        const maxLength = 30;
+        const upperCasePattern = /[A-Z]/; // At least one uppercase letter
+        const lowerCasePattern = /[a-z]/; // At least one lowercase letter
+        const numberPattern = /[0-9]/; // At least one number
+        const specialCharPattern = /[!@#$%^&*(),.?":{}|<>]/; // At least one special character
+
+        // Check for password length
+        if (password.value.length < minLength || password.value.length > maxLength) {
+            errorMessages.push(`Password must be between ${minLength} and ${maxLength} characters.`);
         }
-    } else if (selectedRole === "Employer") {
-        // Only check the fields that are required for Employer
-        if (name.value.trim() === "" || email.value.trim() === "" || password.value.trim() === "" || !terms.checked) {
-            errorMessageDiv.style.display = "block";
-            errorMessageText.innerHTML = "Please complete all required<br>fields for Employer.";
-            return; // Exit if validation fails
+
+        // Check for uppercase letter
+        if (!upperCasePattern.test(password.value)) {
+            errorMessages.push("Password must include at least one uppercase letter.");
         }
+
+        // Check for lowercase letter
+        if (!lowerCasePattern.test(password.value)) {
+            errorMessages.push("Password must include at least one lowercase letter.");
+        }
+
+        // Check for number
+        if (!numberPattern.test(password.value)) {
+            errorMessages.push("Password must include at least one number.");
+        }
+
+        // Check for special character
+        if (!specialCharPattern.test(password.value)) {
+            errorMessages.push("Password must include at least one special character.");
+        }
+    }
+
+    // Validate terms and trigger default validation message
+    if (!terms.checked) {
+        terms.focus(); // Set focus on the terms checkbox
+        alert("You must agree to the Terms of Service."); // Custom alert for the terms
+        return; // Exit if terms are not agreed upon
+    }
+
+    // If there are error messages, display them
+    if (errorMessages.length > 0) {
+        errorMessageDiv.style.display = "block";
+        errorMessageText.innerHTML = errorMessages.join('<br>'); // Display the combined error messages with line breaks
+        return; // Exit if validation fails
     }
 
     // Hide the error message div if validation passes
     errorMessageDiv.style.display = "none";
     toggleFormsDisplay();
+
     // Perform the AJAX call to check email
     $.ajax({
         url: "/check_email",
@@ -195,8 +248,6 @@ function displayDetails() {
 
 
 
-
-
 </script>
 
 <script>
@@ -213,33 +264,23 @@ function displayDetails() {
         }
     }
 
-    function validateAndSubmit() {
+function validateAndSubmit() {
     var form = document.getElementById("signupForm");
-    var email = form.querySelector("input[name='email']").value; // Get the email input value
-    var selectedRole = document.querySelector('input[name="role"]:checked').value; // Get the selected role (Jobseeker or Employer)
+    var email = form.querySelector("input[name='email']").value;
+    var selectedRole = document.querySelector('input[name="role"]:checked').value;
 
-    console.log("Starting email validation for:", email);
-    console.log("Selected role:", selectedRole);
-
-    // Perform AJAX request to check email
+    // Validate the business name input first
+    // Continue with the rest of the form submission process...
     $.ajax({
         url: "/check_email",
         method: "POST",
         data: { email: email },
         success: function(response) {
-            console.log("Email check response:", response);
-
             if (response.email_exists) {
                 alert("Email is already registered. Please use a different email.");
-                console.log("Email already exists. Aborting process.");
+                return;
             } else {
-                console.log("Email is valid. Proceeding with form validation.");
-
-                // Proceed if the email does not exist
                 if (form.checkValidity()) {
-                    console.log("Form is valid. Proceeding with account creation.");
-
-                    // Submit the form to /create_account
                     $.ajax({
                         url: "/create_account",
                         method: "POST",
@@ -247,22 +288,14 @@ function displayDetails() {
                         contentType: false,
                         processData: false,
                         success: function(createAccountResponse) {
-                            console.log("Account created successfully. User ID:", createAccountResponse.user_id);
-                            
-                            // Generate and upload the PDF based on the selected role
                             var pdfFilename = selectedRole === "Jobseeker" ? 'form-content-jobseeker.pdf' : 'form-content-employer.pdf';
                             var uploadUrl = selectedRole === "Jobseeker" ? '/insert_html2pdf_jobseeker' : '/insert_html2pdf_employer';
                             var formClass = selectedRole === "Jobseeker" ? '.form-container_registration_jobseeker' : '.form-container_registration_employer';
 
-                            // Pass the email for the PDF upload
                             generateAndUploadPDF(formClass, pdfFilename, uploadUrl, email).then(() => {
-                                console.log(selectedRole + " PDF generated and uploaded successfully.");
-
-                                // Call /signin after PDF upload
                                 window.location.href = "/signin"; // Redirect to signin
                             }).catch((error) => {
-                                alert("Error generating or uploading the " + selectedRole + " PDF. Please try again.");
-                                console.error("Error in " + selectedRole + " PDF process:", error);
+                                alert("Error generating or uploading the PDF. Please try again.");
                             });
                         },
                         error: function() {
@@ -270,17 +303,240 @@ function displayDetails() {
                         }
                     });
                 } else {
-                    console.log("Form validation failed.");
-                    form.reportValidity(); // Display form validation errors
+                    form.reportValidity(); // This will trigger any built-in HTML5 validation
+                    validateBusinessName();
+                    validateTradeName();
+                    validateAcronym();
+                    validateTaxIdentifier();
+                    validateLineOfBusinessIndustry();
+                    validateMobileNumber();
+                    validateOwnerName();
+                    validateContactName();
+                    validatePosition();
+                    validateFaxNumber();
+                    validateEmailAddress();
                 }
             }
         },
         error: function() {
-            alert("An error occurred while checking the email.");
-            console.error("Error during email validation.");
+            alert("Error checking email.");
         }
     });
 }
+
+
+function validateBusinessName() {
+    const businessNameGroup = document.getElementById('business_name_group');
+    const businessNameInput = businessNameGroup.querySelector('input[name="employer_business"]');
+                            
+    // Check if the input field is empty or invalid
+    if (!businessNameInput.checkValidity()) {
+        businessNameGroup.classList.add('error_background_color'); // Add error background if invalid
+    } else {
+        businessNameGroup.classList.remove('error_background_color'); // Remove error background if valid
+                            }
+}
+function validateTradeName() {
+        const tradeNameGroup = document.getElementById('trade_name_group');
+        const tradeNameInput = tradeNameGroup.querySelector('input[name="employer_trade"]');
+
+        if (!tradeNameInput.checkValidity()) {
+            tradeNameGroup.classList.add('error_background_color'); // Add red background if invalid
+            return false;
+        } else {
+            tradeNameGroup.classList.remove('error_background_color'); // Remove red background if valid
+            return true;
+        }
+    }
+function validateAcronym() {
+        const acronymGroup = document.getElementById('acronym_group');
+        const acronymInput = acronymGroup.querySelector('input[name="employer_acronym"]');
+
+        if (!acronymInput.checkValidity()) {
+            acronymGroup.classList.add('error_background_color'); // Add red background if invalid
+            return false;
+        } else {
+            acronymGroup.classList.remove('error_background_color'); // Remove red background if valid
+            return true;
+        }
+    }
+function validateTaxIdentifier() {
+    const taxIdentifierInput = document.querySelector('input[name="employer_tax_identifier_number"]'); // Get the input element
+    let taxIdentifierValue = taxIdentifierInput.value; // Get the input value
+
+    // Remove non-digit characters
+    const digitsOnly = taxIdentifierValue.replace(/\D/g, ''); // Keep only numbers
+
+    // Limit to 9 digits (for 11 characters including hyphens)
+    if (digitsOnly.length > 9) {
+        taxIdentifierValue = digitsOnly.slice(0, 9); // Keep only the first 9 digits
+    } else {
+        taxIdentifierValue = digitsOnly; // Use the current valid digits
+    }
+
+    // Format as nnn-nnn-nnn
+    if (taxIdentifierValue.length > 0) {
+        const formattedValue = taxIdentifierValue.replace(/(\d{3})(?=\d)/g, '$1-'); // Add hyphens
+        taxIdentifierInput.value = formattedValue.substring(0, 11); // Limit the input to 11 characters
+    } else {
+        taxIdentifierInput.value = ''; // Reset the input if no digits are present
+    }
+
+    // Check if the input is valid
+    if (taxIdentifierInput.value.length !== 11) {
+        document.getElementById('taxIdentifierver1').style.backgroundColor = 'lightcoral'; // Set error background color
+        return false;
+    }
+
+    // Reset background color of the parent label if valid
+    document.getElementById('taxIdentifierver1').style.backgroundColor = ''; 
+    return true;
+}
+function validateLineOfBusinessIndustry() {
+    const lineOfBusinessInput = document.querySelector('input[name="employer_line_of_business_industry"]'); // Get the input element
+    const lineOfBusinessContainer = document.getElementById('lineOfBusinessContainer'); // Get the div element
+    const lineOfBusinessValue = lineOfBusinessInput.value.trim(); // Get the trimmed input value
+
+    // Check if the input is empty
+    if (lineOfBusinessValue === "") {
+        lineOfBusinessInput.classList.add('error_background_color'); // Add error class to input
+        lineOfBusinessContainer.classList.add('error_background_color'); // Add error class to container
+        return false;
+    }
+
+    // Reset background color of the input and container if valid
+    lineOfBusinessInput.classList.remove('error_background_color'); 
+    lineOfBusinessContainer.classList.remove('error_background_color'); 
+    return true;
+}
+function validateMobileNumber() {
+    const input = document.getElementById('employer_mobile_number'); // Get the input element
+    let digits = input.value.replace(/\D/g, ''); // Keep only digits, excluding '+'
+
+    // Ensure the input always starts with +63
+    if (!input.value.startsWith('+63')) {
+        digits = '63' + digits; // Add '63' to the digits if it is not there
+    }
+
+    // Limit to exactly 10 digits after the +63 (12 digits total)
+    if (digits.length > 12) {
+        digits = digits.slice(0, 12); // Trim to 12 digits (including the '63')
+    }
+
+    // Update the input field with the +63 prefix and only digits
+    input.value = '+63' + digits.slice(2); // Ensure the input starts with +63
+
+    // Check for validity (exactly 12 digits, including the +63)
+    const label = document.getElementById('employer_mobile_number_container'); // Get the label element
+    const isValid = digits.length === 12; // Check if it has exactly 12 digits (including '63')
+
+    if (!isValid) { // If less than 12 digits, it's invalid
+        input.classList.add('error_background_color'); // Add error background to input
+        label.classList.add('error_background_color'); // Add error background to label
+    } else {
+        input.classList.remove('error_background_color'); // Remove error background from input if valid
+        label.classList.remove('error_background_color'); // Remove error background from label if valid
+    }
+
+    return isValid; // Return true if valid, false otherwise
+}
+function validateOwnerName() {
+        const input = document.getElementById('employer_president'); // Get the input element
+        const namePattern = /^[A-Za-z\s]+$/; 
+        const parentDiv = document.getElementById('nameofownercontainer'); // Get the parent div
+
+        if (!namePattern.test(input.value)) { // If the input doesn't match the pattern
+            input.classList.add('error_background_color'); // Add error background to input
+            parentDiv.classList.add('error_background_color'); // Add error background to the parent div
+        } else {
+            input.classList.remove('error_background_color'); // Remove error background if valid
+            parentDiv.classList.remove('error_background_color'); // Remove error background from parent div if valid
+        }
+    }
+function validateContactName() {
+        const input = document.getElementById('employer_contact'); // Get the input element
+        const namePattern = /^[A-Za-z\s]+$/; 
+        const parentDiv = document.getElementById('contactpersoncontainer'); // Get the parent div
+
+        if (!namePattern.test(input.value)) { // If the input doesn't match the pattern
+            input.classList.add('error_background_color'); // Add error background to input
+            parentDiv.classList.add('error_background_color'); // Add error background to the parent div
+        } else {
+            input.classList.remove('error_background_color'); // Remove error background if valid
+            parentDiv.classList.remove('error_background_color'); // Remove error background from parent div if valid
+        }
+    }
+function validatePosition() {
+        const input = document.getElementById('employer_position'); // Get the input element
+        const namePattern = /^[A-Za-z\s]+$/; 
+        const parentDiv = document.getElementById('positioncontainer'); // Get the parent div
+
+        if (!namePattern.test(input.value)) { // If the input doesn't match the pattern
+            input.classList.add('error_background_color'); // Add error background to input
+            parentDiv.classList.add('error_background_color'); // Add error background to the parent div
+        } else {
+            input.classList.remove('error_background_color'); // Remove error background if valid
+            parentDiv.classList.remove('error_background_color'); // Remove error background from parent div if valid
+        }
+    }
+function validateFaxNumber() {
+        const input = document.getElementById('employer_fax_number'); // Get the input element
+        let digits = input.value.replace(/\D/g, ''); // Keep only digits
+
+        // Limit to exactly 10 digits for validation
+        if (digits.length > 10) {
+            digits = digits.slice(0, 10); // Trim to 10 digits
+        }
+
+        // Update the input field with the cleaned digits
+        input.value = digits;
+
+        // Check for validity (exactly 10 digits)
+        const label = document.getElementById('fax_number_container'); // Get the label element
+        const isValid = digits.length === 10; // Check if it has exactly 10 digits
+
+        if (!isValid) { // If less than 10 digits, it's invalid
+            input.classList.add('error_background_color'); // Add error background to input
+            label.classList.add('error_background_color'); // Add error background to container
+        } else {
+            input.classList.remove('error_background_color'); // Remove error background from input if valid
+            label.classList.remove('error_background_color'); // Remove error background from container if valid
+        }
+
+        return isValid; // Return true if valid, false otherwise
+    }
+function validateEmailAddress() {
+        const input = document.getElementById('employer_email_address'); // Get the input element
+        const label = document.getElementById('employer_email_address_container'); // Get the label element
+
+        const isValid = input.checkValidity(); // Use the built-in email validation
+
+        if (!isValid) { // If the email format is invalid
+            input.classList.add('error_background_color'); // Add error background to input
+            label.classList.add('error_background_color'); // Add error background to container
+        } else {
+            input.classList.remove('error_background_color'); // Remove error background from input if valid
+            label.classList.remove('error_background_color'); // Remove error background from container if valid
+        }
+
+        return isValid; // Return true if valid, false otherwise
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function generateAndUploadPDF(elementSelector, filename, uploadUrl, email) {

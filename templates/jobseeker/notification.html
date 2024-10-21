@@ -1,8 +1,20 @@
 <!-- Notification Modal -->
 <div id="notificationModal" class="modal-jobseeker-notification">
     <div class="modal-notification-content">
-        <h2>Notification</h2>
+        <h2 style="display: flex;">Notification &nbsp;&nbsp;<img src="static/images/archive.png" width="40px" height="40px" onclick="openArchivedContainer()"></h2>
         <div class="notifications-container"></div>
+
+<!-- Modal Structure -->
+<div id="archivedModal" class="modal-archive">
+    <div class="modal-content-archive">
+        <span class="close-archive" onclick="closeArchivedContainer()">&times;</span>
+        <h2>Archived Notifications</h2>
+        <!-- Notifications will be injected here -->
+        <div id="archivedNotificationsContainer"></div>
+    </div>
+</div>
+        
+
 <div class="modal fade" id="notificationJobDetailsModal" tabindex="-1" aria-labelledby="notificationJobDetailsLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -55,7 +67,168 @@
     .no-scroll {
         overflow: hidden;
     }
+    /* The Modal (background) */
+.modal-archive {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content-archive {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; /* Adjust as needed */
+}
+
+/* Close Button */
+.close-archive {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-archive:hover,
+.close-archive:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
 </style>
+
+
+
+
+
+
+<script>
+// Open Modal
+function checkSession(callback) {
+    $.ajax({
+        url: '/check_session',  // You can create this route to check session status
+        type: 'GET',
+        success: function(response) {
+            callback(true);
+        },
+        error: function() {
+            callback(false);
+        }
+    });
+}
+
+function openArchivedContainer() {
+    checkSession(function(isLoggedIn) {
+        if (!isLoggedIn) {
+            console.error('User is not logged in.');
+            return; // Or redirect to login page
+        }
+
+        document.getElementById('archivedModal').style.display = 'block';
+
+        // Use Ajax to fetch hidden notifications
+        $.ajax({
+            url: '/fetch_all_hidden_jobseeker_notification',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    return;
+                }
+
+                const container = document.getElementById('archivedNotificationsContainer');
+                container.innerHTML = ''; // Clear previous content
+
+                if (data.notifications.length === 0) {
+                    container.innerHTML = '<p>No archived notifications found.</p>';
+                } else {
+                    // Append notifications with the specified HTML structure
+                    data.notifications.forEach(notif => {
+    const notificationDiv = document.createElement('div');
+    notificationDiv.className = 'notification-notification';
+    notificationDiv.id = `notification-${notif.NotifID}`;
+    notificationDiv.innerHTML = `
+        <img src="/static/images/unarchive.png" style="    float: right;position: relative; place-self: end;" width="30px" onclick="unarchiveNotification(${notif.NotifID})">
+        <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
+            <div class="profile_notification">
+                <img src="${notif.profile_picture}" class="profile-picture-small" alt="Employer Profile Picture">
+            </div>
+            <div class="notification-content_notification" onclick="showNotificationJobDetails(${notif.Job_ID})">
+                <div class="fname_notification">${notif.employer_fname}</div>
+                <div class="text_notification">${notif.text}</div>
+                <div class="time_notification" data-time="${notif.date_created}"></div>
+            </div>
+        </div>`;
+    container.appendChild(notificationDiv);
+});
+
+                }
+            },
+            error: function(error) {
+                console.error('Error fetching hidden notifications:', error);
+            }
+        });
+    });
+}
+
+
+// Close Modal
+function closeArchivedContainer() {
+    document.getElementById('archivedModal').style.display = 'none';
+}
+
+// Example function to handle unarchiving (adjust logic as needed)
+function unarchiveNotification(notifID) {
+    // Log the action
+    console.log('Unarchiving notification with ID:', notifID);
+    
+    // Send the POST request to unarchive the notification
+    $.ajax({
+        url: '/unarchive_jobseeker_notifications',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ NotifID: notifID }), // Pass the notification ID
+        success: function(response) {
+            console.log(response.success); // Log the success message
+            // Optionally, remove the notification from the modal or update the UI
+            const notifElement = document.getElementById(`notification-${notifID}`);
+            if (notifElement) {
+                notifElement.remove(); // Remove the notification from the DOM
+            }
+        },
+        error: function(error) {
+            console.error('Error unarchiving notification:', error.responseJSON.error);
+        }
+    });
+}
+
+
+// Close modal if the user clicks anywhere outside the modal content
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
@@ -139,7 +312,7 @@ function fetchNotifications() {
             notificationDiv.className = 'notification_notification';
             notificationDiv.id = `notification-${notif.NotifID}`;
             notificationDiv.innerHTML = `
-                <img src="/static/images/close.png" style="position: relative; place-self: end;" width="30px" onclick="close_jobseeker_notification_popup(this)">
+                <img src="/static/images/archive.png" style="position: relative; place-self: end;" width="30px" onclick="close_jobseeker_notification_popup(this)">
                 <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
                     <div class="profile_notification">
                         <img src="${notif.profile_picture}" class="profile-picture-small" alt="Employer Profile Picture">
@@ -153,6 +326,16 @@ function fetchNotifications() {
             `;
             notificationsContainer.appendChild(notificationDiv);
         });
+
+        // If no notifications are fetched, display the default empty notification message
+        if (fetchedNotificationIDs.length === 0) {
+            const emptyNotificationDiv = document.createElement('div');
+            emptyNotificationDiv.id = 'empty_notification_container';
+            emptyNotificationDiv.innerHTML = `
+                <h4>No new notification messages have been received</h4>
+            `;
+            notificationsContainer.appendChild(emptyNotificationDiv);
+        }
 
         // Log the fetched Notification IDs
         console.log("Fetched Notification IDs:", fetchedNotificationIDs);

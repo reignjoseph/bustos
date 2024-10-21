@@ -8,7 +8,8 @@
         </button>
         
         <!-- Status Message -->
-        <h2 class="text-left font-bold">Status</h2>
+        <h2 class="text-left font-bold" style="display: flex;">Status  &nbsp;&nbsp;<img src="static/images/archive.png" width="40px" height="40px" onclick="openArchivedStatusContainer()"></h2>
+        
         <div class="status-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
             <!-- Dynamic status cards will be injected here -->
         </div>
@@ -22,94 +23,122 @@
             document.addEventListener('DOMContentLoaded', function() {
                 fetchApplicationStatus();
                 // Refresh status data every 60 seconds
-                setInterval(fetchApplicationStatus, 10000);
+                // setInterval(fetchApplicationStatus, 10000);
             });
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             function fetchApplicationStatus() {
-                $.ajax({
-                    url: '/retrieve_application_status',
-                    method: 'GET',
-                    success: function(data) {
-                        console.log("Received status data: ", data);
-        
-                        let newStatus = {}; // To store new statuses
-                        let statusChanged = false; // To check if the status has changed
-        
-                        let statusHtml = '';
-        
-                        // Create a style element for the keyframes dynamically
-                        const styleSheet = document.createElement("style");
-                        document.head.appendChild(styleSheet);
-        
-                        data.forEach(status => {
-                            const relativeTime = moment(status.date_posted).fromNow();
-        
-                            let progressLevel = 0;
-                            if (status.status_type === 'Approved') progressLevel = 25;
-                            else if (status.status_type === 'Scheduled') progressLevel = 50;
-                            else if (status.status_type === 'Interviewed') progressLevel = 75;
-                            else if (status.status_type === 'Passed') progressLevel = 100;
-        
-                            // Store the current status in the newStatus object
-                            newStatus[status.status_id] = progressLevel;
-        
-                            // Compare with lastStatus, and if they differ, set statusChanged to true
-                            if (lastStatus[status.status_id] !== progressLevel) {
-                                statusChanged = true;
-                            }
-        
-                            const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
-        
-                            styleSheet.sheet.insertRule(`
-                                @keyframes ${uniqueAnimationName} {
-                                    0% { width: 0%; }
-                                    100% { width: ${progressLevel}%; }
-                                }
-                            `, styleSheet.sheet.cssRules.length);
-        
-                            statusHtml += `
-                                <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                                    <img class="close-img" src="/static/images/close.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close">
-                                    <div style="display: grid; align-items: flex-start; grid-template-columns: min-content;">
-                                        <div class="profile-picture" style="overflow: hidden; border: 1px solid black; display: flex; border-radius: 50%; width: 5rem; height: 5rem;">
-                                            <img src="${status.profile_picture}" alt="Profile">
-                                        </div>
-                                        <div class="status-info" style="margin: 0px 20px; display: flex; flex-direction: column; grid-column: 2;">
-                                            <div class="employer-name" style="font-weight: bold;color:black;">${status.employer_name}</div>
-                                            <div class="status-description" style="color: #000000; margin-top: 10px;">${status.status_description}</div>
-                                            <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
-                                        </div>
-                                    </div>
-                                    <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
-                                        <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
-                                            <span style="color: white; display: block; text-align: center; z-index: 2;transform:translate(0.1vw,-0.1vw);">
-                                                ${progressLevel}% ${status.status_type}
-                                            </span>
-                                        </span>
-                                    </div>
-                                </div>
-                            `;
-                        });
-        
-                        document.querySelector('.status-container').innerHTML = statusHtml;
-                        updateRelativeTimes();
-        
-                        // If any status changed, play the notification sound
-                        if (statusChanged) {
-                            playNotificationSound();
-                        }
-        
-                        // Update lastStatus to reflect the new status and store it in localStorage
-                        localStorage.setItem('lastStatus', JSON.stringify(newStatus));
-                        lastStatus = { ...newStatus };
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error fetching status data: " + error);
-                    }
-                });
+    $.ajax({
+        url: '/retrieve_application_status',
+        method: 'GET',
+        success: function(data) {
+            console.log("Received status data: ", data);
+
+            // Check if there is no data
+            if (!data || data.length === 0) {
+                console.log("No application statuses found."); // Log a message for no data
+                document.querySelector('.status-container').innerHTML = '<h6>There are no fetched applications.</h6>'; // Display empty message
+                return; // Exit the function early
             }
-        
-            function updateRelativeTimes() {
+            
+
+            let newStatus = {}; // To store new statuses
+            let statusChanged = false; // To check if the status has changed
+            let statusHtml = '';
+
+            // Create a style element for the keyframes dynamically
+            const styleSheet = document.createElement("style");
+            document.head.appendChild(styleSheet);
+
+            data.forEach(status => {
+                const relativeTime = moment(status.date_posted).fromNow();
+                let progressLevel = 0;
+
+                if (status.status_type === 'Approved') progressLevel = 25;
+                else if (status.status_type === 'Scheduled') progressLevel = 50;
+                else if (status.status_type === 'Interviewed') progressLevel = 75;
+                else if (status.status_type === 'Passed') progressLevel = 100;
+
+                // Store the current status in the newStatus object
+                newStatus[status.status_id] = progressLevel;
+
+                // Compare with lastStatus, and if they differ, set statusChanged to true
+                if (lastStatus[status.status_id] !== progressLevel) {
+                    statusChanged = true;
+                }
+
+                const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
+                styleSheet.sheet.insertRule(`
+                    @keyframes ${uniqueAnimationName} {
+                        0% { width: 0%; }
+                        100% { width: ${progressLevel}%; }
+                    }
+                `, styleSheet.sheet.cssRules.length);
+
+                statusHtml += `
+                    <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <img class="close-img" src="/static/images/archive.png" onclick="hidePopUp('${status.applicant_id}', '${status.status_id}')" alt="Close">
+                        <div style="display: grid; align-items: flex-start; grid-template-columns: min-content;">
+                            <div class="profile-picture" style="overflow: hidden; border: 1px solid black; display: flex; border-radius: 50%; width: 5rem; height: 5rem;">
+                                <img src="${status.profile_picture}" alt="Profile">
+                            </div>
+                            <div class="status-info" style="margin: 0px 20px; display: flex; flex-direction: column; grid-column: 2;">
+                                <div class="employer-name" style="font-weight: bold;color:black;">${status.employer_name}</div>
+                                <div class="status-description" style="color: #000000; margin-top: 10px;">${status.status_description}</div>
+                                <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
+                            </div>
+                        </div>
+                        <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
+                            <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
+                                <span style="color: white; display: block; text-align: center; z-index: 2;transform:translate(0.1vw,-0.1vw);">
+                                    ${progressLevel}% ${status.status_type}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.querySelector('.status-container').innerHTML = statusHtml;
+            updateRelativeTimes();
+
+            // If any status changed, play the notification sound
+            if (statusChanged) {
+                playNotificationSound();
+            }
+
+            // Update lastStatus to reflect the new status and store it in localStorage
+            localStorage.setItem('lastStatus', JSON.stringify(newStatus));
+            lastStatus = { ...newStatus };
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching status data: " + error);
+        }
+    });
+}
+
+
+function updateRelativeTimes() {
                 document.querySelectorAll('.status-time').forEach(element => {
                     const time = element.getAttribute('data-time');
                     element.textContent = moment(time).fromNow();
@@ -127,11 +156,13 @@
                     success: function(response) {
                         console.log("Popup status updated:", response);
                         $(`#status-card-${statusId}`).remove();
+                        fetchApplicationStatus();
                     },
                     error: function(xhr, status, error) {
                         console.error("Error updating popup status:", error);
                     }
                 });
+                 fetchApplicationStatus();
             }
         
             function playNotificationSound() {
@@ -143,9 +174,202 @@
     </div>
 </div>
 
+<style>
+/* Modal Background */
+.jobseeker_status_archived_modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
 
+/* Modal Content */
+.jobseeker_status_archived_modal_content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    border-radius: 8px; /* Rounded corners */
+}
+
+/* Close Button */
+.jobseeker_status_archived_close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.jobseeker_status_archived_close:hover,
+.jobseeker_status_archived_close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Title */
+.jobseeker_status_archived_title {
+    margin: 0; /* Remove margin */
+    padding-bottom: 10px; /* Space below title */
+    font-size: 24px; /* Title font size */
+    color: #333; /* Title color */
+}
+
+/* Container for Archived Status */
+#jobseeker_status_archived_container {
+    margin-top: 10px; /* Space above the container */
+}    
+.archive_status_container_frame {
+    background-color: #fefefe; /* Match the modal background color */
+    margin: 2% auto; /* Center the modal */
+    padding: 20px; /* Same padding */
+    border: 1px solid #888; /* Same border */
+    width: max-content; /* Same width */
+    border-radius: 8px; /* Same rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Same shadow effect */
+}
+</style>
+
+
+<div id="archivedStatusModal" class="modal" style="display: none;">
+    <div class="archive_status_container_frame">
+        <span class="jobseeker_status_archived_close" onclick="closeArchivedStatusContainer()">×</span>
+        <h3 class="jobseeker_status_archived_title">Archived Status</h3>
+        <div id="jobseeker_status_archived_container"></div> <!-- This will hold the status content -->
+    </div>
+</div>
 
 <script>
+
+// Function to open the archived status container/modal
+
+function fetchArchivedStatus() {
+    $.ajax({
+        url: '/fetch_all_hidden_status',
+        method: 'GET',
+        success: function(data) {
+            console.log("Fetched Archived Statuses: ", data);
+            const container = document.getElementById('jobseeker_status_archived_container');
+            if (!data || data.statuses.length === 0) {
+                container.innerHTML = '<h6>There are no fetched applications.</h6>';
+                return; // Exit if no data
+            }
+
+            // Process and display the statuses
+            let statusesHtml = '';
+            data.statuses.forEach(status => {
+    const relativeTime = moment(status.date_posted).fromNow(); // Assuming you still want to display relative time
+    let progressLevel = 0; // Initialize progress level as needed (adjust based on your logic)
+
+    // Example logic for progressLevel based on status_type
+    if (status.status_type === 'Approved') progressLevel = 25;
+    else if (status.status_type === 'Scheduled') progressLevel = 50;
+    else if (status.status_type === 'Interviewed') progressLevel = 75;
+    else if (status.status_type === 'Passed') progressLevel = 100;
+
+    const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
+    
+    statusesHtml += `
+        <div class="status-card" id="status-card-${status.status_id}" style="display: flex; flex-direction: column; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+            <img class="close-img" src="/static/images/unarchive.png" onclick="unarchiveTheStatus(${status.status_id})" alt="Unarchive">
+            <div style="display: grid; align-items: flex-start; grid-template-columns: min-content;">
+                <div class="profile-picture" style="overflow: hidden; border: 1px solid black; display: flex; border-radius: 50%; width: 5rem; height: 5rem;">
+                    <img src="${status.profile_picture}" alt="Profile">
+                </div>
+                <div class="status-info" style="margin: 0px 20px; display: flex; flex-direction: column; grid-column: 2;">
+                    <div class="employer-name" style="font-weight: bold;color:black;">${status.employer_name}</div>
+                    <div class="status-description" style="color: #000000; margin-top: 10px;">${status.status_description}</div>
+                    <div class="status-time" style="color: black; font-size: 14px;" data-time="${status.date_posted}">${relativeTime}</div>
+                </div>
+            </div>
+            <div class="loading-bar" style="margin-top: 10px; height: 20px; width: 100%; background: #accbe4; border-radius: 50px; overflow: hidden;">
+                <span class="animate-bar" style="display: block; height: 100%; border-radius: 50px; background-image: linear-gradient(to bottom, #fff, #2df364 30%); width: ${progressLevel}%; animation: ${uniqueAnimationName} 2s ease-in-out;">
+                    <span style="color: white; display: block; text-align: center; z-index: 2;transform:translate(0.1vw,-0.1vw);">
+                        ${progressLevel}% ${status.status_type}
+                    </span>
+                </span>
+            </div>
+        </div>
+    `;
+});
+
+
+            container.innerHTML = statusesHtml; // Populate the container with status HTML
+        },
+        error: function(error) {
+            console.error("Error fetching archived statuses: ", error);
+        }
+    });
+}
+
+// Call this function to open the modal and fetch statuses
+function openArchivedStatusContainer() {
+    fetchArchivedStatus(); // Fetch the statuses
+    document.getElementById('archivedStatusModal').style.display = 'block'; // Show the modal
+}
+
+// Function to close the modal
+function closeArchivedStatusContainer() {
+    document.getElementById('archivedStatusModal').style.display = 'none'; // Hide the modal
+    fetchArchivedStatus();
+}
+
+
+
+// Close the modal if the user clicks anywhere outside of it
+window.onclick = function(event) {
+    const archivedStatusModal = document.getElementById('archivedStatusModal');
+    if (event.target === archivedStatusModal) {
+        archivedStatusModal.style.display = 'none'; // Hide the modal
+    }
+    const archivedModal = document.getElementById('archivedModal');
+    if (event.target === archivedModal) {
+        archivedModal.style.display = 'none';
+    }
+    const prompt_apply_now = document.getElementById('prompt_apply_now');
+    console.log("Clicked element:", event.target); // Log the clicked element
+    if (event.target === prompt_apply_now) {
+        closeApplyNowPrompt(); // Close the modal if the background is clicked
+    }
+};
+
+
+
+
+function unarchiveTheStatus(statusID, applicantID) {
+    console.log('Unarchiving status with ID:', statusID, 'for applicant:', applicantID);
+    
+    // Send the POST request to unarchive the status
+    $.ajax({
+        url: '/unarchive_status',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ status_id: statusID }), // Pass the status ID
+        success: function(response) {
+            console.log(response.success); // Log the success message
+            // Optionally, remove the status card from the modal or update the UI
+            const statusElement = document.getElementById(`status-card-${statusID}`);
+            if (statusElement) {
+                statusElement.remove(); // Remove the status from the DOM
+            }
+            fetchApplicationStatus();
+        },
+        error: function(error) {
+            console.error('Error unarchiving status:', error.responseJSON.error);
+        }
+        
+    });
+}
+
+
+
 // Function to open the status modal
 function openStatus() {
     document.getElementById('modal-status').style.display = 'block';
@@ -165,5 +389,6 @@ document.getElementById('modal-status').addEventListener('click', function(event
         document.body.classList.remove('hidden-scroll'); // Re-enable scrolling on body
     }
 });
+
 
 </script>

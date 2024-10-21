@@ -49,6 +49,206 @@ def get_db_connection():
 
 
 
+
+
+
+
+
+
+
+
+@app.route('/fetch_all_hidden_jobseeker_notification', methods=['GET'])
+def fetch_hidden_notifications():
+    try:
+        # Check if user_id is in session
+        if 'user_id' not in session:
+            return jsonify({'error': 'Not logged in'}), 401  # Unauthorized
+
+        user_id = session['user_id']  # Get the jobseeker's ID from the session
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Query to fetch all notifications for the specific jobseeker where popup is false
+        cursor.execute('''
+            SELECT *, u.profile AS employer_profile FROM jobseeker_notifications jn
+            JOIN users u ON jn.employer_id = u.User_ID
+            WHERE jn.jobseeker_id = ? AND jn.popup = "false"
+        ''', (user_id,))
+
+        notifications = cursor.fetchall()
+        conn.close()
+
+        # Prepare the notifications list with all columns
+        notifications_list = [{
+            'NotifID': notification['NotifID'],
+            'jobseeker_id': notification['jobseeker_id'],
+            'Job_ID': notification['Job_ID'],
+            'employer_id': notification['employer_id'],
+            'profile_picture': notification['employer_profile'] if notification['employer_profile'] else '/static/images/employer-images/avatar.png',
+            'employer_fname': notification['employer_fname'],
+            'text': notification['text'],
+            'company': notification['company'],
+            'job_title': notification['job_title'],
+            'popup': notification['popup'],
+            'date_created': notification['date_created']
+        } for notification in notifications]
+
+        # Print the number of fetched notifications and their details to the console for debugging
+        print(f"Fetched Archived Notifications: {len(notifications_list)} items")
+        for notif in notifications_list:
+            print(f"NotifID: {notif['NotifID']}, Employer Name: {notif['employer_fname']}, Profile Picture: {notif['profile_picture']}")
+
+        # Return the notifications or an empty list if none found
+        return jsonify({'notifications': notifications_list})
+
+    except Exception as e:
+        print(f"Error fetching hidden notifications: {e}")
+        return jsonify({'error': 'An error occurred while retrieving notifications'}), 500
+@app.route('/unarchive_jobseeker_notifications', methods=['POST'])
+def unarchive_notification():
+    # Get the notification ID from the request
+    notif_id = request.json.get('NotifID')
+    
+    # Ensure a valid notification ID is provided
+    if not notif_id:
+        return jsonify({'error': 'Notification ID is required'}), 400
+    
+    # Get the user_id from session
+    user_id = session.get('user_id')  # Use user_id instead of jobseeker_id
+    
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401  # 401 Unauthorized
+
+    # Connect to the database
+    conn = get_db_connection()
+
+    # Update the popup field to an empty string for the specified notification ID
+    cursor = conn.cursor()
+    cursor.execute(
+        'UPDATE jobseeker_notifications SET popup = "" WHERE NotifID = ? AND jobseeker_id = ?',
+        (notif_id, user_id)  # Use user_id for the query
+    )
+    
+    # Check if any row was updated
+    if cursor.rowcount == 0:
+        return jsonify({'error': 'No notification found or already unarchived'}), 404
+    
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': 'Notification unarchived successfully'})
+
+
+
+
+
+@app.route('/fetch_all_hidden_status', methods=['GET'])
+def fetch_all_hidden_status():
+    try:
+        # Check if user_id is in session
+        if 'user_id' not in session:
+            print("User is not logged in.")
+            return jsonify({'error': 'Not logged in'}), 401  # Unauthorized
+
+        user_id = session['user_id']  # Get the jobseeker's ID from the session
+        print(f"User ID: {user_id}")  # Print the user ID for debugging
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        print("Database connection established.")
+
+        # Query to fetch detailed information for hidden statuses
+        cursor.execute('''
+            SELECT a.status_id, a.applicant_id, a.job_id, a.jobseeker_id, a.employer_id, a.status_description, 
+                   a.status_type, a.date_posted, u.profile AS profile_picture, u.fname AS employer_name
+            FROM application_status a
+            JOIN users u ON a.employer_id = u.User_ID
+            WHERE jobseeker_id = ? AND jobseeker_popup = "false"
+        ''', (user_id,))  # Filter by jobseeker_id
+
+        statuses = cursor.fetchall()
+        conn.close()
+
+        # Prepare the statuses list
+        statuses_list = []
+        for row in statuses:
+            profile_picture = row[8]  # Profile picture URL
+            if profile_picture:
+                profile_url = url_for('static', filename=f'images/employer-images/{profile_picture}')
+            else:
+                profile_url = url_for('static', filename='images/employer-images/woman.png')
+
+            statuses_list.append({
+                'status_id': row[0],
+                'applicant_id': row[1],
+                'job_id': row[2],
+                'jobseeker_id': row[3],
+                'employer_id': row[4],
+                'status_description': row[5],
+                'status_type': row[6],
+                'date_posted': row[7],
+                'profile_picture': profile_url,
+                'employer_name': row[9]
+            })
+
+        # Print the fetched statuses for debugging
+        print(f"Fetched Archived Statuses: {len(statuses_list)} items")
+        for status in statuses_list:
+            print(f"Status ID: {status['status_id']}, Employer Name: {status['employer_name']}, Description: {status['status_description']}")
+
+        # Return the statuses or an empty list if none found
+        return jsonify({'statuses': statuses_list})
+
+    except Exception as e:
+        print(f"Error fetching hidden statuses: {e}")
+        return jsonify({'error': 'An error occurred while retrieving statuses'}), 500
+
+
+@app.route('/unarchive_status', methods=['POST'])
+def unarchive_status():
+    # Get the status ID from the request
+    status_id = request.json.get('status_id')
+
+    # Ensure a valid status ID is provided
+    if not status_id:
+        return jsonify({'error': 'Status ID is required'}), 400
+
+    # Connect to the database
+    conn = get_db_connection()
+
+    # Update the jobseeker_popup field to an empty string for the specified status ID
+    conn.execute(
+        'UPDATE application_status SET jobseeker_popup = "" WHERE status_id = ?',
+        (status_id,)  # Only status_id is used for the query
+    )
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': 'Status unarchived successfully'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/insert_html2pdf_jobseeker', methods=['POST'])
 def insert_html2pdf_jobseeker():
     if 'pdf' not in request.files:
@@ -62,11 +262,34 @@ def insert_html2pdf_jobseeker():
         return redirect('/signin')
 
     if file:
-        # Secure the filename and prepare for saving
+        # Secure the filename
         filename = secure_filename('form-content-jobseeker.pdf')
         file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
 
-        # Check if file already exists and rename if necessary
+        # Connect to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Assuming you have the user's email in the request data
+        user_email = request.form.get('email')  # Get the email from the form data
+
+        if not user_email:
+            print("Email not provided in the request.")
+            return redirect('/signin')
+
+        # Check if a filename already exists for the user in the `users` table
+        cursor.execute('''
+            SELECT pdf_form FROM users WHERE email = ?
+        ''', (user_email,))
+        existing_filename = cursor.fetchone()
+
+        # If a filename exists in the table but the file is missing from the folder, generate a new one
+        if existing_filename and existing_filename[0]:
+            existing_file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], existing_filename[0])
+            if not os.path.exists(existing_file_path):
+                print(f"File {existing_filename[0]} is missing, generating a new filename.")
+
+        # If the file exists or no existing filename, proceed with checking the folder and renaming logic
         base, extension = os.path.splitext(filename)
         counter = 1
         new_filename = filename  # Initialize new_filename
@@ -80,17 +303,7 @@ def insert_html2pdf_jobseeker():
         file.save(file_path)
         print(f"PDF saved to {file_path}")
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Assuming you have the user's email in the request data
-        user_email = request.form.get('email')  # Get the email from the form data
-
-        if not user_email:
-            print("Email not provided in the request.")
-            return redirect('/signin')
-
-        # Update the `pdf_form` field in the `users` table based on email
+        # Update the `pdf_form` field in the `users` table with the new filename
         cursor.execute('''
             UPDATE users
             SET pdf_form = ?
@@ -164,7 +377,7 @@ def retrieve_application_status():
 
         print("Database connection established.")
 
-        # Query to get application status and related information where 'jobseeker_popup' is empty or null
+        # Query to get application status and related information
         cursor.execute('''  
             SELECT a.status_id, a.applicant_id, a.job_id, a.jobseeker_id, a.employer_id, a.status_description, 
                    a.status_type, a.company, u.profile, u.fname, a.date_posted
@@ -174,29 +387,14 @@ def retrieve_application_status():
         ''', (user_id,))  # Filter by jobseeker_id
 
         status_list = cursor.fetchall()
-
-        # Print the retrieved data
-        if not status_list:
-            print("No data was found.")  # Print message when no records are found
-        else:
-            print(f"Fetched {len(status_list)} records from application_status.")
-            for row in status_list:
-                print("Record details:")
-                print(f"status_id: {row[0]}")
-                print(f"applicant_id: {row[1]}")
-                print(f"job_id: {row[2]}")
-                print(f"jobseeker_id: {row[3]}")
-                print(f"employer_id: {row[4]}")
-                print(f"status_description: {row[5]}")
-                print(f"status_type: {row[6]}")
-                print(f"company: {row[7]}")
-                print(f"profile_picture: {row[8]}")
-                print(f"employer_name: {row[9]}")
-                print(f"date_posted: {row[10]}")
-
         conn.close()
 
-        # Prepare the status data with the profile picture URL and date_posted
+        # Check if no records were found
+        if not status_list:
+            print("No data was found.")  # Print message when no records are found
+            return jsonify([])  # Return an empty list
+
+        # Prepare the status data
         results = []
         for row in status_list:
             profile_picture = row[8]
@@ -206,7 +404,6 @@ def retrieve_application_status():
             else:
                 profile_url = url_for('static', filename='images/employer-images/woman.png')
 
-            # Add the date_posted field to the result
             results.append({
                 'status_id': row[0],
                 'applicant_id': row[1],
@@ -216,14 +413,10 @@ def retrieve_application_status():
                 'status_description': row[5],
                 'status_type': row[6],
                 'company': row[7],
-                'profile_picture': profile_url,  # Use the dynamic profile URL
+                'profile_picture': profile_url,
                 'employer_name': row[9],
-                'date_posted': row[10]  # Include the date_posted field
+                'date_posted': row[10]
             })
-
-        # If no records were found, return an appropriate response
-        if not results:
-            return jsonify({'message': 'No application statuses found for this jobseeker.'}), 404
 
         return jsonify(results)
 
@@ -296,8 +489,29 @@ def update_popup_status():
 
 
 
+import re
 
 
+
+
+from nltk.stem import PorterStemmer
+
+# Initialize the PorterStemmer
+stemmer = PorterStemmer()
+
+def clean_and_stem_skills(skills_string):
+    # Split the skills string on commas to separate individual skills
+    skills_list = skills_string.split(',')
+    
+    # Initialize a list to hold cleaned and stemmed skills
+    cleaned_skills = []
+    
+    for skill in skills_list:
+        # Remove special characters and whitespace, then convert to lowercase
+        cleaned_skill = ''.join(e for e in skill.strip().lower() if e.isalnum())
+        cleaned_skills.append(cleaned_skill)
+
+    return cleaned_skills
 
 @app.route('/advance_filter', methods=['GET'])
 def advance_filter():
@@ -308,62 +522,69 @@ def advance_filter():
     position_filter = request.args.get('position_filter', 'Default')
     nature_of_work_filter = request.args.get('nature_of_work_filter', 'Default')
 
-    print("Skill Filter Received:", skill_filter)
-    print("Location Filter Received:", location_filter)
-    print("Company Filter Received:", company_filter)
-    print("Job Filter Received:", job_filter)
-    print("Position Filter Received:", position_filter)
-    print("Nature of Work Filter Received:", nature_of_work_filter)
-
     if 'user_id' not in session:
         return jsonify({"error": "User is not logged in"}), 401
 
     conn = get_db_connection()
+
+    jobseeker_id = session['user_id']
+    all_form101_query = "SELECT * FROM form101 WHERE jobseeker_id = ?"
+    all_form101_records = conn.execute(all_form101_query, (jobseeker_id,)).fetchall()
+
+    form101_records = [dict(row) for row in all_form101_records]
+    print(f"All records from form101 for Jobseeker_ID {jobseeker_id}: {form101_records}")
+
+    all_jobs_query = "SELECT * FROM jobs"
+    all_jobs_records = conn.execute(all_jobs_query).fetchall()
+
+    jobs_records = [dict(row) for row in all_jobs_records]
+    print(f"All records from jobs table: {jobs_records}")
+
     initial_query = "SELECT * FROM jobs WHERE LOWER(request) = 'approved' AND LOWER(jobStatus) = 'available'"
     initial_jobs = conn.execute(initial_query).fetchall()
 
-    print("Initial Jobs:", [job['Job_ID'] for job in initial_jobs])
-
     filtered_jobs = []
 
-    # Skill filter logic
-    if skill_filter == 'Default':
-        jobseeker_id = session['user_id']
-        skills_query = "SELECT skills FROM form101 WHERE jobseeker_id = ?"
-        skills_result = conn.execute(skills_query, (jobseeker_id,)).fetchone()
+    skills_query = "SELECT skills FROM form101 WHERE jobseeker_id = ?"
+    skills_result = conn.execute(skills_query, (jobseeker_id,)).fetchone()
 
-        if skills_result:
-            skills = skills_result['skills'].replace("[", "").replace("]", "").split(",")
-            skills = [skill.strip().replace("Skill: ", "").lower() for skill in skills]
-            print("Extracted Skills:", skills)
-            filtered_jobs += [job for job in initial_jobs if any(skill in job['skills'].lower() for skill in skills)]
+    cleaned_jobseeker_skills = []
+    if skills_result:
+        cleaned_jobseeker_skills = clean_and_stem_skills(skills_result['skills'])
+        print(f"This is the Jobseeker_ID: {jobseeker_id} and this is skills: {cleaned_jobseeker_skills}")
+
+    # If all filters are 'Default', check for partial matches
+    if all(f == 'Default' for f in [skill_filter, location_filter, company_filter, job_filter, position_filter, nature_of_work_filter]):
+        for job in initial_jobs:
+            cleaned_job_skills = clean_and_stem_skills(job['skills'])
+            print(f"This is the Job ID: {job['Job_ID']} and the fetched skills on this job: {cleaned_job_skills}")
+
+            matched_words = set()
+            for job_skill in cleaned_job_skills:
+                for js_skill in cleaned_jobseeker_skills:
+                    # Check if job skill is a substring of jobseeker skill or vice versa
+                    if job_skill in js_skill or js_skill in job_skill:
+                        matched_words.add(job_skill)  # Add the job's skill instead
+
+            if matched_words:
+                print(f"Matched words found: {matched_words}")
+                filtered_jobs.append(job)
+
+
     else:
-        filtered_jobs += [job for job in initial_jobs if skill_filter.lower() in job['skills'].lower()]
+        for job in initial_jobs:
+            cleaned_job_skills = clean_and_stem_skills(job['skills'])
 
-    # Location filter logic
-    if location_filter != 'Default':
-        filtered_jobs += [job for job in initial_jobs if location_filter.lower() in job['location'].lower()]
-
-    # Company filter logic
-    if company_filter != 'Default':
-        filtered_jobs += [job for job in initial_jobs if company_filter.lower() in job['Company'].lower()]
-
-    # Job title filter logic
-    if job_filter != 'Default':
-        filtered_jobs += [job for job in initial_jobs if job_filter.lower() in job['title'].lower()]
-
-    # Position filter logic
-    if position_filter != 'Default':
-        filtered_jobs += [job for job in initial_jobs if position_filter.lower() in job['position'].lower()]
-
-    # Nature of work filter logic
-    if nature_of_work_filter != 'Default':
-        filtered_jobs += [job for job in initial_jobs if nature_of_work_filter.lower() in job['natureOfWork'].lower()]
+            if (skill_filter == 'Default' or skill_filter.lower() in cleaned_job_skills) and \
+               (location_filter == 'Default' or location_filter.lower() in job['location'].lower()) and \
+               (company_filter == 'Default' or company_filter.lower() in job['Company'].lower()) and \
+               (job_filter == 'Default' or job_filter.lower() in job['title'].lower()) and \
+               (position_filter == 'Default' or position_filter.lower() in job['position'].lower()) and \
+               (nature_of_work_filter == 'Default' or nature_of_work_filter.lower() in job['natureOfWork'].lower()):
+                filtered_jobs.append(job)
 
     # Remove duplicates by converting list to a dictionary (keyed by Job_ID)
     final_jobs = list({job['Job_ID']: job for job in filtered_jobs}.values())
-
-    print("Final Filtered Jobs:", [job['Job_ID'] for job in final_jobs])
 
     conn.close()
 
@@ -378,11 +599,9 @@ def advance_filter():
         "closingDate": job['closingDate'],
     } for job in final_jobs]
 
-    print("Final Filtered Jobs Returned:", job_list)
+    print(f"Return fetched jobs: {job_list}")
 
     return jsonify(job_list)
-
-
 
 
 
@@ -636,11 +855,17 @@ def jobseeker_fetch_all_notification():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Fetch notifications for the specific jobseeker where popup is NULL or empty, sorted by date_created DESC
+        # Fetch notifications for the specific jobseeker where popup is NULL or empty,
+        # and join with jobs table where jobStatus is 'Available' and request is 'Approved'
         cursor.execute('''
-            SELECT * FROM jobseeker_notifications 
-            WHERE jobseeker_id = ? AND (popup IS NULL OR popup = "") 
-            ORDER BY date_created DESC
+            SELECT jn.*, j.jobStatus, j.request, j.title, j.image, j.location, j.natureOfWork, j.Company, j.closingDate
+            FROM jobseeker_notifications jn
+            JOIN jobs j ON jn.Job_ID = j.Job_ID
+            WHERE jn.jobseeker_id = ? 
+            AND (jn.popup IS NULL OR jn.popup = "")
+            AND j.jobStatus = "Available" 
+            AND j.request = "Approved"
+            ORDER BY jn.date_created DESC
         ''', (user_id,))  # Filter by jobseeker_id
 
         notifications = cursor.fetchall()
@@ -660,7 +885,15 @@ def jobseeker_fetch_all_notification():
                 'date_created': notification['date_created'],
                 'profile_picture': profile_picture,
                 'NotifID': notification['NotifID'],
-                'Job_ID': notification['Job_ID']
+                'Job_ID': notification['Job_ID'],
+                'jobStatus': notification['jobStatus'],    # Added from jobs table
+                'request': notification['request'],        # Added from jobs table
+                'title': notification['title'],            # Job title
+                'image': notification['image'],            # Job image
+                'location': notification['location'],      # Job location
+                'natureOfWork': notification['natureOfWork'],  # Job nature
+                'Company': notification['Company'],        # Job Company
+                'closingDate': notification['closingDate'] # Closing date
             })
 
         # Close the cursor and connection
@@ -674,6 +907,9 @@ def jobseeker_fetch_all_notification():
         })
 
     return jsonify({'error': 'User not authenticated'}), 401
+
+
+
 
 
 

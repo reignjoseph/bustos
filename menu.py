@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
+from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify,send_from_directory
 import sqlite3
 import os
 from werkzeug.utils import secure_filename
@@ -13,6 +13,7 @@ from main import app
 import pytz
 import time
 import logging
+import bcrypt
 # This is the 
 # Set a secret key for the session
 app.secret_key = 'your_secret_key'
@@ -32,6 +33,11 @@ def get_db_connection():
         return None  # Return None if connection fails
 
 
+
+
+@app.route('/ph-json/<path:filename>')
+def serve_ph_json(filename):
+    return send_from_directory('ph-json', filename)
 
 otp_storage = {}  # Store OTPs and timestamps in a dictionary
 # Configure logger
@@ -231,7 +237,7 @@ def forgot_password_check_email():
             if current_time < cooldown_time:
                 remaining_time = (cooldown_time - current_time).total_seconds()
                 return jsonify({
-                    'cooldown': f'This email cannot request a password reset for {remaining_time:.0f} seconds.'
+                    'cooldown': f'The Password Reset in {remaining_time:.0f} seconds.'
                 }), 200  # Return cooldown message
 
         return jsonify({'message': 'Approved'})  # Proceed if no cooldown
@@ -397,7 +403,8 @@ def check_session():
     if 'user_id' in session:
         return jsonify({'logged_in': True})
     else:
-        return jsonify({'logged_in': False})
+        return jsonify({'logged_in': False}), 401
+
 
 
 
@@ -641,7 +648,6 @@ def logout():
 
 
 
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -655,11 +661,12 @@ def signup():
         print(f"Received data - Role: {role}, Name: {name}, Email: {email}, Password: {password}")
         
         try:
+            # Hash the password using bcrypt
+            
             # Connect to the database
             conn = sqlite3.connect('trabahanap.db')
             cursor = conn.cursor()
 
-            # Insert the user into the database
             cursor.execute('''
                 INSERT INTO users (email, password, fname, userType, contactnum, dateRegister, AccountStatus)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -718,7 +725,6 @@ def create_account():
         # Get current time in Philippine Time (PHT)
     # philippine_tz = timezone(timedelta(hours=8))
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
-
     # user_id = None  # Initialize user_id to None
     
     if role == 'Jobseeker':
@@ -984,7 +990,7 @@ def create_account():
             formatted_skills += f', [ {other_skill} ]'
 
         # Prepend with "Skill: "
-        formatted_skills = f'Skill: {formatted_skills}'
+        formatted_skills = f'{formatted_skills}'
 
 
 

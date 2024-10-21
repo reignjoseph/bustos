@@ -19,6 +19,7 @@ import pdfkit
 
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 #___________________________________
 
 
@@ -1018,13 +1019,15 @@ def approve_job(job_id):
     cursor.execute("UPDATE jobs SET request = 'Approved' WHERE Job_ID = ?", (job_id,))
 
     # Fetch job details for the approved job
-    cursor.execute('SELECT company, title, employer_ID FROM jobs WHERE Job_ID = ?', (job_id,))
+    cursor.execute('SELECT company, title, employer_ID, location, closingDate FROM jobs WHERE Job_ID = ?', (job_id,))
     job_data = cursor.fetchone()
 
     if job_data:
         company = job_data[0]
         title = job_data[1]
         employer_id = job_data[2]
+        location = job_data[3]
+        closing_date = job_data[4]
 
         # Fetch the employer's name and profile picture
         cursor.execute('SELECT fname, profile FROM users WHERE User_ID = ?', (employer_id,))
@@ -1033,8 +1036,8 @@ def approve_job(job_id):
         employer_fname = employer_data[0] if employer_data else 'Unknown'
         employer_profile = employer_data[1] if employer_data and employer_data[1] else 'static/images/employer-images/avatar.png'
 
-       # Fetch jobseekers' details with userType 'Jobseeker' and status 'Approved'
-        cursor.execute('SELECT User_ID FROM users WHERE userType = "Jobseeker" AND status = "Approved"')
+        # Fetch jobseekers' email and details with userType 'Jobseeker' and status 'Approved'
+        cursor.execute('SELECT User_ID, email FROM users WHERE userType = "Jobseeker" AND status = "Approved"')
         jobseekers = cursor.fetchall()
 
         # Get current time in Philippine Time (PHT)
@@ -1047,12 +1050,36 @@ def approve_job(job_id):
         # Loop through each jobseeker and insert a notification for each one
         for jobseeker in jobseekers:
             jobseeker_id = jobseeker[0]  # Get the User_ID of the jobseeker
+            email = jobseeker[1]  # Get the email of the jobseeker
 
-            cursor.execute('''
-                INSERT INTO jobseeker_notifications 
+            cursor.execute('''INSERT INTO jobseeker_notifications 
                 (jobseeker_id, Job_ID, employer_id, text, company, job_title, employer_fname, employer_profile, popup, date_created) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (jobseeker_id, job_id, employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, 'true', current_time_pht))
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+                (jobseeker_id, job_id, employer_id, jobseeker_notification_text, company, title, employer_fname, employer_profile, '', current_time_pht))
+
+            # Send notification email to the jobseeker
+            sender_email = "reignjosephc.delossantos@gmail.com"
+            password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+
+            # Create the email content
+            subject = "BustosPESO - New Job Vacancy"
+            body = f"Dear Jobseeker,\n\nA BustosPESO posted a new job vacancy of \"{title}\" at {location} until {closing_date}.\n\nBest regards,\nBustosPESO Team"
+
+            # Create the email message
+            message = MIMEMultipart()
+            message['From'] = sender_email
+            message['To'] = email
+            message['Subject'] = subject
+            message.attach(MIMEText(body, 'plain'))
+
+            # Send the email
+            try:
+                with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                    server.starttls()
+                    server.login(sender_email, password)
+                    server.send_message(message)
+            except Exception as e:
+                print(f"Failed to send email to {email}: {e}")
 
         # Print how many notifications were inserted
         print(f"{len(jobseekers)} jobseeker notification(s) were sent.")
@@ -1061,6 +1088,9 @@ def approve_job(job_id):
     conn.close()
 
     return jsonify({'message': 'Job approved successfully and notifications sent to jobseekers'})
+
+
+
 
 
 
