@@ -171,6 +171,7 @@ $(document).ready(function() {
         $(".flatpickr-schedule").flatpickr({
             enableTime: true,
             dateFormat: "Y-m-d H:i",
+            minDate: "today",
             time_24hr: true,
             onChange: function(selectedDates, dateStr, instance) {
                 let applicantId = $(instance.element).data("applicant-id");

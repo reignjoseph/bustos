@@ -14,23 +14,10 @@ timezone = pytz.timezone('Asia/Manila')
 from threading import Thread
 import time
 import pdfkit
-
-
-
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 #___________________________________
-
-
-
-
-
-
-
-
-
-
 # Configure logging
 if not app.debug:
     file_handler = FileHandler('error.log')
@@ -61,39 +48,6 @@ def get_db_connection():
     conn = sqlite3.connect('trabahanap.db')
     conn.row_factory = sqlite3.Row
     return conn
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -127,11 +81,6 @@ def admin():
 
     print('User session is active')  # Debugging print statement
     return render_template('admin/admin.html')
-
-
-
-
-
 
 @app.route('/report_registration_data')
 def report_get_registration_data():
@@ -177,7 +126,6 @@ def report_get_registration_data():
         'employers': employers
     })
 
-
 @app.route('/hired_data')
 def hired_data():
     # Connect to the database
@@ -206,7 +154,6 @@ def hired_data():
         'labels': years[::-1],  # Reverse to show earliest year first
         'applicants': [data[year] for year in years[::-1]]  # Applicants count sorted by year
     })
-
 
 @app.route('/ratings_data', methods=['GET'])
 def ratings_data():
@@ -269,35 +216,6 @@ def ratings_data():
     conn.close()
     return jsonify(result)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/peso_report_view', methods=['GET'])
 def peso_report_view():
     return render_template('admin/admin_reports.html')
@@ -332,7 +250,7 @@ def retrieve_admin_notification():
             query += " AND notification_id = ?"
             params.append(notification_id)
         if user_id:
-            query += " AND user_id = ?"  # Add condition for user_id
+            query += " AND user_id = ?"
             params.append(user_id)
         if date_range:
             # Split the date range into start and end dates
@@ -343,6 +261,9 @@ def retrieve_admin_notification():
                 query += " AND notification_date BETWEEN ? AND ?"
                 params.append(start_date)
                 params.append(end_date)
+
+        # Add ORDER BY clause to sort by notification_date in descending order
+        query += " ORDER BY notification_date DESC"
 
         print("Executing query:", query)
         print("With parameters:", params)
@@ -368,7 +289,7 @@ def retrieve_admin_notification():
                 "notification_text": notification[4],
                 "notification_date": notification[5]
             }
-            for notification in notifications  # Assuming 'notifications' is your data source
+            for notification in notifications
         ]
 
         print("Processed notification data:", data)
@@ -382,67 +303,84 @@ def retrieve_admin_notification():
     finally:
         cur.close()
         conn.close()
+@app.route('/retrieve_admin_notifications_archived', methods=['GET'])
+def retrieve_admin_notifications_archived():
+    fname = request.args.get('fname')
+    notification_id = request.args.get('notification_id')
+    date_range = request.args.get('dateRange')  # Get date range from the request
+    user_id = request.args.get('user_id')  # Get user_id from the request
 
+    conn = get_db_connection()
+    cur = conn.cursor()
 
+    try:
+        query = """
+            SELECT notification_id, userType, picture, fname, notification_text, notification_date
+            FROM admin_notification
+            WHERE notification_popup = 'false'  -- Fetch notifications marked as archived
+        """
+        params = []
 
+        if fname:
+            query += " AND fname LIKE ?"
+            params.append(f"%{fname}%")
+        if notification_id:
+            query += " AND notification_id = ?"
+            params.append(notification_id)
+        if user_id:
+            query += " AND user_id = ?"
+            params.append(user_id)
+        if date_range:
+            # Split the date range into start and end dates
+            date_range = date_range.split(' to ')
+            if len(date_range) == 2:
+                start_date = date_range[0]
+                end_date = date_range[1]
+                query += " AND notification_date BETWEEN ? AND ?"
+                params.append(start_date)
+                params.append(end_date)
 
+        # Add ORDER BY clause to sort by notification_date in descending order
+        query += " ORDER BY notification_date DESC"
 
-# def update_notification_pictures():
-#     conn = get_db_connection()
-#     cur = conn.cursor()
+        print("Executing query:", query)
+        print("With parameters:", params)
 
-#     try:
-#         # Update pictures in admin_notification from users table
-#         cur.execute("""
-#             UPDATE admin_notification
-#             SET picture = (SELECT profile FROM users WHERE User_ID = admin_notification.user_id)
-#             WHERE user_id IN (SELECT User_ID FROM users)
-#         """)
-#         conn.commit()
-#         print("Updated notification pictures.")
-#     except Exception as e:
-#         print(f"Error updating notification pictures: {e}")
-#     finally:
-#         cur.close()
-#         conn.close()
-# # Start the background thread
-# Thread(target=update_notification_pictures, daemon=True).start()
+        cur.execute(query, params)
+        notifications = cur.fetchall()
 
+        print("Fetched notifications:", notifications)
 
+        data = [
+            {
+                "notification_id": notification[0],
+                "userType": notification[1],
+                "picture": (
+                    f"static/images/jobseeker-images/man.png" if notification[1] == "Jobseeker" and notification[2] is None 
+                    else f"static/{notification[2]}" if notification[1] == "Jobseeker" 
+                    else f"/static/images/employer-images/{notification[2]}" if notification[1] == "Employer" and notification[2] is not None 
+                    else f"/static/images/employer-images/woman.png" if notification[1] == "Employer" and notification[2] is None
+                    else f"/static/{notification[2]}" if notification[1] == "Admin" 
+                    else notification[2]  # Default case if not Jobseeker, Employer, or Admin
+                ),
+                "fname": notification[3],
+                "notification_text": notification[4],
+                "notification_date": notification[5]
+            }
+            for notification in notifications
+        ]
 
+        print("Processed notification data:", data)
 
+        return jsonify(data)
 
+    except Exception as e:
+        print(f"Error retrieving notifications: {e}")
+        return jsonify({"error": "Internal Server Error"}), 500
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/close_admin_notification', methods=['POST'])
@@ -490,29 +428,29 @@ def close_admin_notification():
     finally:
         cur.close()
         conn.close()
+@app.route('/unarchive_admin_notifications', methods=['POST'])
+def unarchive_admin_notifications():
+    try:
+        data = request.get_json()  # Get JSON data from the request
+        notification_id = data.get('notification_id')  # Extract the notification ID
 
+        conn = get_db_connection()
+        cur = conn.cursor()
 
+        # Update the database to set notification_popup to an empty string
+        query = "UPDATE admin_notification SET notification_popup = '' WHERE notification_id = ?"
+        cur.execute(query, (notification_id,))
+        conn.commit()
 
+        return jsonify(success=True)
 
+    except Exception as e:
+        print(f"Error unarchiving notification: {e}")
+        return jsonify(success=False, error=str(e)), 500
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    finally:
+        cur.close()
+        conn.close()
 
 
 
@@ -547,21 +485,6 @@ def get_user_type():
     # Return the data as JSON
     return jsonify(data)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/retrieve_types_of_users')
 def retrieve_types_of_users():
     conn = get_db_connection()
@@ -569,34 +492,59 @@ def retrieve_types_of_users():
 
     print("Database connection established.")  # Debugging line
 
-    # Query to count users
-    cursor.execute("SELECT COUNT(*) as total, "
-                   "(SELECT COUNT(*) FROM users WHERE currentState='Active') as active, "
-                   "(SELECT COUNT(*) FROM users WHERE currentState='Inactive') as inactive, "
-                   "(SELECT COUNT(*) FROM users WHERE status='Approved') as approved "
-                   "FROM users")
+    # Query to count total, active, inactive, and approved users from the 'users' table
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total,
+            (SELECT COUNT(*) FROM users WHERE currentState='Active') as active,
+            (SELECT COUNT(*) FROM users WHERE currentState='Inactive') as inactive,
+            (SELECT COUNT(*) FROM users WHERE status='Approved') as approved
+        FROM users
+    """)
+    
+    user_result = cursor.fetchone()
 
-    result = cursor.fetchone()
+    # Query to count total jobseekers from the 'application_status' table
+    cursor.execute("SELECT COUNT(*) as totalhiredjobseekers FROM application_status")
+    total_hired_result = cursor.fetchone()
 
-    print("Query executed. Result fetched: ", result)  # Debugging line
+    # Query to count hired jobseekers from the 'application_status' table where result is 'Passed'
+    cursor.execute("SELECT COUNT(*) as hiredjobseekers FROM application_status WHERE result='Passed'")
+    hired_result = cursor.fetchone()
+
+    print("Query executed. Results fetched: ", user_result, total_hired_result, hired_result)  # Debugging line
 
     # Close the cursor and connection
     cursor.close()
     conn.close()
 
-    # Check if result is None
-    if result is None:
+    # Check if any of the results is None
+    if user_result is None or total_hired_result is None or hired_result is None:
         print("No result returned from the database.")  # Debugging line
-        return jsonify({'count': {'total': 0, 'active': 0, 'inactive': 0, 'approved': 0}})
+        return jsonify({
+            'count': {
+                'total': 0, 
+                'active': 0, 
+                'inactive': 0, 
+                'approved': 0, 
+                'totalhiredjobseekers': 0,
+                'hiredjobseekers': 0
+            }
+        })
 
+    # Return the results as JSON
     return jsonify({
         'count': {
-            'total': result['total'],
-            'active': result['active'],
-            'inactive': result['inactive'],
-            'approved': result['approved']
+            'total': user_result['total'],  # Total users
+            'active': user_result['active'],  # Active users
+            'inactive': user_result['inactive'],  # Inactive users
+            'approved': user_result['approved'],  # Approved users
+            'totalhiredjobseekers': total_hired_result['totalhiredjobseekers'],  # Total jobseekers applied
+            'hiredjobseekers': hired_result['hiredjobseekers']  # Hired jobseekers (result = 'Passed')
         }
     })
+
+
 
 
 
@@ -662,18 +610,6 @@ def get_all_ratings():
         'ratings_by_star': ratings_dict
     })
 
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/get_job_count', methods=['POST'])
 def get_job_count():
     data = request.get_json()
@@ -688,11 +624,6 @@ def get_job_count():
     conn.close()
     return jsonify({'count': row[0]})
 
-
-
-
-
-
 @app.route('/fetch_admin_announcements', methods=['GET'])
 def fetch_admin_announcements():
     announcementID = request.args.get('announcementID', default=None, type=int)
@@ -705,7 +636,7 @@ def fetch_admin_announcements():
 
     # Specify the columns to select, excluding "image"
     query = """SELECT announcementID, "What", "When", "Where", "Requirement", "Description", "date_posted", "status" 
-               FROM announcement WHERE 1=1"""
+               FROM announcement WHERE (popup IS NULL OR popup = '')"""
     params = []
 
     if announcementID is not None:
@@ -715,6 +646,9 @@ def fetch_admin_announcements():
     if status and status != "Both":
         query += " AND status = ?"
         params.append(status)
+
+    # Add ORDER BY clause to sort by date_posted in descending order
+    query += " ORDER BY date_posted DESC"
 
     query += " LIMIT ? OFFSET ?"
     params.append(itemsPerPage)
@@ -730,14 +664,6 @@ def fetch_admin_announcements():
                      for row in rows]
 
     return jsonify(announcements)
-
-
-
-
-
-
-
-
 
 @app.route('/get_announcement/<int:announcementID>', methods=['GET'])
 def get_announcement(announcementID):
@@ -760,8 +686,7 @@ def get_announcement(announcementID):
         })
     else:
         return jsonify({'error': 'Announcement not found'}), 404
-
-        
+   
 @app.route('/apply_edit_announcement', methods=['POST'])
 def apply_edit_announcement():
     try:
@@ -790,54 +715,70 @@ def apply_edit_announcement():
         print(f"Error updating announcement: {e}")
         return jsonify(success=False), 500
 
-@app.route('/apply_delete_announcement', methods=['POST'])
-def apply_delete_announcement():
+@app.route('/apply_hide_announcement', methods=['POST'])
+def apply_hide_announcement():
     try:
         announcementID = request.form['announcementID']
         
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM announcement WHERE announcementID = ?', (announcementID,))
+        
+        # Update the popup field to "false" for the given announcementID
+        cursor.execute('UPDATE announcement SET popup = ? WHERE announcementID = ?', ("false", announcementID))
         
         conn.commit()
         conn.close()
 
         return jsonify(success=True)
     except Exception as e:
-        print(f"Error deleting announcement: {e}")
+        print(f"Error updating announcement: {e}")
         return jsonify(success=False), 500
 
+@app.route('/fetch_admin_announcement_archived', methods=['GET'])
+def fetch_admin_announcement_archived():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
+        # Query to fetch all announcements where popup is set to 'false'
+        query = """
+            SELECT announcementID, "What", "When", "Where", "Requirement", "Description", "date_posted", "status" 
+            FROM announcement 
+            WHERE popup = 'false'
+            ORDER BY date_posted DESC  -- This line sorts the announcements in descending order
+        """
 
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
 
+        # Convert to JSON format
+        announcements = [{'announcementID': row[0], 'What': row[1], 'When': row[2], 'Where': row[3],
+                         'Requirement': row[4], 'Description': row[5], 'date_posted': row[6], 'status': row[7]} 
+                         for row in rows]
 
+        return jsonify(announcements)
+    
+    except Exception as e:
+        print(f"Error fetching archived announcements: {e}")
+        return jsonify(success=False, error=str(e)), 500
 
+@app.route('/update_unarchived_admin_announcement', methods=['POST'])
+def update_unarchived_admin_announcement():
+    try:
+        announcementID = request.form['announcementID']
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE announcement SET popup = "" WHERE announcementID = ?', (announcementID,))
+        
+        conn.commit()
+        conn.close()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error unarchiving announcement: {e}")
+        return jsonify(success=False), 500
 
 
 
@@ -895,23 +836,6 @@ def insert_announcement():
         print(f"Error inserting announcement: {e}")
         return jsonify(success=False), 500
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/admin_fetched_jobs', methods=['GET'])
 def admin_fetched_jobs():
     job_id = request.args.get('job_id', '')
@@ -968,6 +892,9 @@ def admin_fetched_jobs():
         params.append(date_range[0])
         params.append(date_range[1])
 
+    # Add ORDER BY clause for descending order
+    query += " ORDER BY date_posted DESC"  # Change this field if you want to sort by something else
+
     # Pagination Logic: Add LIMIT and OFFSET to the query
     offset = (page - 1) * items_per_page
     query += " LIMIT ? OFFSET ?"
@@ -1005,11 +932,7 @@ def admin_fetched_jobs():
         'current_page': page
     })
 
-
-
-
 click_count = 0  # Global variable to track the number of clicks
-
 @app.route('/admin_fetched_jobs/approve/<int:job_id>', methods=['POST'])
 def approve_job(job_id):
     conn = get_db_connection()
@@ -1089,16 +1012,6 @@ def approve_job(job_id):
 
     return jsonify({'message': 'Job approved successfully and notifications sent to jobseekers'})
 
-
-
-
-
-
-
-
-
-
-
 def generate_notification_text(company, job_title):
     # Define consistent and varied structures
     structures = [
@@ -1137,14 +1050,6 @@ def generate_notification_text(company, job_title):
 
     return jobseeker_notification_text
 
-
-
-
-
-
-
-
-
 @app.route('/admin_fetched_jobs/deny/<int:job_id>', methods=['POST'])
 def deny_job(job_id):
     conn = get_db_connection()
@@ -1152,11 +1057,6 @@ def deny_job(job_id):
     conn.commit()
     conn.close()
     return jsonify({'message': 'Job denied successfully'})
-
-
-
-
-
 
 
 
@@ -1204,6 +1104,9 @@ def fetch_all_users():
             filters.extend([start_date, end_date])
         except ValueError:
             return jsonify({"error": "Invalid date range format"}), 400
+
+    # Add ORDER BY clause for descending order
+    query += " ORDER BY u.dateRegister DESC"  # Change this field if you want to sort by something else
 
     # Pagination logic
     itemsPerPage = 5  # Set max items per page
@@ -1271,20 +1174,13 @@ def fetch_all_users():
 
 
 
-
-
-
-
-
-
-
-
-
 @app.route('/update_user_status', methods=['POST'])
 def update_user_status():
     data = request.json
+    print(f"Received data: {data}")  # Log the entire received data
     user_id = data['userId']
     status = data['status']
+    reason = data.get('reason', '')
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1300,20 +1196,28 @@ def update_user_status():
         cursor.execute("UPDATE users SET status = ? WHERE User_ID = ?", (status, user_id))
         conn.commit()
 
-        # Send an email notification to the user
-        send_status_update_email(email, status)  # Function to send the email
+        # Print statement to confirm status update
+        print(f"User ID: {user_id} has been updated to status: {status}")
+
+        # Send an email notification to the user with the reason if status is "Denied"
+        if status == 'Denied':
+            send_status_update_email(email, status, reason)  # Send email with reason
+        else:
+            send_status_update_email(email, status)  # Send email without reason
 
     conn.close()
     return jsonify({"success": True})
 
 
-def send_status_update_email(email, status):
+def send_status_update_email(email, status, reason=None):
     sender_email = "reignjosephc.delossantos@gmail.com"
     password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
-    message = f"Subject: BustosPESO - Application Status Update\n\nDear User,\n\nWe wanted to inform you that your registration at BustosPESO has been {status}.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
+    message = f"Subject: BustosPESO - Application Status Update\n\nDear User,\n\nWe wanted to inform you that your registration at BustosPESO has been {status}."
 
+    if reason:
+        message += f"\n\nReason: {reason}"  # Append reason if provided
 
-
+    message += "\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
 
     try:
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
@@ -1323,8 +1227,6 @@ def send_status_update_email(email, status):
             print(f"Status update email sent to {email}")
     except Exception as e:
         print(f"Error sending email: {e}")
-
-
 
 
 
@@ -1347,7 +1249,7 @@ def fetch_all_jobseekers():
 
     # Base SQL query to fetch jobseekers
     query = """
-        SELECT User_ID, email, fname, contactnum, address,currentState, dateRegister
+        SELECT User_ID, email, fname, contactnum, address, currentState, dateRegister
         FROM users
         WHERE userType = 'Jobseeker' AND status = 'Approved'
     """
@@ -1369,6 +1271,9 @@ def fetch_all_jobseekers():
     elif date_to:
         query += " AND date(dateRegister) <= ?"
         filters.append(date_to)
+
+    # Add ORDER BY clause for descending order
+    query += " ORDER BY dateRegister DESC"  # Change this field if you want to sort by something else
 
     # Add pagination
     query += " LIMIT ? OFFSET ?"
@@ -1395,9 +1300,6 @@ def fetch_all_jobseekers():
 
     # Return the jobseekers data as JSON
     return jsonify({"jobseekers": jobseekers_list})
-
-
-
 
 
 @app.route('/fetch_all_employers', methods=['GET'])
@@ -1434,6 +1336,9 @@ def fetch_all_employers():
         query += " AND dateRegister BETWEEN ? AND ?"
         filters.extend([startDate, endDate])
 
+    # Add ORDER BY clause for descending order
+    query += " ORDER BY dateRegister DESC"  # Change this field if you want to sort by something else
+
     # Add pagination
     query += " LIMIT ? OFFSET ?"
     filters.extend([items_per_page, offset])
@@ -1460,8 +1365,6 @@ def fetch_all_employers():
     # Return the employers data as JSON
     return jsonify({"employers": employers_list})
 
-
-
 @app.route('/fetch_all_ratings', methods=['GET'])
 def fetch_all_ratings():
     try:
@@ -1487,6 +1390,9 @@ def fetch_all_ratings():
             if end_date_filter:  # Ensure end_date_filter is not empty
                 query += " AND DATE(date_created) <= ?"
                 params.append(end_date_filter)
+
+        # Add ORDER BY clause for descending order
+        query += " ORDER BY date_created DESC"  # Change this field if you want to sort by something else
 
         offset = (page - 1) * 7
         query += " LIMIT 7 OFFSET ?"

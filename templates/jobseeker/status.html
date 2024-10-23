@@ -269,7 +269,8 @@ function fetchArchivedStatus() {
     let progressLevel = 0; // Initialize progress level as needed (adjust based on your logic)
 
     // Example logic for progressLevel based on status_type
-    if (status.status_type === 'Approved') progressLevel = 25;
+    if (status.status_type === 'Pending') progressLevel = 5;
+    else if (status.status_type === 'Approved') progressLevel = 25;
     else if (status.status_type === 'Scheduled') progressLevel = 50;
     else if (status.status_type === 'Interviewed') progressLevel = 75;
     else if (status.status_type === 'Passed') progressLevel = 100;
@@ -338,10 +339,31 @@ window.onclick = function(event) {
     if (event.target === prompt_apply_now) {
         closeApplyNowPrompt(); // Close the modal if the background is clicked
     }
+    const confirmation_rating_modal = document.getElementById('confirmation_rating_modal');
+    if (event.target === confirmation_rating_modal) {
+        closeModalConfirmationRating(); // Close the modal if the background is clicked
+    }
+    const configurationProfile = document.getElementById('configurationProfile');
+    if (event.target === configurationProfile) {
+        closeProfileModal(); // Close the modal if the background is clicked
+    }
+    const jobseeker_logout_modal = document.getElementById("jobseeker_logout_modal");
+    if (event.target == jobseeker_logout_modal) {
+        closeLogout();
+    }
+    const confirmation_changepassword_modal = document.getElementById('confirmation_changepassword_modal');
+    if (event.target === confirmation_changepassword_modal) {
+        closeModalConfirmationChangePassword();
+    }
+
 };
 
 
-
+window.onload = function() {
+    showPersonalInfo();
+    checkSession(); // Check session status when the page loads
+        setInterval(checkSession, 60000); // Check session status every 60 seconds
+};
 
 function unarchiveTheStatus(statusID, applicantID) {
     console.log('Unarchiving status with ID:', statusID, 'for applicant:', applicantID);

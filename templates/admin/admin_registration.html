@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_registration.css') }}">
 <!-- Control Registration Container -->
-<div class="registration" style="flex-direction: column; display: none; background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
-    <h1 style="color: white; margin: 20px;">Registration</h1>
+<div class="registration" style="grid-column: 2;flex-direction: column; display: none; background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; margin: 20px;">Registrations</h1>
     <div style="display: flex; flex-direction: column; padding: 20px; background-color: white; border-radius: 10px; margin: 20px;">
         <!-- Control Filter Section -->
         <div class="control_filter">
@@ -55,6 +55,31 @@
     </div>
 </div>
 
+
+
+<script>
+let currentUserId; // Global variable to hold the current user ID
+
+function denyConfirmation(userId) {
+    currentUserId = userId; // Store the userId passed to the function
+    console.log(`Denying user with ID: ${userId}`); // Log the userId for confirmation
+    document.getElementById("denyModalFrame").style.display = "block"; // Show the deny modal
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+}
+function closeDenyModal() {
+  // Hide the modal when the close button is clicked
+  document.getElementById("denyModalFrame").style.display = "none";
+  document.body.style.overflow = '';
+  currentUserId = null; // Reset the currentUserId after closing the modal
+}    
+
+function approveUserStatus(userId) {
+    currentUserId = userId; // Store the userId passed to the function
+    console.log(`Approving user with ID: ${userId}`); // Log the userId for confirmation
+    updateUserStatus('Approved'); // Call updateUserStatus with the approved status
+}
+</script>
+
 <!-- Include scripts for Flatpickr and Moment.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -103,8 +128,19 @@
                         <td>${formatDate(user.dateRegister)}</td>
                         <td>
                             ${user.status === 'Pending' ? `
-                                <button class="approvebtn" onclick="updateUserStatus(${user.User_ID}, 'Approved')">Approve</button>
-                                <button class="denybtn" onclick="updateUserStatus(${user.User_ID}, 'Denied')">Deny</button>
+                                <button class="approvebtn" onclick="approveUserStatus(${user.User_ID}, 'Approved')">Approve</button>
+                                
+                                <button class="denybtn"style="width:100%;" onclick="denyConfirmation(${user.User_ID})">Deny</button>
+                                
+                                                                
+                                <div id="denyModalFrame" class="denyModalFrame" style="display:none;">
+                                    <div class="deny-modal-content">
+                                    
+                                    <label style="display: flex; align-items: center; white-space: nowrap; justify-content: space-between;">Please provide a reason for denying this user:&nbsp;<span class="close" onclick="closeDenyModal()"><img src="static/images/close.png" width="30px" height="30px" alt="Close"></span></label>
+                                    <textarea id="reasonDeny" rows="4" cols="50" width="100%" placeholder="Enter reason here..." style="margin-bottom: 1rem;width: 100%; min-height: 50px; max-height: 150px;"></textarea>
+                                    <button class="denybtn" onclick="updateUserStatus(${user.User_ID}, 'Denied')">Submit</button>
+                                    </div>
+                                </div>
                             ` : ''}
                         </td>
                     `;
@@ -119,6 +155,10 @@
             });
     }
 
+   
+    
+
+    
     // Format date using Moment.js
     function formatDate(dateString) {
         return moment(dateString).format('MMMM D, YYYY');
@@ -145,23 +185,46 @@
     applyControlFilters();  // Re-fetch users with updated page
 }
 
-    // Update user status
-    function updateUserStatus(userId, status) {
-        fetch(`/update_user_status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ userId, status })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Refresh the user list after updating status
-                applyControlFilters();
-            } else {
-                alert('Failed to update status');
-            }
-        });
+
+
+// Update user status
+function updateUserStatus(status) {
+    const reason = document.getElementById("reasonDeny").value; // Get the reason from the textarea
+    console.log(`Updating User ID: ${currentUserId} to status: ${status}`); // Log the userId and status
+
+    // Check for a mismatch
+    if (!currentUserId) {  // Check if currentUserId is set
+        console.log(`No user ID set for updating status`);
+        return; // Exit the function if no user ID is available
     }
+    
+    fetch(`/update_user_status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: currentUserId, status, reason }) // Include reason in the body
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`); // Handle HTTP errors
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Log the response data
+        if (data.success) {
+            // Refresh the user list after updating status
+            applyControlFilters();
+            closeDenyModal(); // Close modal after success
+            currentUserId = null; // Reset the currentUserId after closing the modal
+        } else {
+            alert('Failed to update status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error); // Log the error
+        alert('An error occurred while updating status');
+    });
+}
 </script>

@@ -8,25 +8,30 @@
    
 
 
-<div class="dashboard" style="flex-direction: column; display: block; background-color: rgb(209 224 255); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+<div class="dashboard" style="grid-column: 2;flex-direction: column; display: block; background-color: rgb(209 224 255); width: min-content; height: min-content; margin: 16px; border-radius: 5px; border: 1px solid;">
     <div class="dashboard_grid">
         <h1 style="color: black; white-space: nowrap;">User Management</h1>
-        <div style="display: flex; width: min-content; padding: 20px; gap: 40px; grid-row: 2;">
+        <div style="display: flex; gap: 1rem; grid-row: 2; width: auto; justify-content: center; margin: 10px;">
             <div id="approvedUser" class="usersContainer" style="text-align: center;">
                 <canvas id="approvedChart" class="doughnut_canva" width="100" height="100"></canvas>
                 <label id="approvedCountLabel" class="count_doughnut">0</label>
-                <label>Approved Users:</label>
+                <label style="margin: 0;">Approved Users:</label>
             </div>
             <div id="activeUser" class="usersContainer" style="text-align: center;">
                 <canvas id="activeChart"  class="doughnut_canva" width="100" height="100"></canvas>
                 <label id="activeCountLabel" class="count_doughnut">0</label>
-                <label>Active Users: </label>
+                <label style="margin: 0;">Active Users: </label>
             </div>
 
             <div id="inactiveUser" class="usersContainer" style="text-align: center;">
                 <canvas id="inactiveChart"class="doughnut_canva"  width="100" height="100"></canvas>
                 <label id="inactiveCountLabel" class="count_doughnut">0</label>
-                <label>Inactive Users: </label>
+                <label style="margin: 0;">Inactive Users: </label>
+            </div>
+            <div id="hiredJobseekers" class="usersContainer" style="text-align: center;">
+                <canvas id="hiredJobseekersChart"class="doughnut_canva"  width="100" height="100"></canvas>
+                <label id="hiredJobseekersLabel" class="count_doughnut">0</label>
+                <label style="margin: 0;">Hired Jobseekers: </label>
             </div>
         </div>
 
@@ -45,29 +50,34 @@
                 <span id="jobStatusLabel">Unavailable</span>
                 <span id="jobCount">Count: 0</span>
             </div>
+
+            <div class="list_admin_rate">
+                <div class="total_ratings">
+                    <label>Total Ratings:</label>
+                    <label id="totalRatings">0</label>
+                    <span id="totalRatingComparison">(compared to last year)</span>
+                </div>
+                <div class="average_rating">
+                    <label>Average Rating:</label>
+                    <label id="averageRatings">0</label>
+                    <span id="averageRatingComparison">(compared to last year)</span>
+                </div>
+                <div class="rating_charts">
+                    <canvas id="ratingChart" width="400" height="200" style=" max-height: 15rem; max-width:40rem;"></canvas>
+                </div>
+            </div>
+
+
         </div>
         
 
-        <div class="list_admin_rate">
-            <div class="total_ratings">
-                <label>Total Ratings:</label>
-                <label id="totalRatings">0</label>
-                <span id="totalRatingComparison">(compared to last year)</span>
-            </div>
-            <div class="average_rating">
-                <label>Average Rating:</label>
-                <label id="averageRatings">0</label>
-                <span id="averageRatingComparison">(compared to last year)</span>
-            </div>
-            <div class="rating_charts">
-                <canvas id="ratingChart" width="400" height="200"></canvas>
-            </div>
-        </div>
+
+
 
 
         <iframe class="bulacan_statistic" src="/statistics"></iframe>
 
-        <div id="educational-attainment-chart" style="width: -webkit-fill-available;height: 100%;"> <canvas id="attainmentChart" width="486" height="243" style="display: block; box-sizing: border-box; height: 177px; width: 354px;"></canvas> </div>
+        <div id="educational-attainment-chart" > <canvas id="attainmentChart" style=" max-height: 15rem; max-width:40rem;display: block; box-sizing: border-box; height: auto; width: auto;"></canvas> </div>
 
 
     </div>
@@ -114,9 +124,14 @@
                             x: {
                                 beginAtZero: true,
                                 stepSize: 1,  // Force whole numbers
-                ticks: {
-                    precision: 0   // Remove decimals
-                }
+                                ticks: {
+                                    precision: 0   // Remove decimals
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                onClick: (e) => e.stopPropagation() // Prevent clicking on legend labels
                             }
                         }
                     }
@@ -125,6 +140,7 @@
             .catch(error => console.error('Error fetching educational attainment data:', error));
     });
 </script>
+
 
 
 
@@ -215,6 +231,11 @@
                                     precision: 0   // Remove decimals
                                 }
                             }
+                        },
+                        plugins: {
+                            legend: {
+                                onClick: (e) => e.stopPropagation() // Prevent clicking on legend labels
+                            }
                         }
                     }
                 });
@@ -235,6 +256,8 @@
 <script>
 let userTypeChart; // Variable to hold the user type chart instance
 const progressCharts = {}; // Object to hold the chart instances for progress bars
+let jobseekersVisible = true; // Track visibility of jobseekers dataset
+let employersVisible = true; // Track visibility of employers dataset (initially hidden)
 
 function createChart(dates, jobseekers, employers) {
     const ctx = document.getElementById('userTypeChart').getContext('2d');
@@ -248,23 +271,25 @@ function createChart(dates, jobseekers, employers) {
     userTypeChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dates, // Use the parsed dates here
+            labels: dates,
             datasets: [
                 {
-                    label: 'Jobseekers',
+                    label: 'Jobseekers', // Original label
                     data: jobseekers,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
+                    hidden: false // Set visibility to always visible
                 },
                 {
-                    label: 'Employers',
+                    label: 'Employers', // Original label
                     data: employers,
                     borderColor: 'rgba(255, 99, 132, 1)',
                     backgroundColor: 'rgba(255, 99, 132, 0.2)',
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
+                    hidden: false // Set visibility to always visible
                 }
             ]
         },
@@ -274,16 +299,37 @@ function createChart(dates, jobseekers, employers) {
                 mode: 'index',
                 intersect: false,
             },
+            plugins: {
+                legend: {
+                    onClick: (e, legendItem, legend) => {
+                        // Get the index of the clicked item
+                        const index = legendItem.datasetIndex;
+
+                        // Toggle visibility
+                        const dataset = legend.chart.data.datasets[index];
+                        dataset.hidden = !dataset.hidden;
+
+                        // Check if both datasets are hidden
+                        const allHidden = legend.chart.data.datasets.every(ds => ds.hidden);
+                        if (allHidden) {
+                            e.stopPropagation(); // Prevent propagation if all datasets are hidden
+                        }
+
+                        // Re-render the chart
+                        legend.chart.update();
+                    }
+                }
+            },
             scales: {
                 x: {
                     type: 'time',
                     time: {
-                        unit: 'month', // Use 'month' as we are aggregating by month
-                        tooltipFormat: 'MMMM yyyy', // Format for tooltip
+                        unit: 'month',
+                        tooltipFormat: 'MMMM yyyy',
                     },
                     title: {
                         display: true,
-                        text: 'Month' // Label for the x-axis
+                        text: 'Month'
                     }
                 },
                 y: {
@@ -292,16 +338,17 @@ function createChart(dates, jobseekers, employers) {
                         display: true,
                         text: 'Count'
                     },
-                 
-                                stepSize: 1,  // Force whole numbers
-                ticks: {
-                    precision: 0   // Remove decimals
+                    stepSize: 1,
+                    ticks: {
+                        precision: 0
+                    }
                 }
-                }
-            }
+            },
         }
     });
 }
+
+
 
 // Function to create circular progress bars
 function createProgressBar(canvasId, count, total, labelId) {
@@ -350,6 +397,7 @@ function fetchUserCounts() {
             createProgressBar('approvedChart', data.count.approved, data.count.total, 'approvedCountLabel');
             createProgressBar('activeChart', data.count.active, data.count.total, 'activeCountLabel');
             createProgressBar('inactiveChart', data.count.inactive, data.count.total, 'inactiveCountLabel');
+            createProgressBar('hiredJobseekersChart', data.count.hiredjobseekers, data.count.totalhiredjobseekers, 'hiredJobseekersLabel');
         })
         .catch(error => console.error('Error fetching user counts:', error));
 }

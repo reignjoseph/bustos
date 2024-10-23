@@ -1,185 +1,426 @@
-<!-- Profile Modal Background -->
-<div id="modal-profile" class="modal-profile fixed inset-0 bg-gray-800 bg-opacity-50 justify-center items-center">
-    <!-- Profile Modal Container -->
-    <div class="profile-frame1 bg-white p-8 rounded-lg shadow-lg w-full mx-auto relative grid grid-cols-2 grid-rows-auto gap-4">
-        
-        
-        <!-- Close Button -->
-<!-- Close Button -->
-<button id="close-profile-btn" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" style="transform: translate(-5px, 5px);">
-    <img src="{{ url_for('static', filename='images/close.png') }}" alt="Close" class="w-6 h-6">
-</button>
 
 
-        <!-- Toggle Buttons -->
-        <div class="button_bar flex justify-center mb-4">
-            <button type="button" onclick="showPersonalInfo()" class="button1_profile bg-gray-300 px-4 py-2 rounded ml-2">Personal Information</button>
-            <button type="button" onclick="showPassword()" class="button2_profile bg-gray-300 px-4 py-2 rounded ml-2">Change Password</button>
-        </div>
+<div id="configurationProfile" class="modal-container" style="display: none; overflow-y: auto;">
+    <div class="configuration_profile_frame" > <!-- Specific class -->
+        <h6 style="display: flex; align-items: center; justify-content: space-between; width: -webkit-fill-available;">Profile <img src="static/images/close.png" style="width: 30px; height: 30px; position: relative; float: right;" onclick="closeProfileModal()" alt="Close"></h6>
+        <div class="profile_section">
+            <div class="button_bar flex justify-center mb-4" >
+                <button type="button" onclick="showPersonalInfo()" class="button1_profile bg-gray-300 px-4 py-2 rounded ml-2">Personal Information</button>
+                <button type="button" onclick="showPassword()" class="button2_profile bg-gray-300 px-4 py-2 rounded ml-2">Change Password</button>
+            </div>
+            <div class="profile_display">
+                
+                <!-- THIS IS CONTAINER FOR PERSONAL INFO -->
+                <div id="personal_info_container" class="personal_info_container"  style="display: none;">
+                    <form id="personal-info-form" action="/jobseeker_update_profile" method="post" enctype="multipart/form-data" class="formcontainer">
+                        <h6 style="margin-bottom: 2rem;">INFORMATION
+                            <a href="/view_nstp_form" target="_blank">
+                                <img id="view_nstp" style="cursor: pointer; position: absolute; margin: 10px;" src="static/images/nstp_img.png" width="32px" height="auto" class="hover-scale">
+                            </a>
+                            
+                            <style>.hover-scale {transition: transform 0.3s ease;}.hover-scale:hover {transform: scale(1.5) translateY(0.3rem);}</style>
+                        </h6>
+                        
+                        <!-- Profile Picture Container -->
+                        <div id="profile_picture_container" style="display: grid;justify-content: center;align-items: flex-end;grid-template-columns: 5.4rem auto;">
+                            <div id="profile_picture_display" style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; display: flex; border: 2px solid #ccc; align-items: center;">
+                                <img id="profile_picture_img" src="{{ url_for('static', filename=user_data[6]) }}" alt="Profile Picture" style="width: fit-content; height: fit-content; object-fit: cover;">
+                            </div>
+                            <label for="profile-picture-input" class="camera-icon absolute">
+                                <img src="/static/images/camera.png" alt="Camera Icon" class="w-6 h-6 camera-hover-effect text-gray-600">
+                                <!-- <input type="file" id="profile-picture-input" name="profile_picture" class="hidden" accept="image/*" onchange="previewProfilePicture(event) "> -->
+                                <input type="file" id="profile-picture-input" name="profile_picture" class="hidden" accept="image/*" onchange="submitProfilePicture();">
+                                </label>
+                            </label>
+                            <label style="grid-column: 1 / span2; text-align: center;">{{user_data[3]}}</label>
+                        </div>
+                        <!-- DETAILS -->
+                        <div>
+                        <input id="bio" name="bio" class="profile_bio w-full h-24 p-2 border border-gray-300 rounded resize-none mb-4" placeholder="Write your bio here (up to 30 words)" maxlength="30" value="{{user_data[9]}}" spellcheck="false" oninput="submitBio();">
+                        <label>EMAIL:</label>
+                        <input type="email" id="email" name="email" class="profile_email  w-full h-24 p-2 border border-gray-300 rounded resize-none mb-2" value="{{user_data[1]}}" disabled readonly>
+                        <label>MOBILE NO:</label>
+                        <input type="text" id="phone" name="phone" class="profile_phone  w-full h-24 p-2 border border-gray-300 rounded resize-none mb-2" value="{{ user_data[5] }}" maxlength="11" minlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" disabled readonly>
+                        <label>ADDRESS:</label>
+                        <input type="text" id="address" name="address" class="profile_address  w-full h-24 p-2 border border-gray-300 rounded resize-none mb-2" value="{{ user_data[10] }}" disabled readonly>
+                        
+                        
+                        </div>
 
-        <!-- Container for Profile Picture and Forms -->
-        <div style="grid-column: 2;">
-            <form id="personal-info-form" action="/jobseeker_update_profile" method="post" enctype="multipart/form-data" class="formcontainer">
-                <div class="profile-picture-container">
-                    <!-- Profile Picture Circle -->
-                    <img id="profile-picture" class="w-24 h-24 rounded-full object-cover" src="{{ url_for('static', filename=user_data[6]) }}" alt="Profile Picture">
-                    <!-- <img id="profile-picture" class="w-24 h-24 rounded-full object-cover" src="{{ url_for('static', filename= user_data[6]) }}" alt="Profile Picture"> -->
 
-                    <!-- Camera Icon -->
-                    <label for="profile-picture-input" class="camera-icon absolute">
-                        <img src="/static/images/camera.png" alt="Camera Icon" class="w-6 h-6 camera-hover-effect text-gray-600">
-                        <input type="file" id="profile-picture-input" name="profile_picture" class="hidden">
-                    </label>
+                    </form>
+                    
+
+                </div>
+                <!-- THIS IS CONTAINER FOR PASSWORD -->
+                <div id="password_info_container" class="password_info_container"  style="display: none;">
+                    <!-- <div id="ChangePasswordMessage" class="error-message" style="display: none;"></div> -->
+                    <form id="password-form" action="/change_password" method="post" class="password_container">
+                        <h6>PASSWORD</h6>
+                        <div id="password_error_message_container" class="error-message mt-4" style="display: none;">
+                            <img src="static/images/close.png" alt="Close" style="width: 15px; height: 15px; cursor: pointer; float: right;" onclick="closeErrorMessage()">
+                            <span id="error-text"></span>
+                        </div>
+                        <div class="col-span-2 flex flex-col items-center justify-center">
+                            <div class="password-update mt-4">
+                                <div id="password-error-message" class="error-message mt-4" style="display: none;">
+                                    <span id="error-text"></span>
+                                    <button type="button" id="close-error-message" class="close-button" onclick="closeErrorMessage()">&times;</button>
+                                </div>
+                    
+                                <!-- Old Password -->
+                                <label for="oldpassword" class="block mb-2">Old Password:
+                                    <div style="display: flex; align-items: center;">
+                                    <input type="password" id="oldpassword" name="oldpassword" class="w-full p-2 border border-gray-300 rounded mb-4" placeholder="Old Password" required autocomplete="current-password">
+                                    <img src="static/images/eye-open.png" alt="Show Password"  class="mb-4" style="margin-left: -2rem;width: 20px; height: 20px; position: relative; float: right; cursor: pointer;" onclick="togglePasswordVisibility('oldpassword', this)">
+                                </div>
+                                </label>
+
+                                <!-- New Password -->
+                                <label for="newpassword" class="block mb-2">New Password:
+                                    <div style="display: flex; align-items: center;">
+                                    <input type="password" id="newpassword" name="newpassword" class="w-full p-2 border border-gray-300 rounded mb-4" placeholder="New Password" required autocomplete="new-password">
+                                    <img src="static/images/eye-open.png" alt="Show Password" class="mb-4" style="margin-left: -2rem;width: 20px; height: 20px; position: relative; float: right; cursor: pointer;" onclick="togglePasswordVisibility('newpassword', this)">
+                                </div>
+                                </label>
+
+                                <!-- Confirm New Password -->
+                                <label for="confirmpassword" class="block mb-2">Confirm New Password:
+                                    <div style="display: flex; align-items: center;">
+                                    <input type="password" id="confirmpassword" name="confirmpassword" class="w-full p-2 border border-gray-300 rounded mb-4" placeholder="Confirm New Password" required autocomplete="new-password">
+                                    <img src="static/images/eye-open.png" alt="Show Password" class="mb-4" style="margin-left: -2rem;width: 20px; height: 20px; position: relative; float: right; cursor: pointer;" onclick="togglePasswordVisibility('confirmpassword', this)">
+                                </div>
+                                </label>
+
+                                <button type="button" class="button-profile bg-blue-500 text-white px-4 py-2 rounded" onclick="changePasswordConfirmation()">Change Password</button>
+                                
+                                <div id="confirmation_changepassword_modal" class="modal" style="display: none;">
+                                    <div class="change_password_frame">
+                                        <h6 style="width: -webkit-fill-available; display: flex; align-items: center;">
+                                            Are you sure you want to change your password? &nbsp;&nbsp;
+                                            <img src="static/images/close.png" style="width: 30px; height: 30px; position: relative; float: right;" onclick="closeModalConfirmationChangePassword()" alt="Close">
+                                        </h6>
+                    
+                                        <div style="width: -webkit-fill-available; height: inherit; display: flex; align-items: center; justify-content: space-evenly;">
+                                            <button type="button" class="btn btn-primary" onclick="submitChangePassword()">Yes</button>
+                                            <button type="button" class="btn btn-secondary" onclick="closeModalConfirmationChangePassword()">No</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                     
                 </div>
 
-                <!-- Profile Information -->
-                <label style="align-self: center;">{{user_data[3]}}</label>
-                <input id="bio" name="bio" class="profile_bio " placeholder="Write your bio here (up to 30 words)" maxlength="30" value="{{user_data[9]}}" spellcheck="false">
-
-                <div class="PIcontainer mt-4">
-                    <h6 class="email">Email:</h6>
-                    <input type="email" id="email" name="email" class="profile_email  w-full h-24 p-2 border border-gray-300 rounded resize-none" spellcheck="false" placeholder="Email" value="{{user_data[1]}}" disabled>
-                    <h6 class="phone">Phone:</h6>
-                    <input type="text" id="phone" name="phone" class="profile_phone w-full p-2 border border-gray-300 rounded" placeholder="Phone" value="{{ user_data[5] }}" maxlength="11" minlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
-                    <h6 class="address">Address:</h6>
-                    <textarea class="address resize-none mt-4" type="text" id="address" name="address" placeholder="Address" spellcheck="false" maxlength="80">{{user_data[10]}}</textarea>
-                </div>
-
-                <button type="submit" class="button-profile bg-blue-500 text-white px-4 py-2 rounded mt-4">Update Profile</button>
-            </form>
-
-            <!-- Form for Changing Password -->
-            <form id="password-form" action="/change_password" method="post" class="password_container" style="display: none;">
-                <div class="col-span-2 flex flex-col items-center justify-center">
-                    <div class="password-update mt-4">
-                        <h3 class="text-xl font-bold mb-4">Change Password</h3>
-                        
-                        <div id="password-error-message" class="error-message mt-4" style="display: none;">
-                            <span id="error-text"></span>
-                            <button type="button" id="close-error-message" class="close-button">&times;</button>
-                        </div>
-
-                        <label for="oldpassword" class="block mb-2">Old Password:</label>
-                        <input type="password" id="oldpassword" name="oldpassword" class="w-full p-2 border border-gray-300 rounded mb-4" placeholder="Old Password" required autocomplete="current-password">
-                
-                        <label for="newpassword" class="block mb-2">New Password:</label>
-                        <input type="password" id="newpassword" name="newpassword" class="w-full p-2 border border-gray-300 rounded mb-4" placeholder="New Password" required autocomplete="new-password">
-                
-                        <label for="confirmpassword" class="block mb-2">Confirm New Password:</label>
-                        <input type="password" id="confirmpassword" name="confirmpassword" class="w-full p-2 border border-gray-300 rounded mb-4" placeholder="Confirm New Password" required autocomplete="new-password">
-                
-                        <button type="submit" class="button-profile bg-blue-500 text-white px-4 py-2 rounded">Change Password</button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
-
-
-
+        <!-- Add your profile content here -->
     </div>
 </div>
 
+
+
+
 <script>
-    // Function to open the profile modal
-    function openProfile() {
-        document.getElementById('modal-profile').classList.add('active');
-        document.body.classList.add('hidden-scroll');
+
+// Function to open the profile modal
+function openProfileModal() {
+    document.getElementById('configurationProfile').style.display = 'flex';
+    document.body.classList.add('hidden-scroll'); // Prevent scrolling in the background
+}
+
+// Function to close the profile modal
+function closeProfileModal() {
+    document.getElementById('configurationProfile').style.display = 'none';
+    document.body.classList.remove('hidden-scroll'); // Allow scrolling in the background
+}
+
+// Function to show the personal info container and hide the password info container
+function showPersonalInfo() {
+    const personalInfoContainer = document.getElementById('personal_info_container');
+    const passwordInfoContainer = document.getElementById('password_info_container');
+    
+    // Show personal info only if hidden and hide password info
+    if (window.getComputedStyle(personalInfoContainer).display === 'none') {
+        personalInfoContainer.style.display = 'flex';  // Show personal info
+        passwordInfoContainer.style.display = 'none';  // Hide password info
     }
+}
+function submitProfilePicture() {
+    const input = document.getElementById('profile-picture-input');
 
-    // Close button functionality
-    document.getElementById('close-profile-btn').addEventListener('click', () => {
-        document.getElementById('modal-profile').classList.remove('active');
-        document.body.classList.remove('hidden-scroll');
-    });
+    // Check if a file has been selected
+    if (input.files.length > 0) {
+        const formData = new FormData(document.getElementById('personal-info-form'));
+        
+        // Log the file name and size
+        console.log("File selected:", input.files[0].name, "Size:", input.files[0].size);
 
-    // Close modal when clicking outside of it
-    document.getElementById('modal-profile').addEventListener('click', function(event) {
-        if (event.target === this) {
-            this.classList.remove('active');
-            document.body.classList.remove('hidden-scroll'); // Re-enable scrolling on body
-        }
-    });
+        // Send the form data using AJAX
+        $.ajax({
+            type: 'POST',
+            url: '/jobseeker_update_profile',  // Use relative URL
+            data: formData,
+            contentType: false, // Tell jQuery not to set content type
+            processData: false, // Tell jQuery not to process the data
+            success: function(response) {
+                console.log("Response from server:", response); // Log the server response
 
-    // Profile picture change functionality
-    document.getElementById('profile-picture-input').addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('profile-picture').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // Show personal information form
-    function showPersonalInfo() {
-        document.getElementById('personal-info-form').style.display = 'flex';
-        document.getElementById('password-form').style.display = 'none';
-    }
-
-    // Show password change form
-    function showPassword() {
-        document.getElementById('personal-info-form').style.display = 'none';
-        document.getElementById('password-form').style.display = 'grid';
-    }
-
-    // Password change form submission handling
-    document.getElementById('password-form').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent form submission
-
-        const oldPassword = document.getElementById('oldpassword').value;
-        const newPassword = document.getElementById('newpassword').value;
-        const confirmPassword = document.getElementById('confirmpassword').value;
-        const errorMessageDiv = document.getElementById('password-error-message');
-        const errorTextSpan = document.getElementById('error-text');
-
-        errorMessageDiv.style.display = 'none'; // Hide error message by default
-        errorTextSpan.innerHTML = ''; // Clear previous error message
-
-        if (!oldPassword || !newPassword || !confirmPassword) {
-            errorTextSpan.innerHTML = "All fields are required";
-            errorMessageDiv.style.display = 'block'; // Show error message
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            errorTextSpan.innerHTML = "Password does not match";
-            errorMessageDiv.style.display = 'block'; // Show error message
-            return;
-        }
-
-        // Create a FormData object to send form data via AJAX
-        const formData = new FormData(this);
-
-        fetch('/change_password', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Password change was successful, handle accordingly
-                errorTextSpan.innerHTML = "Password successfully updated";
-                errorMessageDiv.style.color = 'green'; // Change text color to green
-                errorMessageDiv.style.backgroundColor = '#dff0d8'; // Light green background
-                errorMessageDiv.style.display = 'block'; // Show success message
-            } else {
-                // Display server-side error message
-                errorTextSpan.innerHTML = data.error_message;
-                errorMessageDiv.style.color = 'red'; // Keep text color red for errors
-                errorMessageDiv.style.backgroundColor = '#fdd'; // Light red background
-                errorMessageDiv.style.display = 'block'; // Show error message
+                // Handle success response
+                if (response.success) {
+                    // Update the image preview if necessary
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const profileImg = document.getElementById('profile_picture_img');
+                        if (profileImg) {
+                            profileImg.src = e.target.result; // Update image source
+                            console.log("Profile image updated successfully."); // Log success
+                        } else {
+                            console.error("Profile image element not found");
+                        }
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    // Handle error response
+                    console.error("Error message from server:", response.error_message);
+                    updateErrorMessage(response.error_message);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('AJAX error: ' + textStatus, errorThrown);
+                updateErrorMessage('An unexpected error occurred. Please try again later.');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
         });
-    });
+        return false; // Prevent the default form submission
+    } else {
+        console.warn("No file selected."); // Log warning if no file is selected
+    }
+    return false; // Prevent the default form submission
+}
+function submitBio() {
+    const bioInput = document.getElementById('bio');
+    const formData = new FormData(document.getElementById('personal-info-form'));
 
-    // Close error message on button click
-    document.getElementById('close-error-message').addEventListener('click', function() {
-        document.getElementById('password-error-message').style.display = 'none';
+    // Send the form data using AJAX
+    $.ajax({
+        type: 'POST',
+        url: '/jobseeker_update_profile',  // Use the correct URL for your route
+        data: formData,
+        contentType: false, // Tell jQuery not to set content type
+        processData: false, // Tell jQuery not to process the data
+        success: function(response) {
+            if (response.success) {
+                console.log('Profile updated successfully.');
+            } else {
+                console.error('Error updating profile:', response.error_message);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error: ' + textStatus, errorThrown);
+        }
     });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Function to show the password info container and hide the personal info container
+function showPassword() {
+    const passwordInfoContainer = document.getElementById('password_info_container');
+    const personalInfoContainer = document.getElementById('personal_info_container');
+    
+    // Show password info only if hidden and hide personal info
+    if (window.getComputedStyle(passwordInfoContainer).display === 'none') {
+        passwordInfoContainer.style.display = 'flex';  // Show password info
+        personalInfoContainer.style.display = 'none';  // Hide personal info
+    }
+}
+
+    // Function to toggle password visibility
+    function togglePasswordVisibility(passwordFieldId, eyeIcon) {
+        const passwordField = document.getElementById(passwordFieldId);
+
+        if (passwordField.type === "password") {
+            passwordField.type = "text";  // Show password
+            eyeIcon.src = "/static/images/eye-close.png";  // Change to "close" eye icon
+        } else {
+            passwordField.type = "password";  // Hide password
+            eyeIcon.src = "/static/images/eye-open.png";  // Change to "open" eye icon
+        }
+    }
+
+// Function to open the change password confirmation modal
+    // Function to open the change password confirmation modal
+    function changePasswordConfirmation() {
+        const modal = document.getElementById('confirmation_changepassword_modal');
+        modal.style.display = 'block'; // Show the modal
+        document.body.classList.add('hidden-scroll'); // Prevent scrolling when the modal is open
+    }
+
+    // Function to close the change password confirmation modal
+    function closeModalConfirmationChangePassword() {
+        const modal = document.getElementById('confirmation_changepassword_modal');
+        modal.style.display = 'none'; // Hide the modal
+        document.body.classList.remove('hidden-scroll'); // Allow scrolling again
+    }
+
+function submitChangePassword() {
+    const oldPassword = document.getElementById('oldpassword').value;
+    const newPassword = document.getElementById('newpassword').value;
+    const confirmPassword = document.getElementById('confirmpassword').value;
+
+    const minLength = 8;
+    const maxLength = 30;
+    const upperCasePattern = /[A-Z]/; // At least one uppercase letter
+    const lowerCasePattern = /[a-z]/; // At least one lowercase letter
+    const numberPattern = /[0-9]/; // At least one number
+    const specialCharPattern = /[!@#$%^&*(),.?":{}|<>]/; // At least one special character
+
+    // Close the confirmation modal before sending the AJAX request
+    closeModalConfirmationChangePassword();
+
+    // Validate new password
+    if (newPassword.length < minLength || newPassword.length > maxLength) {
+        updateErrorMessage(`Password must be between ${minLength} and ${maxLength} characters.`);
+        return;
+    }
+    if (!upperCasePattern.test(newPassword)) {
+        updateErrorMessage("Password must contain at least one uppercase letter.");
+        return;
+    }
+    if (!lowerCasePattern.test(newPassword)) {
+        updateErrorMessage("Password must contain at least one lowercase letter.");
+        return;
+    }
+    if (!numberPattern.test(newPassword)) {
+        updateErrorMessage("Password must contain at least one number.");
+        return;
+    }
+    if (!specialCharPattern.test(newPassword)) {
+        updateErrorMessage("Password must contain at least one special character.");
+        return;
+    }
+
+    // Check if the confirm password matches
+    if (newPassword !== confirmPassword) {
+        updateErrorMessage("New password and confirm password do not match.");
+        return;
+    }
+
+    // Perform AJAX request to change the password
+    $.ajax({
+        type: 'POST',
+        url: '/change_password',  // Your Flask endpoint
+        contentType: 'application/json',
+        data: JSON.stringify({
+            oldpassword: oldPassword,      // Use 'oldpassword' instead of 'old_password'
+            newpassword: newPassword,      // Use 'newpassword' instead of 'new_password'
+            confirmpassword: confirmPassword // Use 'confirmpassword' instead of 'confirm_password'
+        }),
+        success: function(response) {
+            if (response.success) {
+                // Optionally, redirect or show success message
+                window.location.reload(); // Reload page on success
+            } else {
+                // Show the error message
+                updateErrorMessage(response.error_message);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error: ' + textStatus, errorThrown);
+            updateErrorMessage('An unexpected error occurred. Please try again later.');
+        }
+    });
+}
+
+
+    // Function to update and display the error message
+    function updateErrorMessage(errorMessage) {
+    const errorContainer = document.getElementById('password_error_message_container');
+    const errorText = document.getElementById('error-text');
+
+    if (errorContainer) {
+        errorText.textContent = errorMessage; // Set the error message text
+        errorContainer.style.display = 'block'; // Show the error message container
+    }
+}
+
+function closeErrorMessage() {
+    const errorContainer = document.getElementById('password_error_message_container');
+    if (errorContainer) {
+        errorContainer.style.display = 'none'; // Hide the error message container
+    }
+}
+
 </script>
+<style>
+    .change_password_frame {
+    background-color: #fefefe; /* Match the modal background color */
+    margin: 8% auto; /* Center the modal */
+    padding: 20px; /* Same padding */
+    border: 1px solid #888; /* Same border */
+    width: max-content; /* Same width */
+    border-radius: 8px; /* Same rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Same shadow effect */
+}
+.modal-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Ensure modal is above other content */
+}
+
+.configuration_profile_frame {
+    background-color: #fefefe; /* Modal background color */
+    padding: 20px; /* Padding inside modal */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
+    margin: 20% auto 2% auto;
+}
+.profile_section{
+    display: grid;
+
+}
+.profile_display{
+    grid-column: 2; width: auto; background-color: burlywood; height: -webkit-fill-available; border-radius: 10px;
+}
+.personal_info_container{
+    width: auto; height: auto; margin: 5px;flex-direction: column;
+}
+
+.password_info_container{
+    width: auto; height: auto;  margin: 5px;flex-direction: column;;
+}
+
+</style>

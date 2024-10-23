@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="static/css/admin/admin_navigation.css">
     <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
 </head>
-<body style="margin: 0; display: flex;">
+<body style="margin: 0; display: grid;grid-template-columns: min-content;">
 <style>
 .flash-messages {
     width: 100%;
@@ -67,39 +67,29 @@
         updateData();
 
         // Refresh data every 60 seconds
-        setInterval(function() {
-            fetchJobseekers();
-            registrationFetchUsers();
-            fetchRatings(rating_currentPage);
-            fetchEmployers();
-            fetchJobs();
-            announcement_applyFilter();
-            updateData();
             
-            checkSession();
-        }, 60000); // 60 seconds = 60,000 milliseconds
     }
 </script>
 
 <script>
 // AJAX to check session status
-function checkSession() {
-    fetch('/admin', { method: 'GET' })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;  // Redirect if necessary
-                return;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.session_timeout) {
-                // Show sign-in modal or redirect
-                alert('Your session has timed out. Please sign in again.');
-                window.location.href = '/signin'; // Redirect to sign-in page
-            }
-        })
-        .catch(error => console.error('Error checking session:', error));
-}    
+// function checkSession() {
+//     fetch('/admin', { method: 'GET' })
+//         .then(response => {
+//             if (response.redirected) {
+//                 window.location.href = response.url;  // Redirect if necessary
+//                 return;
+//             }
+//             return response.json();
+//         })
+//         .then(data => {
+//             if (data && data.session_timeout) {
+//                 // Show sign-in modal or redirect
+//                 alert('Your session has timed out. Please sign in again.');
+//                 window.location.href = '/signin'; // Redirect to sign-in page
+//             }
+//         })
+//         .catch(error => console.error('Error checking session:', error));
+// }    
 </script>
 </html>

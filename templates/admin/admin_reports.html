@@ -1,89 +1,66 @@
-<html lang="en">
-<head>
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="static/css/admin/admin_reports.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@latest"></script> <!-- Date Adapter -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-</head>
-<body style="display: flex; justify-content: center; margin: 0px 315px 0px 315px;">
-    <div class="reports" style="flex-direction: column; display: none; width: -webkit-fill-available; height: -webkit-fill-available; margin: 30px 200px 0px 200px; border: 1px solid;">
+    <div class="reports" style="position: relative; grid-column: 2; display: inherit;visibility: collapse;  width: fit-content; height: 0;overflow: hidden;  margin: 0px; border: 1px solid;">
         <button class="PDF" onclick="generatePDF()">Download PDF</button>
-        <!-- <button id="toggleJobseeker" style="margin-bottom: 10px;">Toggle Jobseeker</button> -->
-        <div class="letloadallcontents" style="width:inherit;height:inherit;padding:10px; background-color:ghostwhite;">
-        <script>
-
-// Function to check if .letloadallcontents has loaded
-function checkContentLoaded() {
-    const container = document.querySelector('.letloadallcontents');
-
-    // Ensure that the content is loaded
-    if (container && container.innerHTML.trim()) {
-        return true; // Content is loaded
-    }
-    return false; // Content not loaded yet
-}
-
-// PDF generation function
-function generatePDF() {
-    // Wait until the content inside .letloadallcontents is loaded
-    if (!checkContentLoaded()) {
-        alert("Content is still loading, please wait.");
-        return;
-    }
-
-    // Get the .mainframe element to print
-    const element = document.querySelector('.mainframe');
-
-    // Check if the element exists and has content
-    if (!element || !element.innerHTML.trim()) {
-        alert("No content available for PDF generation.");
-        return;
-    }
-
-    // Options for the PDF with best quality settings
-    const options = {
-        margin: 0.45,
-        filename: 'peso_report.pdf',
-        image: { type: 'jpeg', quality: 1 },  // Best quality for images
-        html2canvas: { scale: 4 },  // Higher scale for better resolution
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
-
-    // Generate PDF without delay
-    html2pdf()
-        .from(element)
-        .set(options)
-        .save()
-        .catch(err => {
-            console.error('Error generating PDF:', err);
-            alert('An error occurred while generating the PDF.');
-        });
-}
+        
+        <div class="letloadallcontents" style="width: 50rem;height:inherit;padding:10px;">
 
 
-
-
-
-
-
-
-
-
-
-
-        window.onload = function() {
-    const registrationChart = Chart.getChart('registrationChart'); // Get the chart instance
-    if (registrationChart) {
-        const meta = registrationChart.getDatasetMeta(0); // Assuming Jobseekers is the first dataset
-        meta.hidden = !meta.hidden; // Toggle visibility
-        registrationChart.update();
-    }
-};
+<script>
+                function generatePDF() {
+                    // Scroll the page to the top before generating the PDF
+                    window.scrollTo(0, 0);
             
-            </script>
+                    // Disable scrolling on the page
+                    disableScroll();
+            
+                    const element = document.querySelector('.mainframe'); // Select the main content to convert to PDF
+            
+                    const options = {
+                        margin: 0.45,
+                        filename: 'peso_report.pdf',
+                        image: { type: 'jpeg', quality: 1 },  // Best quality for images
+                        html2canvas: { scale: 4 },  // Higher scale for better resolution
+                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
+            
+                    // Generate PDF using html2pdf
+                    html2pdf()
+                        .from(element)
+                        .set(options)
+                        .save()
+                        .then(() => {
+                            console.log("PDF has been generated and downloaded.");
+                        })
+                        .catch((error) => {
+                            console.error("Error generating PDF: ", error);
+                        })
+                        .finally(() => {
+                            // Re-enable scrolling after the PDF is generated
+                            enableScroll();
+                        });
+                }
+            
+                // Function to disable page scrolling
+                function disableScroll() {
+                    // Disable scroll and force the body to the top position
+                    document.body.style.overflow = 'hidden';
+                }
+            
+                // Function to re-enable page scrolling
+                function enableScroll() {
+                    // Re-enable scroll
+                    document.body.style.overflow = '';
+                }
+</script>
+            
             
         <main class="mainframe">
+            
             <header>
                 <div style="display: flex; height: min-content; width: -webkit-fill-available; justify-content: space-between; margin: 0px;">
                     <img src="static/images/bayan_ng_bustos.png" alt="Bayan Logo" width="90px">
@@ -106,7 +83,7 @@ function generatePDF() {
             </div>
 
             <div class="noApplicant">
-                <h5 style="text-align: center; font-size: 13px;">Number of Applicants</h5>
+                <h5 style="text-align: center; font-size: 13px;">Number of Hired Job Seekers</h5>
                 <canvas id="hiredChart" width="50%"></canvas>
             </div>
 
@@ -136,291 +113,326 @@ function generatePDF() {
         });
     </script>
 
-    <script type="text/javascript">
-        // Fetch data from the Flask route and render the chart
-        $(document).ready(function () {
-            $.ajax({
-                url: "/report_registration_data", // Flask route to get the registration data
-                type: "GET",
-                success: function (response) {
-                    const ctx = document.getElementById('registrationChart').getContext('2d');
-                    
-                    // Ensure the data is sorted by year
-                    const sortedIndices = response.labels.map((label, index) => ({ label, index }))
-                        .sort((a, b) => a.label - b.label); // Sort by year
-    
-                    const sortedLabels = sortedIndices.map(item => item.label);
-                    const sortedJobseekers = sortedIndices.map(item => response.jobseekers[item.index]);
-                    const sortedEmployers = sortedIndices.map(item => response.employers[item.index]);
-    
-                    const registrationChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: sortedLabels, // Sorted years
-                            datasets: [
-                                {
-                                    label: 'Jobseekers',
-                                    data: sortedJobseekers, // Sorted data for jobseekers
-                                    borderColor: '#1f77b4',
-                                    fill: false
-                                },
-                                {
-                                    label: 'Employers',
-                                    data: sortedEmployers, // Sorted data for employers
-                                    borderColor: '#ff7f0e',
-                                    fill: false
-                                }
-                            ]
-                        },
-                        options: {
-                            scales: {
-                                x: {
-                                    type: 'category', // Set x-axis type to 'category'
-                                    title: {
-                                        display: true,
-                                        text: 'Year' // Optional: Label for the x-axis
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    stepSize: 1, // Set the step size to 1
-                                    title: {
-                                        display: true,
-                                        text: 'Count' // Optional: Label for the y-axis
-                                    }
-                                }
-                            },
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: true
-                                }
-                            }
-                        }
-                    });
-    
-                    // Logic to determine the highest Jobseeker count and corresponding year
-                    // Logic to determine the highest Jobseeker count and corresponding year
-                    const jobseekerCounts = sortedJobseekers;
-                    const employerCounts = sortedEmployers; // Ensure you have this array available
-                    const highestJobseekerCount = Math.max(...jobseekerCounts);
-                    const highestEmployerCount = Math.max(...employerCounts);
-                    const highestJobseekerYearIndex = jobseekerCounts.indexOf(highestJobseekerCount);
-                    const highestEmployerYearIndex = employerCounts.indexOf(highestEmployerCount);
-                    const highestJobseekerYear = sortedLabels[highestJobseekerYearIndex];
-                    const highestEmployerYear = sortedLabels[highestEmployerYearIndex];
-
-                    // Determine the comparison text for Jobseekers
-                    let jobseekerComparisonText;
-                    if (highestJobseekerYear === String(new Date().getFullYear())) {
-                        jobseekerComparisonText = "than the previous year.";
-                    } else {
-                        jobseekerComparisonText = "than the current year.";
-                    }
-
-                    // Determine the employer message based on the count
-                    let employerMessage;
-                    if (highestEmployerCount >= 2) {
-                        employerMessage = `${highestEmployerCount} Employers were hired on ${new Date().getFullYear()}.`;
-                    } else if (highestEmployerCount === 1) {
-                        employerMessage = `1 Employer was hired on ${new Date().getFullYear()}.`;
-                    } else {
-                        employerMessage = `No Employers were hired on ${new Date().getFullYear()}.`;
-                    }
-
-                    // Create the paragraph and append it to the DOM
-                    const message = `The graph portrays that ${highestJobseekerCount} Jobseeker(s) registered to find a job on ${highestJobseekerYear} ${jobseekerComparisonText} ${employerMessage}`;
-                    $('<p style="font-size: 10px;">').text(message).appendTo('.noRegistered');
-                    
-                                                // Logic to handle the button click for the "Jobseekers" label
-
-                },
-                error: function (error) {
-                    console.error("Error fetching the registration data: ", error);
-                }
-            });
-        });
-    </script>
-    
-    <script type="text/javascript">
-        // Fetch data from the Flask route and render the chart
-        $(document).ready(function () {
-            $.ajax({
-                url: "/hired_data", // Flask route to get the applicants data
-                type: "GET",
-                success: function (response) {
-                    const ctx = document.getElementById('hiredChart').getContext('2d');
-                    
-                    // Ensure the data is sorted by year
-                    const sortedLabels = response.labels;
-                    const sortedApplicants = response.applicants;
-                    
-                    // Create the chart for passed applicants
-                    const hiredChart = new Chart(ctx, {
-                        type: 'bar',  // You can change the type to 'line' if you prefer
-                        data: {
-                            labels: sortedLabels, // Sorted years
-                            datasets: [
-                                {
-                                    label: 'Applicants Hired',
-                                    data: sortedApplicants, // Sorted data for applicants
-                                    backgroundColor: '#4caf50',  // Color for bars
-                                    borderColor: '#388e3c',
-                                    borderWidth: 1
-                                }
-                            ]
-                        },
-                        options: {
-                            scales: {
-                                x: {
-                                    type: 'category', // Set x-axis type to 'category'
-                                    title: {
-                                        display: true,
-                                        text: 'Year' // Optional: Label for the x-axis
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    stepSize: 1, // Set the step size to 1
-                                    title: {
-                                        display: true,
-                                        text: 'Count' // Optional: Label for the y-axis
-                                    }
-                                }
-                            },
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: true
-                                }
-                            }
-                        }
-                    });
-    
-                    // Logic to determine the highest count and corresponding year for passed applicants
-                    const highestApplicantCount = Math.max(...sortedApplicants);
-                    const highestApplicantYearIndex = sortedApplicants.indexOf(highestApplicantCount);
-                    const highestApplicantYear = sortedLabels[highestApplicantYearIndex];
-    
-                    // Create the paragraph and append it to the DOM
-                    const message = `The highest number of hired applicants was ${highestApplicantCount} in ${highestApplicantYear}.`;
-                    $('<p style="font-size: 10px;">').text(message).appendTo('.noApplicant');
-                },
-
-
+<script type="text/javascript">
+    // Fetch data from the Flask route and render the chart
+    $(document).ready(function () {
+        $.ajax({
+            url: "/report_registration_data", // Flask route to get the registration data
+            type: "GET",
+            success: function (response) {
+                const ctx = document.getElementById('registrationChart').getContext('2d');
                 
-                error: function (error) {
-                    console.error("Error fetching the applicants data: ", error);
-                }
-            });
-        });
-    </script>
-    
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $.ajax({
-                url: "/ratings_data", // Flask route to get the ratings data
-                type: "GET",
-                success: function (response) {
-                    const ctx = document.getElementById('ratingsChart').getContext('2d');
-    
-                    // Define colors for each star rating (1 to 5)
-                    const starColors = ['#ff9999', '#ffcc99', '#ffff99', '#ccff99', '#99ff99'];
-    
-                    const ratingsChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: response.labels, // Years
-                            datasets: [
-                                {
-                                    label: '1 Star',
-                                    data: response.stars[1], // 1-star ratings
-                                    backgroundColor: starColors[0]
-                                },
-                                {
-                                    label: '2 Stars',
-                                    data: response.stars[2], // 2-star ratings
-                                    backgroundColor: starColors[1]
-                                },
-                                {
-                                    label: '3 Stars',
-                                    data: response.stars[3], // 3-star ratings
-                                    backgroundColor: starColors[2]
-                                },
-                                {
-                                    label: '4 Stars',
-                                    data: response.stars[4], // 4-star ratings
-                                    backgroundColor: starColors[3]
-                                },
-                                {
-                                    label: '5 Stars',
-                                    data: response.stars[5], // 5-star ratings
-                                    backgroundColor: starColors[4]
-                                }
-                            ]
-                        },
-                        options: {
-                            scales: {
-                                x: {
-                                    type: 'category',
-                                    title: {
-                                        display: true,
-                                        text: 'Year' // Label for the x-axis
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Number of Ratings' // Label for the y-axis
-                                    }
+                // Ensure the data is sorted by year
+                const sortedIndices = response.labels.map((label, index) => ({ label, index }))
+                    .sort((a, b) => a.label - b.label); // Sort by year
+
+                const sortedLabels = sortedIndices.map(item => item.label);
+                const sortedJobseekers = sortedIndices.map(item => response.jobseekers[item.index]);
+                const sortedEmployers = sortedIndices.map(item => response.employers[item.index]);
+
+                const registrationChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedLabels, // Sorted years
+                        datasets: [
+                            {
+                                label: 'Jobseekers',
+                                data: sortedJobseekers, // Sorted data for jobseekers
+                                borderColor: '#1f77b4',
+                                fill: false
+                            },
+                            {
+                                label: 'Employers',
+                                data: sortedEmployers, // Sorted data for employers
+                                borderColor: '#ff7f0e',
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'category', // Set x-axis type to 'category'
+                                title: {
+                                    display: true,
+                                    text: 'Year' // Optional: Label for the x-axis
                                 }
                             },
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: true
+                            y: {
+                                beginAtZero: true,
+                                stepSize: 1, // Set the step size to 1
+                                title: {
+                                    display: true,
+                                    text: 'Count' // Optional: Label for the y-axis
+                                }
+                            }
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                onClick: (e, legendItem, legend) => {
+                                    // Get the index of the clicked item
+                                    const index = legendItem.datasetIndex;
+
+                                    // Toggle visibility
+                                    const dataset = legend.chart.data.datasets[index];
+                                    dataset.hidden = !dataset.hidden;
+
+                                    // Check if both datasets are hidden
+                                    const allHidden = legend.chart.data.datasets.every(ds => ds.hidden);
+                                    if (allHidden) {
+                                        e.stopPropagation(); // Prevent propagation if all datasets are hidden
+                                        dataset.hidden = false; // Make sure one dataset stays visible
+                                    }
+
+                                    // Re-render the chart
+                                    legend.chart.update();
                                 }
                             }
                         }
-                    });
-    
-                    // Logic to determine the highest rating count for the current year
-                    const currentYear = new Date().getFullYear().toString();
-                    const previousYear = (new Date().getFullYear() - 1).toString();
-                    
-                    // Calculate total ratings for the current year and previous year
-                    const currentYearRatings = response.stars[1][response.labels.indexOf(currentYear)] +
-                        response.stars[2][response.labels.indexOf(currentYear)] +
-                        response.stars[3][response.labels.indexOf(currentYear)] +
-                        response.stars[4][response.labels.indexOf(currentYear)] +
-                        response.stars[5][response.labels.indexOf(currentYear)];
-    
-                    const previousYearRatings = response.stars[1][response.labels.indexOf(previousYear)] +
-                        response.stars[2][response.labels.indexOf(previousYear)] +
-                        response.stars[3][response.labels.indexOf(previousYear)] +
-                        response.stars[4][response.labels.indexOf(previousYear)] +
-                        response.stars[5][response.labels.indexOf(previousYear)];
-    
-                    // Create the message
-                    let message;
-                    if (currentYearRatings > previousYearRatings) {
-                        message = `The current year (${currentYear}) has higher ratings (${currentYearRatings}) than the previous year (${previousYear}) with (${previousYearRatings}).`;
-                    } else {
-                        message = `The previous year (${previousYear}) had higher ratings (${previousYearRatings}) than the current year (${currentYear}) with (${currentYearRatings}).`;
                     }
-    
-                    // Append the message to the DOM
-                    $('<p style="font-size: 12px; text-align: center;">').text(message).appendTo('.noRatings');
-                },
-                error: function (error) {
-                    console.error("Error fetching the ratings data: ", error);
+                });
+
+                const jobseekerCounts = sortedJobseekers;
+                const employerCounts = sortedEmployers; // Ensure you have this array available
+                const highestJobseekerCount = Math.max(...jobseekerCounts);
+                const highestEmployerCount = Math.max(...employerCounts);
+                const highestJobseekerYearIndex = jobseekerCounts.indexOf(highestJobseekerCount);
+                const highestEmployerYearIndex = employerCounts.indexOf(highestEmployerCount);
+                const highestJobseekerYear = sortedLabels[highestJobseekerYearIndex];
+                const highestEmployerYear = sortedLabels[highestEmployerYearIndex];
+
+                // Determine the comparison text for Jobseekers
+                let jobseekerComparisonText;
+                if (highestJobseekerYear === String(new Date().getFullYear())) {
+                    jobseekerComparisonText = "than the previous year.";
+                } else {
+                    jobseekerComparisonText = "than the current year.";
                 }
-            });
+
+                // Determine the employer message based on the count
+                let employerMessage;
+                if (highestEmployerCount >= 2) {
+                    employerMessage = `${highestEmployerCount} Employers were hired on ${new Date().getFullYear()}.`;
+                } else if (highestEmployerCount === 1) {
+                    employerMessage = `1 Employer was hired on ${new Date().getFullYear()}.`;
+                } else {
+                    employerMessage = `No Employers were hired on ${new Date().getFullYear()}.`;
+                }
+
+                // Create the paragraph and append it to the DOM
+                const message = `The graph portrays that ${highestJobseekerCount} Jobseeker(s) registered to find a job on ${highestJobseekerYear} ${jobseekerComparisonText} ${employerMessage}`;
+                $('<p style="font-size: 10px;">').text(message).appendTo('.noRegistered');
+            },
+            error: function (error) {
+                console.error("Error fetching the registration data: ", error);
+            }
         });
-    </script>
+    });
+</script>
+
+
+    
+<script type="text/javascript">
+    // Fetch data from the Flask route and render the chart
+    $(document).ready(function () {
+        $.ajax({
+            url: "/hired_data", // Flask route to get the applicants data
+            type: "GET",
+            success: function (response) {
+                const ctx = document.getElementById('hiredChart').getContext('2d');
+                
+                // Ensure the data is sorted by year
+                const sortedLabels = response.labels;
+                const sortedApplicants = response.applicants;
+                
+                // Create the chart for hired applicants
+                const hiredChart = new Chart(ctx, {
+                    type: 'bar',  // You can change the type to 'line' if you prefer
+                    data: {
+                        labels: sortedLabels, // Sorted years
+                        datasets: [
+                            {
+                                label: 'Jobseekers Hired',
+                                data: sortedApplicants, // Sorted data for applicants
+                                backgroundColor: '#4caf50',  // Color for bars
+                                borderColor: '#388e3c',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'category', // Set x-axis type to 'category'
+                                title: {
+                                    display: true,
+                                    text: 'Year' // Optional: Label for the x-axis
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                stepSize: 1, // Set the step size to 1
+                                title: {
+                                    display: true,
+                                    text: 'Count' // Optional: Label for the y-axis
+                                }
+                            },
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                onClick: (e, legendItem, legend) => {
+                                    // Get the index of the clicked item
+                                    const index = legendItem.datasetIndex;
+
+                                    // Toggle visibility
+                                    const dataset = legend.chart.data.datasets[index];
+                                    dataset.hidden = !dataset.hidden;
+
+                                    // Check if all datasets are hidden
+                                    const allHidden = legend.chart.data.datasets.every(ds => ds.hidden);
+                                    if (allHidden) {
+                                        e.stopPropagation(); // Prevent propagation if all datasets are hidden
+                                        dataset.hidden = false; // Make sure one dataset stays visible
+                                    }
+
+                                    // Re-render the chart
+                                    legend.chart.update();
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Logic to determine the highest count and corresponding year for hired applicants
+                const highestApplicantCount = Math.max(...sortedApplicants);
+                const highestApplicantYearIndex = sortedApplicants.indexOf(highestApplicantCount);
+                const highestApplicantYear = sortedLabels[highestApplicantYearIndex];
+
+                // Create the paragraph and append it to the DOM
+                const message = `The highest number of hired jobseekers was ${highestApplicantCount} in ${highestApplicantYear}.`;
+                $('<p style="font-size: 10px;">').text(message).appendTo('.noApplicant');
+            },
+            error: function (error) {
+                console.error("Error fetching the applicants data: ", error);
+            }
+        });
+    });
+</script>
+
+    
+<script type="text/javascript">
+    $(document).ready(function () {
+        $.ajax({
+            url: "/ratings_data", // Flask route to get the ratings data
+            type: "GET",
+            success: function (response) {
+                const ctx = document.getElementById('ratingsChart').getContext('2d');
+
+                // Define colors for each star rating (1 to 5)
+                const starColors = ['#ff9999', '#ffcc99', '#ffff99', '#ccff99', '#99ff99'];
+
+                const ratingsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: response.labels, // Years
+                        datasets: [
+                            {
+                                label: '1 Star',
+                                data: response.stars[1], // 1-star ratings
+                                backgroundColor: starColors[0]
+                            },
+                            {
+                                label: '2 Stars',
+                                data: response.stars[2], // 2-star ratings
+                                backgroundColor: starColors[1]
+                            },
+                            {
+                                label: '3 Stars',
+                                data: response.stars[3], // 3-star ratings
+                                backgroundColor: starColors[2]
+                            },
+                            {
+                                label: '4 Stars',
+                                data: response.stars[4], // 4-star ratings
+                                backgroundColor: starColors[3]
+                            },
+                            {
+                                label: '5 Stars',
+                                data: response.stars[5], // 5-star ratings
+                                backgroundColor: starColors[4]
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'category',
+                                title: {
+                                    display: true,
+                                    text: 'Year' // Label for the x-axis
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Ratings' // Label for the y-axis
+                                }
+                            }
+                        },
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                onClick: function() {
+                                    // Disable clicking on the legend items
+                                    return;
+                                    legend.chart.update();
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Logic to determine the highest rating count for the current year
+                const currentYear = new Date().getFullYear().toString();
+                const previousYear = (new Date().getFullYear() - 1).toString();
+                
+                // Calculate total ratings for the current year and previous year
+                const currentYearRatings = response.stars[1][response.labels.indexOf(currentYear)] +
+                    response.stars[2][response.labels.indexOf(currentYear)] +
+                    response.stars[3][response.labels.indexOf(currentYear)] +
+                    response.stars[4][response.labels.indexOf(currentYear)] +
+                    response.stars[5][response.labels.indexOf(currentYear)];
+
+                const previousYearRatings = response.stars[1][response.labels.indexOf(previousYear)] +
+                    response.stars[2][response.labels.indexOf(previousYear)] +
+                    response.stars[3][response.labels.indexOf(previousYear)] +
+                    response.stars[4][response.labels.indexOf(previousYear)] +
+                    response.stars[5][response.labels.indexOf(previousYear)];
+
+                // Create the message
+                let message;
+                if (currentYearRatings > previousYearRatings) {
+                    message = `The current year (${currentYear}) has higher ratings (${currentYearRatings}) than the previous year (${previousYear}) with (${previousYearRatings}).`;
+                } else {
+                    message = `The previous year (${previousYear}) had higher ratings (${previousYearRatings}) than the current year (${currentYear}) with (${currentYearRatings}).`;
+                }
+
+                // Append the message to the DOM
+                $('<p style="font-size: 12px; text-align: center;">').text(message).appendTo('.noRatings');
+            },
+            error: function (error) {
+                console.error("Error fetching the ratings data: ", error);
+            }
+        });
+    });
+</script>
+
         
 
 
-</body>
-</html>

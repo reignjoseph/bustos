@@ -4,12 +4,12 @@
 .hidden-container { display: none; }
 .visible-container { display: grid; }
 .camera-icon {
-    bottom: 0;
-    position: absolute;
+    bottom: 0px;
+    position: relative;
     right: 0;
     background-color: white;
     border-radius: 50%;
-    padding: 0.5rem;
+    padding: 0.25rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     height: min-content;
@@ -30,7 +30,7 @@
 .button-profile {grid-column: 2;width: min-content;text-wrap: nowrap;grid-row: 4;font-size: 11px;align-self: end;justify-self: center;}
 
 
-.formcontainer{display: flex;background-color: #c2c2c2;border-radius: 5px;padding: 10px;flex-direction: column;width: 25rem;gap: 20px;}
+.formcontainer{display: flex;background-color: #c2c2c2;border-radius: 5px;padding: 10px;flex-direction: column;width: 25rem;gap: 0px;}
 .PIcontainer{display: block;position: relative;grid-row: 3;width: -webkit-fill-available;place-items: center;border-radius: 10px;}
 
 .PIcontainer .email{
@@ -63,15 +63,21 @@
     width: -webkit-fill-available;
     height: min-content;
     border: 1px solid !important;
-    padding: 10px;
-    border-radius: 5px;
-    background: aliceblue;
+    background: #c7c7c7;
 }
 .profile_phone{
-    border: 1px solid black !important;
+    width: -webkit-fill-available;
+    height: min-content;
+    border: 1px solid !important;
+    background: #c7c7c7;
 }
 
-
+.profile_address{
+    width: -webkit-fill-available;
+    height: min-content;
+    border: 1px solid !important;
+    background: #c7c7c7;
+}
 .update_profile{width: -webkit-fill-available;display: grid;grid-template-columns: repeat(2, 45%);grid-template-rows: 0px 90px min-content 1fr;grid-column-gap: 5%;grid-row-gap: 20px;}
 
 

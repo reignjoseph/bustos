@@ -1338,13 +1338,16 @@ def profile_employer():
 
 @app.route('/change_password', methods=['POST'])
 def change_password():
-    print("Received data:", request.form)
-    old_password = request.form['oldpassword']
-    new_password = request.form['newpassword']
-    confirm_password = request.form['confirmpassword']
+    # Access the data as JSON
+    data = request.json
+    old_password = data['oldpassword']           # Change to match AJAX keys
+    new_password = data['newpassword']           # Change to match AJAX keys
+    confirm_password = data['confirmpassword']   # Change to match AJAX keys
+
     print(f"Old Password: {old_password}")
     print(f"New Password: {new_password}")
     print(f"Confirm Password: {confirm_password}")
+    
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -1377,7 +1380,6 @@ def change_password():
 
     # Redirect to the profile page or another page as needed
     return jsonify({'success': True})
-
 
 
 

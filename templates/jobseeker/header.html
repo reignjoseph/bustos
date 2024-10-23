@@ -64,13 +64,7 @@ function closeLogout() {
     document.getElementById("jobseeker_logout_modal").style.display = "none"; // Hide modal
 }
 
-// Close the modal if the user clicks outside of it
-window.onclick = function(event) {
-    const modal = document.getElementById("jobseeker_logout_modal");
-    if (event.target == modal) {
-        closeLogout();
-    }
-};    
+ 
 </script>
 <body>
     <header style="padding: 10px;">
@@ -94,7 +88,7 @@ window.onclick = function(event) {
                     <a class="box" onclick="openRate()">
                         <img class="image" src="/static/images/rating.png" alt="Logo">
                     Rate</a>
-                    <a class="box" onclick="openProfile()">
+                    <a class="box" onclick="openProfileModal()">
                         <img class="image" src="/static/images/profile.png" alt="Logo">
                     Profile</a>
                     <a class="box" onclick="openLogout()">

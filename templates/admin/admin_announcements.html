@@ -1,8 +1,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/admin_announcements.css') }}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 
-<div class="announcements" style="flex-direction: column;display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
-    <h1 style="color: white; text-align: -webkit-left;" for="announcementID">Announcement</h1>
+<div class="announcements" style="grid-column: 2;flex-direction: column;display: none;background-color: rgba(0, 66, 201, 0.49); width: -webkit-fill-available; height: -webkit-fill-available; margin: 16px; border-radius: 5px; border: 1px solid;">
+    <h1 style="color: white; text-align: -webkit-left;" for="announcementID">Announcements</h1>
     <div class="mainframe_announcements" style="display: flex;flex-direction: column;padding: 20px;background-color: white;border-radius: 10px;">
         <div class="filter_announcement" style="display: flex; gap: 10px; text-align: center; margin-bottom: 20px;">
             
@@ -16,9 +16,11 @@
             <button class="filter_button openmakeannounce" style="background: white; padding: 4px 16px 4px 16px;" onclick="toggleMakeAnnounce(event)">
                 <img src="{{ url_for('static', filename='images/create.png') }}" alt="Create Announcement" style="width: 20px;">
             </button>
+            <button class="filter_button " style="background: white; padding: 4px 16px 4px 16px;" onclick="viewArchived()">
+                <img src="{{ url_for('static', filename='images/archive.png') }}" alt="Archive" style="width: 20px;">
+            </button>
         </div>
 
-<!-- Hidden form initially -->
 <!-- Background overlay and form container -->
 <div id="announce_container" style=" display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); justify-content: center; align-items: center; z-index: 9999; display: flex;" onclick="this.style.display='none';">
     
@@ -58,7 +60,6 @@
 </div>
 
 
-<!-- EDIT MODAL -->
 <!-- Edit Announcement Modal -->
 <div id="editModal" class="modal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -108,6 +109,130 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for viewing archived announcements -->
+<div id="viewAnnouncementArchive" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 8px; width: 80%; max-width: 900px; text-align: center;flex-direction: column;display: inherit;">
+        <h6>Welcome to the Archived Announcement</h6>
+
+        <table class="fetched_announcement_archived" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">What</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Where</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">When</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Requirement</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Date Posted</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamic announcement rows will be appended here -->
+            </tbody>
+        </table>
+
+        <button style="width:fit-content; align-self: flex-end;" onclick="closeArchiveModal()" style="margin-top: 20px;">Close</button>
+    </div>
+</div>
+
+<script>
+function viewArchived() {
+    // Fetch archived announcements via AJAX
+    $.ajax({
+        url: '/fetch_admin_announcement_archived',
+        type: 'GET',
+        success: function(data) {
+            // Check if data is an array
+            if (Array.isArray(data)) {
+                let totalAnnouncements = data.length;
+
+                // Clear previous content
+                $('.fetched_announcement_archived').html('');  // Clear the table body
+
+                // Add table headers back
+                $('.fetched_announcement_archived').append(`
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">What</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Where</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">When</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Requirement</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Date Posted</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Status</th>
+                            <th style="border: 1px solid #ddd; padding: 8px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `);
+
+                // Iterate through the fetched data and append rows to the table body
+                data.forEach(announcement => {
+                    const statusClass = announcement.status === "Available" ? "Available" : "Unavailable";
+                    const formattedDate = moment(announcement.date_posted).format('MMMM DD, YYYY HH:mm');
+                    $('.fetched_announcement_archived tbody').append(`
+                        <tr class="${statusClass}">
+                            <td data-label="ID">${announcement.announcementID}</td>
+                            <td data-label="What">${announcement.What}</td>
+                            <td data-label="Where">${announcement.Where}</td>
+                            <td data-label="When">${announcement.When}</td>
+                            <td data-label="Requirement">${announcement.Requirement}</td>
+                            <td data-label="Description">${announcement.Description}</td>
+                            <td data-label="Date">${formattedDate}</td>
+                            <td data-label="Status">${announcement.status}</td>
+                            <td data-label="Action" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <button style="background: white; border: none; border-radius: 6px; display: flex; align-items: center; width:min-content; padding:10px;" class="announcement_hide" onclick="unarchivedAnnouncement(${announcement.announcementID})">
+                                    <img width="30px" src="static/images/unarchive.png"> Unarchive
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                });
+
+                // Show the modal
+                document.getElementById('viewAnnouncementArchive').style.display = 'flex';
+            } else {
+                console.error("No archived announcements found.");
+            }
+        },
+        error: function(err) {
+            console.error('Error fetching archived announcements:', err);
+        }
+    });
+}
+function unarchivedAnnouncement(announcementID) {
+    if (confirm("Are you sure you want to unarchive this announcement?")) {
+        $.ajax({
+            url: '/update_unarchived_admin_announcement',
+            type: 'POST',
+            data: {
+                announcementID: announcementID
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Announcement successfully unarchived.');
+                    // Optionally refresh the list or remove the announcement from the archive list
+                    viewArchived();  // Refresh the archive modal or list
+                    announcement_applyFilter();
+                } else {
+                    alert('Failed to unarchive the announcement.');
+                }
+            },
+            error: function(err) {
+                console.error('Error unarchiving announcement:', err);
+            }
+        });
+    }
+}
+function closeArchiveModal() {
+    // Hide the modal
+    document.getElementById('viewAnnouncementArchive').style.display = 'none';
+}
+</script>
 
 <script>
     function submitEditAnnouncement() {
@@ -209,20 +334,20 @@
                         const formattedDate = moment(announcement.date_posted).format('MMMM DD, YYYY HH:mm');
                         $('.fetched_announcement').append(`
                         <tr class="${statusClass}">
-            <td data-label="ID">${announcement.announcementID}</td>
-            <td data-label="What">${announcement.What}</td>
-            <td data-label="Where">${announcement.Where}</td>
-            <td data-label="When">${announcement.When}</td>
-            <td data-label="Requirement">${announcement.Requirement}</td>
-            <td data-label="Description">${announcement.Description}</td>
-            <td data-label="Date">${formattedDate}</td>
-            <td data-label="Status">${announcement.status}</td>
-            <td data-label="Action" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                        <td data-label="ID">${announcement.announcementID}</td>
+                        <td data-label="What">${announcement.What}</td>
+                        <td data-label="Where">${announcement.Where}</td>
+                        <td data-label="When">${announcement.When}</td>
+                        <td data-label="Requirement">${announcement.Requirement}</td>
+                        <td data-label="Description">${announcement.Description}</td>
+                        <td data-label="Date">${formattedDate}</td>
+                        <td data-label="Status">${announcement.status}</td>
+                        <td data-label="Action" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
                                 <button style="background: white; border: none; border-radius: 6px;display: flex; align-items: center; width:min-content; padding:10px;" class="announcement_edit" onclick="editAnnouncement(${announcement.announcementID})">
                                     <img width="30px" src="static/images/announcement_edit.png"> Edit
                                 </button>
-                                <button style="background: white; border: none; border-radius: 6px;display: flex; align-items: center; width:min-content; padding:10px;" class="announcement_delete" onclick="deleteAnnouncement(${announcement.announcementID})">
-                                    <img width="30px" src="static/images/announcement_delete.png"> Delete
+                                <button style="background: white; border: none; border-radius: 6px;display: flex; align-items: center; width:min-content; padding:10px;" class="announcement_hide" onclick="hideAnnouncement(${announcement.announcementID})">
+                                    <img width="30px" src="static/images/archive.png"> Archive
                                 </button>
                             </td>
         </tr>
@@ -267,20 +392,20 @@
         });
     }
 
-    function deleteAnnouncement(announcementID) {
-        if (confirm("Are you sure you want to delete this announcement?")) {
+    function hideAnnouncement(announcementID) {
+        if (confirm("Are you sure you want to archive this announcement?")) {
             $.ajax({
-                url: '/apply_delete_announcement',  // Your API endpoint to delete
+                url: '/apply_hide_announcement',  // Your API endpoint to delete
                 type: 'POST',
                 data: {
                     announcementID: announcementID
                 },
                 success: function(response) {
-                    alert("Announcement deleted successfully.");
+                    // alert("Announcement hide successfully.");
                     announcement_applyFilter();  // Refresh the list after deletion
                 },
                 error: function(err) {
-                    console.error('Error deleting announcement:', err);
+                    console.error('Error hiding announcement:', err);
                 }
             });
         }
@@ -343,6 +468,7 @@
     flatpickr('#when', {
         mode: 'range',
         dateFormat: 'Y-m-d',
+        minDate: 'today'
     });
 
 

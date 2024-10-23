@@ -186,6 +186,7 @@ function seeFullDetail(button) {
         }
     });
 }
+
 function openApplyNowModal() {
     document.getElementById('prompt_apply_now').style.display = 'block';
 }
@@ -412,10 +413,12 @@ function uploadFile(formData) {
             });
     }
 
-    // Run session check on window load and every 60 seconds
-    window.onload = function() {
-        checkSession(); // Check session status when the page loads
-        setInterval(checkSession, 60000); // Check session status every 60 seconds
-    };
+
 </script>
 
+<script>
+window.addEventListener("beforeunload", function (e) {
+    // Send an AJAX request to mark the user as inactive before closing the tab
+    navigator.sendBeacon('/update_inactive_status');  // Use sendBeacon to send the request before the tab closes
+});
+</script>

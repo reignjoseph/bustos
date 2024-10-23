@@ -197,3 +197,21 @@
         font-weight: bold;
     }
 }
+.fetched_announcement_archived tbody tr:nth-child(odd) {
+    background-color: white;
+}
+
+.fetched_announcement_archived tbody tr:nth-child(even) {
+    background-color: lightgrey;
+}
+
+.fetched_announcement_archived th, .fetched_announcement_archived td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    white-space: pre-wrap;
+}
+
+.fetched_announcement_archived th {
+    background-color: #f2f2f2;
+    text-align: left;
+}

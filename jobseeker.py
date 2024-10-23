@@ -1,5 +1,5 @@
 # import re
-from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify
+from flask import Flask, request, redirect, url_for, render_template, flash, session, jsonify,send_from_directory
 import sqlite3
 import os
 import time
@@ -53,8 +53,37 @@ def get_db_connection():
 
 
 
+@app.route('/view_nstp_form', methods=['GET'])
+def view_nstp_form():
+    user_id = session.get('user_id')
+    if user_id is None:
+        return jsonify({'error': 'User not logged in.'}), 401
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    try:
+        cursor.execute("SELECT pdf_form FROM users WHERE User_ID = ?", (user_id,))
+        result = cursor.fetchone()
+
+        if result:
+            pdf_filename = result[0]  # Assuming this contains the filename
+            pdf_path = os.path.join('static', 'images', 'jobseeker-uploads', pdf_filename)
+
+            # Check if the file exists before trying to send it
+            if os.path.exists(pdf_path):
+                # This should serve the PDF correctly
+                return send_from_directory(os.path.dirname(pdf_path), os.path.basename(pdf_path), as_attachment=False)
+            else:
+                return jsonify({'error': 'PDF not found.'}), 404
+        else:
+            return jsonify({'error': 'PDF not found.'}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': 'An error occurred while retrieving the PDF.'}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route('/fetch_all_hidden_jobseeker_notification', methods=['GET'])
@@ -1043,7 +1072,19 @@ def jobseeker():
     # Pass the jobs and user data to the template
     return render_template('/jobseeker/jobseeker.html', jobs=jobs, user_data=user_data)
 
+@app.route('/update_inactive_status', methods=['POST'])
+def update_inactive_status():
+    if 'user_id' in session:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET currentState = ? WHERE User_ID = ?', ('Inactive', session['user_id']))
+        conn.commit()
+        cursor.close()
+        conn.close()
 
+        session.clear()  # Clear session data after marking as inactive
+        return jsonify({'status': 'success'}), 200
+    return jsonify({'error': 'Not authenticated'}), 403
 
 
 
@@ -1065,8 +1106,6 @@ def update_profile():
     # Retrieve form data
     try:
         bio = request.form['bio']
-        address = request.form['address']
-        phone = request.form['phone']
     except KeyError as e:
         flash(f'Missing form field: {e}')
         return redirect(request.url)
@@ -1074,9 +1113,10 @@ def update_profile():
     # Get current user data from the database
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT profile FROM users WHERE User_ID = ?", (user_id,))
-    current_image_path = cursor.fetchone()[0]
-    conn.close()
+    cursor.execute("SELECT profile, email FROM users WHERE User_ID = ?", (user_id,))
+    user_data = cursor.fetchone()
+    current_image_path = user_data[0]  # Get current profile image path
+    email_address = user_data[1]        # Get email address
 
     # Handle the profile picture upload
     if 'profile_picture' not in request.files or request.files['profile_picture'].filename == '':
@@ -1086,23 +1126,46 @@ def update_profile():
         file = request.files['profile_picture']
         if allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
+            filepath = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)  # Ensure you have this config set
             file.save(filepath)
-            image_path = f'images/jobseeker-uploads/{filename}'
+            image_path = f'images/jobseeker-uploads/{filename}'  # Update this for the database path
         else:
             flash('Invalid file format')
             image_path = current_image_path  # Keep the current image path if the file is invalid
 
-    # Update the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # Update the database with the user's bio and profile image
     cursor.execute("""
         UPDATE users
-        SET bio = ?, address = ?, contactnum = ?, profile = ?
+        SET bio = ?, profile = ?
         WHERE User_ID = ?
-    """, (bio, address, phone, image_path, user_id))
-    
+    """, (bio, image_path, user_id))
 
+    # Print the updated values for debugging
+    print(f"Updated Profile: User_ID = {user_id}, Bio = {bio}, Profile Image Path = {image_path}, Email = {email_address}")
+
+    # Now, get the address and phone number from the form101 table
+    cursor.execute("""
+        SELECT address, barangay, municipality, province, contact_no
+        FROM form101
+        WHERE jobseeker_id = ?
+    """, (user_id,))
+    form_data = cursor.fetchone()
+
+    if form_data:
+        # Concatenate address fields
+        address = f"{form_data[0]}, {form_data[1]}, {form_data[2]}, {form_data[3]}"  # Concatenate address fields
+        contact_no = form_data[4]  # Get contact number
+
+        # Print email, address, and contact number for debugging
+        print(f"Email Address: {email_address}, Address: {address}, Contact No: {contact_no}")
+
+        # You can now use email_address, address, and contact_no as needed, for example, you might want to update them in the users table if necessary
+        # Uncomment the next lines if you need to update the contact number and address in the users table
+        # cursor.execute("""
+        #     UPDATE users
+        #     SET address = ?, contact_no = ?
+        #     WHERE User_ID = ?
+        # """, (address, contact_no, user_id))
 
     # Get jobseeker details from `users` table
     cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (user_id,))
@@ -1113,8 +1176,7 @@ def update_profile():
         fname = user[1]    # fname
         userType = user[2] # userType
 
-        # Now fetch the rating using the last inserted `rating_id`
-        notification_text = f"{fname} update his profile status"
+        notification_text = f"{fname} updated their profile."
 
         # Insert notification into `admin_notification` table
         cursor.execute('''
@@ -1124,14 +1186,11 @@ def update_profile():
 
         print(f"Admin Notification: {notification_text}")
 
-
     conn.commit()
     conn.close()
-    
-    # Redirect to the jobseeker page after updating the profile
-    return redirect(url_for('jobseeker'))
 
-
+    # Return a JSON response for AJAX
+    return jsonify(success=True)
 
 
 
