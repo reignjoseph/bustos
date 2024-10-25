@@ -382,39 +382,6 @@ function uploadFile(formData) {
     });
 </script>
 
-<script>
-    function checkSession() {
-        fetch('/jobseeker', { method: 'GET' })
-            .then(response => {
-                // Check if the response is a redirect (HTML), meaning session has expired
-                if (response.redirected) {
-                    alert('Your session has timed out. You will be redirected to sign in.');
-                    window.location.href = response.url;  // Redirect to sign-in
-                    return;
-                }
-
-                // Only attempt to parse JSON if the content type is correct
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return response.json();
-                } else {
-                    // Handle non-JSON responses (e.g., session expired page)
-                    throw new Error('Response was not JSON');
-                }
-            })
-            .then(data => {
-                if (data && data.session_timeout) {
-                    alert('Your session has timed out. Please sign in again.');
-                    window.location.href = '/signin'; // Redirect to sign-in page
-                }
-            })
-            .catch(error => {
-                console.error('Error checking session:', error);
-            });
-    }
-
-
-</script>
 
 <script>
 window.addEventListener("beforeunload", function (e) {

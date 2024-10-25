@@ -14,6 +14,8 @@ import pytz
 import time
 import logging
 import bcrypt
+import requests
+import json 
 # This is the 
 # Set a secret key for the session
 app.secret_key = 'your_secret_key'
@@ -1059,4 +1061,69 @@ def create_account():
 
 
     return redirect('/signin')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.config['UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
+app.config['DUMP_FOLDER'] = 'static/dumps'
+
+# Create necessary directories if they don't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['DUMP_FOLDER'], exist_ok=True)
+
+@app.route('/upload_resume', methods=['POST'])
+def upload_resume():
+    start_time = time.time()
+    
+    if 'resume' not in request.files:
+        print("No file part in the request.")
+        return jsonify({"message": "No file part"}), 400
+
+    file = request.files['resume']
+    if file.filename == '':
+        print("No selected file.")
+        return jsonify({"message": "No selected file"}), 400
+
+    # Save the uploaded resume
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    print(f"Saving file to: {file_path}")
+    file.save(file_path)
+
+    # Prepare the API request to parse the resume
+    url = "https://api.apilayer.com/resume_parser/url?url="
+    headers = {
+        "apikey": "sRD97QBwFuA6Z8oXkfGd8fbOZbeOkHu0"
+    }
+    
+    # Construct the resume URL using the base URL
+    resume_url = f"https://672f0qdk-0fbmnoqs-zqnmrxojxoy8.ac2-preview.marscode.dev/{file_path}"
+    print(f"Requesting resume parsing for URL: {resume_url}")
+    
+    # Record the time before the request
+    request_start_time = time.time()
+    response = requests.get(url + resume_url, headers=headers)
+    request_duration = time.time() - request_start_time
+    print(f"Request duration: {request_duration:.2f} seconds")
+
+    print(f"Response status code: {response.status_code}")
+    print(f"Response text: {response.text}")
 

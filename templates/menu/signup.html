@@ -47,16 +47,62 @@
             </div>
         </div>
     </form>
+
+    <input type="file" id="fileInput" accept=".pdf" />
+    <button id="submitBtn">Upload and Parse</button>
+
+<script>
+document.getElementById('submitBtn').addEventListener('click', function() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            const blob = new Blob([event.target.result], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob); // Create a blob URL
+
+            var myHeaders = new Headers();
+            myHeaders.append("apikey", "sRD97QBwFuA6Z8oXkfGd8fbOZbeOkHu0");
+
+            var requestOptions = {
+                method: 'GET',
+                redirect: 'follow',
+                headers: myHeaders
+            };
+
+            fetch(`https://api.apilayer.com/resume_parser/url?url=${encodeURIComponent(url)}`, requestOptions)
+                .then(response => response.text())
+                .then(result => console.log(result))
+                .catch(error => console.log('error', error));
+        };
+
+        reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
+    } else {
+        console.log('No file selected');
+    }
+});
+
+</script>    
+    
 </main>
 
 
 
-<!-- <script>
-    document.getElementById('generate-pdf').addEventListener('click', () => {
-        const element = document.querySelector('.form-container_registration'); // Adjust the selector to your form container class or ID
-        html2pdf().from(element).save('form-content.pdf');
-    });
-    </script> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

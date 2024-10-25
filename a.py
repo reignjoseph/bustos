@@ -1,26 +1,45 @@
-import sqlite3
+import requests
+import json
+import os
 
-# Path to your SQLite database
-DATABASE = 'trabahanap.db'
+# Relative path of the resume PDF file to parse
+resume_path = "static/images/jobseeker-uploads/CV.pdf"
 
-def count_available_jobs():
-    """Count and print the number of available jobs from the jobs table."""
-    connection = sqlite3.connect(DATABASE)
-    cursor = connection.cursor()  # Create a cursor
-    try:
-        # Query to count available jobs
-        cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Available'")
-        count = cursor.fetchone()[0]  # Fetch the first element from the result
-        
-        # Print the count
-        print(f"Number of available jobs: {count}")
+# API endpoint for resume parsing
+url = "https://api.apilayer.com/resume_parser/url?url="
 
-    except sqlite3.DatabaseError as e:
-        print(f"Database error: {e}")
+# Prepare the request headers
+headers = {
+    "apikey": "sRD97QBwFuA6Z8oXkfGd8fbOZbeOkHu0"
+}
 
-    finally:
-        cursor.close()  # Close the cursor
-        connection.close()  # Close the connection
+# Use the base URL to construct the full URL dynamically
+base_url = "https://672f0qdk-0fbmnoqs-zqnmrxojxoy8.ac2-preview.marscode.dev/"  # Replace with your actual domain
+resume_url = f"{base_url}{resume_path}"
 
-if __name__ == '__main__':
-    count_available_jobs()  # Call the function
+# Send the GET request
+response = requests.get(url + resume_url, headers=headers)
+
+# Check the response status and process the result
+status_code = response.status_code
+if status_code == 200:
+    # Parse the JSON response
+    parsed_data = response.json()
+    print("Response:", parsed_data)
+
+    # Extract the name of the uploaded resume (without extension)
+    resume_name = os.path.splitext(os.path.basename(resume_path))[0]
+
+    # Ensure the directory exists
+    dump_dir = "static/dumps"
+    os.makedirs(dump_dir, exist_ok=True)
+
+    # Save the extracted data to a JSON file named after the uploaded resume
+    dump_file_path = os.path.join(dump_dir, f'{resume_name}.json')
+    with open(dump_file_path, 'w') as json_file:
+        json.dump(parsed_data, json_file, indent=4)
+    
+    print(f"Data saved to {dump_file_path}")
+
+else:
+    print(f"Failed to parse resume: {status_code} - {response.text}")

@@ -762,24 +762,27 @@ def applicant():
         jobseeker_name = session.get('user_fname')
         email = session.get('user_email')
         contact_no = session.get('user_contact')
-        # philippine_tz = timezone(timedelta(hours=8))
         current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')        
 
         # Connect to the database
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
         
-        # Insert the application into the database
+        # Insert the application into the applicant table with 'Pending' status
         cursor.execute('''
-            INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status,date_request)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
-        ''', (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, file_path, 'Pending',current_time_pht))
+            INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status, date_request)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, file_path, 'Pending', current_time_pht))
         
-
-
         print(f"Received data - Date Request: {current_time_pht}")
-        # Commit and close the connection
-        # Get jobseeker details from `users` table
+        
+        # Commit the applicant insertion first to ensure data consistency
+        conn.commit()
+
+        # Get the ID of the inserted applicant
+        applicant_id = cursor.lastrowid
+        
+        # Insert logic for notification
         cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
         user = cursor.fetchone()
         
@@ -788,7 +791,7 @@ def applicant():
             fname = user[1]    # fname
             userType = user[2] # userType
         
-            # Get job details from `jobs` table to retrieve company and location
+            # Get job details from jobs table to retrieve company and location
             cursor.execute('SELECT Company, location FROM jobs WHERE Job_ID = ?', (job_id,))
             job = cursor.fetchone()
             
@@ -799,7 +802,7 @@ def applicant():
                 # Create notification text
                 notification_text = f"{fname} applied for a job at {company} located in {location}"
                 
-                # Insert notification into `admin_notification` table
+                # Insert notification into admin_notification table
                 cursor.execute('''
                     INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
                     VALUES (?, ?, ?, ?, ?, ?)
@@ -807,8 +810,38 @@ def applicant():
 
                 print(f"Admin Notification: {notification_text}")
 
+        conn.commit()  # Commit the notification changes
 
-        conn.commit()
+        # Now proceed with the application_status logic after applicant record is fully inserted
+        cursor.execute('''
+            SELECT company FROM jobs WHERE Job_ID = ?
+        ''', (job_id,))
+        job = cursor.fetchone()
+
+        if job:
+            company = job[0]
+            print(f"Fetched company: {company}")
+
+            # Status descriptions for "Pending" status
+            status_descriptions = [
+                f"Your application at {company} is currently under review.",
+                f"The status of your application at {company} is pending further processing.",
+                f"Notification: Your application for the position at {company} is in progress."
+            ]
+
+            # Choose a random status description
+            status_description = random.choice(status_descriptions)
+            print(f"Generated status description: {status_description}")
+
+            # Insert into the application_status table
+            cursor.execute('''
+                INSERT INTO application_status (applicant_id, job_id, jobseeker_id, employer_id, status_description, status_type, company, date_posted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (applicant_id, job_id, jobseeker_id, employer_id, status_description, 'Pending', company, current_time_pht))
+
+            print(f"Inserted into application_status: applicant_id={applicant_id}, job_id={job_id}, jobseeker_id={jobseeker_id}, employer_id={employer_id}, status_type='Pending', company={company}, date_posted={current_time_pht}")
+
+        conn.commit()  # Commit the application status insertion
         cursor.close()
         conn.close()
 

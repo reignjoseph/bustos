@@ -74,10 +74,13 @@
                 const relativeTime = moment(status.date_posted).fromNow();
                 let progressLevel = 0;
 
-                if (status.status_type === 'Approved') progressLevel = 25;
+                if (status.status_type === 'Pending') progressLevel = 1;
+                else if (status.status_type === 'Approved') progressLevel = 25;
                 else if (status.status_type === 'Scheduled') progressLevel = 50;
                 else if (status.status_type === 'Interviewed') progressLevel = 75;
-                else if (status.status_type === 'Passed') progressLevel = 100;
+                else if (status.status_type === 'Hire') progressLevel = 100;
+                else if (status.status_type === 'Denied') progressLevel = 0;
+                else if (status.status_type === 'Reject') progressLevel = 0;
 
                 // Store the current status in the newStatus object
                 newStatus[status.status_id] = progressLevel;
@@ -269,11 +272,13 @@ function fetchArchivedStatus() {
     let progressLevel = 0; // Initialize progress level as needed (adjust based on your logic)
 
     // Example logic for progressLevel based on status_type
-    if (status.status_type === 'Pending') progressLevel = 5;
-    else if (status.status_type === 'Approved') progressLevel = 25;
-    else if (status.status_type === 'Scheduled') progressLevel = 50;
-    else if (status.status_type === 'Interviewed') progressLevel = 75;
-    else if (status.status_type === 'Passed') progressLevel = 100;
+    if (status.status_type === 'Pending') progressLevel = 1;
+                else if (status.status_type === 'Approved') progressLevel = 25;
+                else if (status.status_type === 'Scheduled') progressLevel = 50;
+                else if (status.status_type === 'Interviewed') progressLevel = 75;
+                else if (status.status_type === 'Hired') progressLevel = 100;
+                else if (status.status_type === 'Denied') progressLevel = 0;
+                else if (status.status_type === 'Rejected') progressLevel = 0;
 
     const uniqueAnimationName = `animateBar_${status.status_id}_${status.status_type}`;
     

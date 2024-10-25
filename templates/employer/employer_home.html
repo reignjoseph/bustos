@@ -28,7 +28,7 @@
                 <p id="job-posted-count">0</p>
             </div>
             <div class="job-stat">
-                <h3>Got Hired</h3>
+                <h3>Jobseekers Hired</h3>
                 <p id="got-hired-count">0</p>
             </div>
             <div class="job-stat">
@@ -141,9 +141,14 @@
                             x: {
                                 beginAtZero: true,
                                 stepSize: 1,  // Force whole numbers
-                ticks: {
-                    precision: 0   // Remove decimals
-                }
+                                ticks: {
+                                    precision: 0   // Remove decimals
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                onClick: (e) => e.stopPropagation() // Prevent clicking on legend labels
                             }
                         }
                     }
@@ -163,7 +168,7 @@
             .then(response => response.json())
             .then(data => {
                 const ctx = document.getElementById('applicantStatsChart').getContext('2d');
-                new Chart(ctx, {
+                const myChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: ['Total Applicants', 'Approved Applicants', 'Denied Applicants'],
@@ -180,9 +185,14 @@
                             y: {
                                 beginAtZero: true,
                                 stepSize: 1,  // Force whole numbers
-                ticks: {
-                    precision: 0   // Remove decimals
-                }
+                                ticks: {
+                                    precision: 0   // Remove decimals
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                onClick: (e) => e.stopPropagation() // Prevent clicking on legend labels
                             }
                         }
                     }
@@ -190,7 +200,7 @@
             })
             .catch(error => console.error('Error fetching applicant stats:', error));
     });
-    </script>
+</script>
 
 
 

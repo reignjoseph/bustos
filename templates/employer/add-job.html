@@ -110,10 +110,10 @@
 
         // Close the modal if the user clicks outside of it
         window.onclick = function(event) {
-            const modal = document.getElementById("myPostModal");
-            if (event.target == modal) {
+            const myPostModal = document.getElementById("myPostModal");
+            if (event.target == myPostModal) {
                 console.log("Clicked outside modal. Closing modal.");
-                modal.style.display = "none";
+                myPostModal.style.display = "none";
             }
             const employer_modal = document.getElementById("employer_logout_modal");
         if (event.target == employer_modal) {
@@ -121,7 +121,16 @@
             employercloseLogout();
         };
 
+        const deniedApplicantConfirmationModal = document.getElementById('deniedApplicantConfirmationModal');
+        if (event.target === deniedApplicantConfirmationModal) {
+            closeDeniedApplicantModal();
+        }
             
+        let displayRejectModal = document.getElementById("displayRejectModal");
+    if (event.target === displayRejectModal) {
+        closeRejectModal();  // Call the closeRejectModal function
+    }
+
         };
 
         // Fetch all job postings for the current page
@@ -574,6 +583,7 @@
 flatpickr("#closingDate", {
     enableTime: true,
     dateFormat: "Y-m-d H:i",
+    minDate: "today",
 });
 document.querySelector('form').addEventListener('submit', function(event) {
     const closingDateInput = document.getElementById('closingDate');

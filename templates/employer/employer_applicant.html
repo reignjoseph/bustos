@@ -3,7 +3,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <div id="employer_applicant_container" class="employer_applicant_container" style="display: none;">
-    <h2 style="padding: 10px; font-family: fantasy; margin: 0;">APPROVED APPLICANT LIST</h2>
+    <h2 style="padding: 10px; font-family: fantasy; margin: 0;">APPROVED APPLICANT LISTS</h2>
     <input style="border: 1px solid; margin: 10px; padding-left: 10px; border-radius: 3px;" type="text" id="approved-search-input" placeholder="Search Name" oninput="approvedSearchApplicants()">
     <div style="border: 1px solid; margin: 10px;"></div>
 
@@ -16,7 +16,7 @@
         <div class="a">Contact No</div>
         <div class="a">Form</div>
         <div class="a">Schedule</div>
-        <div class="a">Interviewed</div>
+        <div class="a">Interview</div>
         <div class="a">Result</div>
 
         <!-- Approved applicants list -->
@@ -41,48 +41,60 @@ $(document).ready(function() {
     const itemsPerPage = 5;
     
     // Event handler for result radio buttons
-    $(document).on('change', "input[name^='result-']", function() {
-        let selectedValue = $(this).val();
-        let applicantId = $(this).attr("name").split('-')[1];
+    
 
-        $.ajax({
-            url: '/update_interview_result',
-            method: 'POST',
-            data: {
-                id: applicantId,
-                result: selectedValue,
-                date_posted: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
-            },
-            success: function(response) {
-                alert('Interview result updated successfully');
-                // Disable both radio buttons after updating
-                $(`input[name='result-${applicantId}']`).prop('disabled', true);
-            },
-            error: function() {
-                alert('Error updating interview result');
-            }
-        });
-    });
+
 
     // Fetch interview results for an applicant
     function fetchInterviewResult(applicantId) {
-        $.ajax({
-            url: '/fetch_interview_result',
-            method: 'POST',
-            data: { id: applicantId },
-            success: function(response) {
-                if (response.result) {
-                    // Disable both radio buttons if there is a result
-                    $(`input[name="result-${applicantId}"]`).prop('disabled', true);
-                    // Optionally check the relevant radio button
-                    $(`input[name="result-${applicantId}"][value="${response.result}"]`).prop('checked', true);
+    console.log(`Fetching interview result for Applicant ID: ${applicantId}`); // Log the applicant ID being fetched
+
+    $.ajax({
+        url: '/fetch_interview_result',
+        method: 'POST',
+        data: { id: applicantId },
+        success: function(response) {
+            console.log(`Response received for Applicant ID ${applicantId}:`, response); // Log the response
+
+            if (response.result) {
+                const hireButton = $(`.hire-button[data-id="${applicantId}"]`);
+                const rejectButton = $(`.reject-button[data-id="${applicantId}"]`);
+
+                if (response.result === "Hire") {
+                    console.log(`Applicant ID ${applicantId} is Hired. Disabling Hire button and removing Reject button.`); // Log action taken
+
+                    // Disable the Hire button and change its styles
+                    hireButton.prop('disabled', true);
+                    hireButton.css({
+                        'background-color': 'darkgreen',
+                        'color': 'white'
+                    }).text('Hired');
+                    hireButton.css('cursor', 'auto');
+                    // Remove the Reject button
+                    rejectButton.prop('disabled', true).remove(); 
+                } else if (response.result === "Reject") {
+                    console.log(`Applicant ID ${applicantId} is Rejected. Disabling Reject button and removing Hire button.`); // Log action taken
+
+                    // Disable the Reject button and change its styles
+                    rejectButton.prop('disabled', true);
+                    rejectButton.css({
+                        'background-color': 'darkred',
+                        'color': 'white'
+                    }).text('Rejected');
+                    rejectButton.css('cursor', 'auto');
+                    // Remove the Hire button
+                    hireButton.prop('disabled', true).remove(); 
                 }
-            },
-            error: function() {
-                console.log('Error fetching interview result');
+            } else {
+                console.log(`No result found for Applicant ID ${applicantId}.`); // Log if no result found
             }
-        });
-    }
+        },
+        error: function() {
+            console.log('Error fetching interview result'); // Log general error
+        }
+    });
+}
+
 
     // Check interview availability for each applicant
     function checkInterviewAvailability() {
@@ -93,8 +105,10 @@ $(document).ready(function() {
                 data: { id: applicant.Applicant_ID }, // Send one ID at a time
                 success: function(response) {
                     let checkbox = $(`#interview-checkbox-${applicant.Applicant_ID}`);
+
                     if (response.status === 'show') {
                         checkbox.css('display', 'block');
+                        
                     } else {
                         checkbox.css('display', 'none');
                     }
@@ -135,7 +149,7 @@ $(document).ready(function() {
         let paginatedApplicants = filteredApplicants.slice(start, end);
 
         paginatedApplicants.forEach(function(applicant) {
-            let displayResultSection = applicant.interviewed === 'YES' ? 'block' : 'none';
+            let displayResultSection = applicant.interviewed === 'YES' ? 'flex' : 'none';
             let applicantCard = `
                 <div class="each_container_approved">
                     <div style="text-align: center;">
@@ -147,13 +161,44 @@ $(document).ready(function() {
                     <div><a href="${applicant.form}" target="_blank" style="">View Resume</a></div>
                     <div style="text-align:center;">
                         <input style="width: 115px;" type="text" class="flatpickr-schedule" value="${applicant.schedule || 'Set a Schedule'}" data-applicant-id="${applicant.Applicant_ID}"  id="schedule-${applicant.Applicant_ID}">
+                        <button class="submit-schedule" data-applicant-id="${applicant.Applicant_ID}" style="margin-left: 5px;">Submit</button>
                     </div>
                     <div id="interview-checkbox-${applicant.Applicant_ID}" style="display: none;">
-                        <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interviewed
+                        <input type="checkbox" ${applicant.interviewed ? 'checked' : ''} data-applicant-id="${applicant.Applicant_ID}" class="interview-checkbox" ${applicant.interviewed ? 'disabled' : ''}> Interview
                     </div>
-                    <div id="result-section-${applicant.Applicant_ID}" style="text-align:center; grid-column: 8; display: ${displayResultSection};">
-                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Passed" ${applicant.result === 'PASSED' ? 'checked' : ''}> Passed
-                        <input type="radio" name="result-${applicant.Applicant_ID}" value="Failed" ${applicant.result === 'FAILED' ? 'checked' : ''}> Failed
+                    <div id="result-section-${applicant.Applicant_ID}" style="text-align: center; grid-column: 8; column-gap: 5px; display: ${displayResultSection};">
+                    
+<!-- Hire Button -->
+<button type="button" class="hire-button" data-id="${applicant.Applicant_ID}"
+    onclick="hireApplicant(${applicant.Applicant_ID})"
+    ${applicant.result === 'HIRED' ? 'disabled' : ''}>
+    Hire
+</button>
+
+<!-- Reject Button -->
+<button type="button" class="reject-button" data-id="${applicant.Applicant_ID}"
+    onclick="confirmReject(${applicant.Applicant_ID})"
+    ${applicant.result === 'REJECT' ? 'disabled' : ''}>
+    Reject
+</button>
+
+<!-- Modal Structure -->
+<div id="displayRejectModal" class="modal-rejected" style="display: none;">
+    <div class="modal-content-rejected">
+        <span class="close" onclick="closeRejectModal()">
+            <img src="static/images/close.png" alt="Close" style="width: 20px; height: 20px;">
+        </span>
+        <label style="display: flex; align-items: center; white-space: nowrap; justify-content: space-between;">
+            Please provide a reason for being rejected
+        </label>
+        <textarea placeholder="Enter reason here..." rows="4" cols="50" style="margin-bottom: 1rem; width: 100%; min-height: 50px; max-height: 150px;"class="reject-reason" id="reject-reason"></textarea>
+        <button type="button" class="hire-button" onclick="denyApplicant()">Submit</button>
+    </div>
+</div>
+
+
+
+
                         <img src="/static/images/close.png" alt="Close Popup" style="width: 20px; display: none;" id="closeapplicantpopup-${applicant.Applicant_ID}" data-applicant-id="${applicant.Applicant_ID}" onclick="closeApplicantButton(${applicant.Applicant_ID})">
                         
                     </div>
@@ -169,36 +214,52 @@ $(document).ready(function() {
 
         // Initialize flatpickr for each schedule input
         $(".flatpickr-schedule").flatpickr({
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            minDate: "today",
-            time_24hr: true,
-            onChange: function(selectedDates, dateStr, instance) {
-                let applicantId = $(instance.element).data("applicant-id");
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    minDate: "today",
+    time_24hr: true
+});
 
-                $.ajax({
-                    url: '/update_applicant_schedule',
-                    method: 'POST',
-                    data: {
-                        id: applicantId,
-                        schedule: dateStr
-                    },
-                    success: function(response) {
-                        alert('Schedule updated successfully');
-                        // Refresh interview availability after schedule change
-                        checkInterviewAvailability();
-                    },
-                    error: function() {
-                        alert('Error updating schedule');
-                    }
-                });
-            }
-        });
+
+
+// Event listener for the submit button
+$(".submit-schedule").on("click", function() {
+    let applicantId = $(this).data("applicant-id");
+    let scheduleDate = $(`#schedule-${applicantId}`).val(); // Get the selected date
+
+    // Check if a date is selected
+    if (scheduleDate === 'Set a Schedule' || !scheduleDate) {
+        alert('Please select a valid schedule.');
+        return;
+    }
+
+    // Make AJAX request to update schedule
+    $.ajax({
+        url: '/update_applicant_schedule',
+        method: 'POST',
+        data: {
+            id: applicantId,
+            schedule: scheduleDate
+        },
+        success: function(response) {
+            alert('Schedule updated successfully');
+            // Refresh interview availability after schedule change
+            checkInterviewAvailability();
+        },
+        error: function() {
+            alert('Error updating schedule');
+        }
+    });
+});
+
+
+
 
         // Event handler for interview checkbox
         $(document).on('change', ".interview-checkbox", function() {
     let isChecked = $(this).is(':checked');
     let applicantId = $(this).data("applicant-id");
+        
 
     if (isChecked) {
         $.ajax({
@@ -212,7 +273,7 @@ $(document).ready(function() {
                 alert('Interview status updated successfully');
                 $(this).prop('disabled', true); // Disable the checkbox
                 $(`#schedule-${applicantId}`).prop('disabled', true);
-                
+                $(`.submit-schedule[data-applicant-id="${applicantId}"]`).css('display', 'none');
                 // Automatically display the result section when the interview status is updated to YES
                 $(`#result-section-${applicantId}`).css('display', 'block');
                 
@@ -228,22 +289,32 @@ $(document).ready(function() {
 });
 
 
+
                 // Disable schedule input if interviewed is YES
                 $(".flatpickr-schedule").each(function() {
-            let applicantId = $(this).data("applicant-id");
-            $.ajax({
-                url: `/check_interview_status/${applicantId}`,
-                method: 'GET',
-                success: function(response) {
-                    if (response.disabled) {
-                        $(`#schedule-${applicantId}`).prop('disabled', true);
-                    }
-                },
-                error: function() {
-                    console.log(`Error checking interview status for applicant ID: ${applicantId}`);
-                }
-            });
-        });
+    let applicantId = $(this).data("applicant-id");
+    $.ajax({
+        url: `/check_interview_status/${applicantId}`,
+        method: 'GET',
+        success: function(response) {
+            // Disable the schedule input if the interview is already scheduled
+            if (response.disabled) {
+                $(`#schedule-${applicantId}`).prop('disabled', true);
+                // Hide the submit button if interview is already scheduled
+                $(`.submit-schedule[data-applicant-id="${applicantId}"]`).css('display', 'none');
+            } else {
+                // Show the submit button if interview is not scheduled
+                $(`.submit-schedule[data-applicant-id="${applicantId}"]`).css('display', 'inline');
+            }
+        },
+        error: function() {
+            console.log(`Error checking interview status for applicant ID: ${applicantId}`);
+        }
+    });
+});
+
+    
+    
     }
     
 
@@ -294,39 +365,85 @@ $(document).ready(function() {
 });
 </script>
 
-<script>
-    function closeApplicantButton(applicantId) {
-    // Confirm the action if necessary
-    if (confirm('Are you sure you want to close this applicant popup?')) {
-        $.ajax({
-            url: `/close_applicant_history/${applicantId}`, // Update the URL to your endpoint
-            method: 'POST',
-            success: function(response) {
-                // Handle successful response
-                // alert('Applicant popup closed successfully.');
-                fetchApprovedApplicants();                
-                // Optionally, hide the result section or do any other necessary UI updates
-                $(`#result-section-${applicantId}`).hide(); // Assuming you want to hide the result section
-            },
-            error: function(xhr) {
-                // Handle error response
-                alert('Error closing applicant popup: ' + xhr.responseJSON.error);
-            }
-        });
-    }
-}
-$(document).on('change', `input[name^="result-"]`, function() {
-    let applicantId = $(this).attr('name').split('-')[1]; // Extract applicant ID
-    console.log(`Applicant ID: ${applicantId}`); // Debugging line
 
-    // Check if either radio button is checked
-    if ($(`input[name="result-${applicantId}"]:checked`).length > 0) {
-        $(`#closeapplicantpopup-${applicantId}`).css('display', 'inline'); // Show the close button if a result is marked
-        console.log(`Close button displayed for applicant ID: ${applicantId}`);
-    } else {
-        $(`#closeapplicantpopup-${applicantId}`).css('display', 'none'); // Hide the close button if no result is marked
-        console.log(`Close button hidden for applicant ID: ${applicantId}`);
+<script>
+// Function to hire the applicant
+function hireApplicant(applicantId) {
+    let result = "Hire";
+
+    fetch('/update_interview_result', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${applicantId}&result=${result}`,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Applicant has been successfully hired.');
+            fetchInterviewResult(applicantId);
+            // location.reload(); // Refresh to reflect the change
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Function to open the reject modal
+function confirmReject(applicantId) {
+    console.log(`Opening reject modal for Applicant ID: ${applicantId}`);
+    const modal = document.getElementById("displayRejectModal");
+    modal.style.display = "block";
+    modal.setAttribute('data-applicant-id', applicantId); // Set the applicant ID
+}
+
+
+// Function to close the reject modal
+function closeRejectModal(applicantId) {
+    document.getElementById("displayRejectModal").style.display = "none";
+    document.getElementById("reject-reason").value = ''; // Clear the textarea
+}
+
+// Function to deny (reject) the applicant
+function denyApplicant() {
+    let reason = document.getElementById("reject-reason").value; // Get the value of the static textarea ID
+
+    // Check if reason is empty
+    if (!reason) {
+        alert('Please provide a reason for rejection.');
+        return;
     }
-});
+
+    // You need to ensure you pass the applicantId when calling denyApplicant() from the modal
+    const applicantId = document.getElementById("displayRejectModal").getAttribute('data-applicant-id');
+    console.log("Denying Applicant ID:", applicantId);
+    console.log("Rejection Reason:", reason); // Log the rejection reason for debugging
+
+    fetch('/update_interview_result', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `id=${applicantId}&result=Reject&reason=${encodeURIComponent(reason)}`,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Applicant has been successfully rejected.');
+            fetchInterviewResult(applicantId);
+            closeRejectModal(); // Close modal after success
+            // location.reload(); // Refresh to reflect the change
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 </script>

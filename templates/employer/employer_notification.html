@@ -2,7 +2,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.34/moment-timezone-with-data.min.js"></script>
 
 <div class="employernotification-container" style="display: none;">
-    <h2 style="padding: 10px; font-family: fantasy;">NOTIFICATION</h2>
+    <h2 style="padding: 10px; font-family: fantasy;">NOTIFICATIONS</h2>
     <input style="border:1px solid;margin: 10px;" type="text" id="search-input" placeholder="Search Name" oninput="searchApplicants()">
     <div id="applicant-list" class="applicant-grid">
         <!-- Applicant data will be dynamically inserted here -->
@@ -16,6 +16,19 @@
         <button id="next-page">Next</button>
     </div>
 </div>
+
+
+<script>
+    // Function to open the modal
+    function openDeniedApplicantModal(applicantId) {
+        document.getElementById('deniedApplicantConfirmationModal').style.display = 'block';
+    }
+
+    // Function to close the modal
+    function closeDeniedApplicantModal() {
+        document.getElementById('deniedApplicantConfirmationModal').style.display = 'none';
+    }
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -71,9 +84,23 @@ function displayApplicants(page, applicants) {
                 <span><a href="${applicant.form}" target="_blank">View Resume</a></span>
                 <span>${applicant.status}</span>
                 <span style="display:flex;justify-content:space-evenly;">
-                    <input style="border-radius:10px;" type="button" value="APPROVE" class="approve-btn" onclick="approvedApplicant(${applicant.Applicant_ID})">
-                    <input style="margin-left:10px;border-radius:10px;" type="button" value="DENIED" class="deny-btn" onclick="deniedApplicant(${applicant.Applicant_ID})">
-                </span>
+                    <button style="border-radius:10px;" type="button" value="APPROVE" class="approve-btn" onclick="approvedApplicant(${applicant.Applicant_ID})">APPROVE</button>
+                    <button style="margin-left:10px;border-radius:10px;" type="button" class="deny-btn" onclick="openDeniedApplicantModal(${applicant.Applicant_ID})">DENY</button>
+                
+                    <!-- Modal Structure -->
+                    <div id="deniedApplicantConfirmationModal" class="modal-applicant-deny">
+                        <div class="modal-content-applicant-deny">
+                            <h6 style="display: flex; align-items: center;">Please provide a reason for denying an applicant. <span style="text-align: -webkit-right;" class="close-modal" onclick="closeDeniedApplicantModal()"><img src="static/images/close.png" alt="Close" style="width:20px;"></span> </h6>
+                            <!-- Additional modal content can go here -->
+                            <textarea  id="denied_reason-input"  rows="4" cols="50" width="100%" placeholder="Enter reason here..." style="margin-bottom: 1rem;width: 100%; min-height: 50px; max-height: 150px;"></textarea>
+                            <button style="place-self: end;margin-left:10px;border-radius:10px; width:fit-content;" type="button" value="DENIED" class="deny-btn" onclick="deniedApplicant(${applicant.Applicant_ID})">SUBMIT</button>
+                        </div>
+                    </div>
+                
+                
+                
+                
+                    </span>
                 <span>${formattedDate}</span> <!-- Formatted date displayed here -->
             </div>
         `;
@@ -125,7 +152,6 @@ function approvedApplicant(applicantId) {
         contentType: 'application/json',
         success: function(response) {
             alert('Applicant approved successfully!');
-            fetchApprovedApplicants();
             fetchApplicants(currentPage); // Refresh the list after updating
         },
         error: function(xhr, status, error) {
@@ -137,14 +163,20 @@ function approvedApplicant(applicantId) {
 
 // Function to deny the applicant
 function deniedApplicant(applicantId) {
+    // Get the reason from the textarea
+    const deniedReason = document.getElementById("denied_reason-input").value;
+
     $.ajax({
         url: '/update_applicant_status',
         method: 'POST',
-        data: JSON.stringify({ 'applicant_id': applicantId, 'status': 'Denied' }),
+        data: JSON.stringify({ 
+            'applicant_id': applicantId, 
+            'status': 'Denied',
+            'denied_reason': deniedReason // Include the reason in the data sent
+        }),
         contentType: 'application/json',
         success: function(response) {
             alert('Applicant denied successfully!');
-            fetchApprovedApplicants();
             fetchApplicants(currentPage); // Refresh the list after updating
         },
         error: function(xhr, status, error) {

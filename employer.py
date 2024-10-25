@@ -10,6 +10,9 @@ from main import app
 import random
 import pytz
 import time
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 timezone = pytz.timezone('Asia/Manila')
 philippine_tz = pytz.timezone('Asia/Manila')
 
@@ -384,7 +387,7 @@ def count_applicant_and_jobs():
     cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Available' AND request='Approved'")
     job_posted_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM application_status WHERE status_type='Passed'")
+    cursor.execute("SELECT COUNT(*) FROM application_status WHERE status_type='Hired'")
     got_hired_count = cursor.fetchone()[0]
 
     cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Unavailable'")
@@ -542,26 +545,35 @@ def update_applicant_schedule():
     philippine_tz = pytz.timezone('Asia/Manila')
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-    # Fetch the company and jobseeker_id associated with the applicant from application_status table
-    cursor.execute("SELECT company, jobseeker_id,employer_id FROM application_status WHERE applicant_id = ?", (applicant_id,))
+    # Fetch the company, jobseeker_id, employer_id, and email associated with the applicant
+    cursor.execute("""
+        SELECT application_status.company, application_status.jobseeker_id, application_status.employer_id, users.email 
+        FROM application_status 
+        JOIN users ON application_status.jobseeker_id = users.User_ID 
+        WHERE application_status.applicant_id = ?
+    """, (applicant_id,))
     result = cursor.fetchone()
 
     if result:
-        # company, jobseeker_id = result  
-        company, jobseeker_id, employer_id = result
+        company, jobseeker_id, employer_id, email = result  # Now includes email
         
-        # Fetch the fname of the jobseeker where userType is "Jobseeker"
+        # Fetch the fname of the jobseeker
         cursor.execute("SELECT fname FROM users WHERE User_ID = ? AND userType = 'Jobseeker'", (jobseeker_id,))
         user_result = cursor.fetchone()
         fname = user_result[0] if user_result else 'Unknown'
 
-        # Fetch the fname of the employer where userType is "Employer"
+        # Fetch the fname of the employer
         cursor.execute("SELECT fname FROM users WHERE User_ID = ? AND userType = 'Employer'", (employer_id,))
         employer_result = cursor.fetchone()
         employer_name = employer_result[0] if employer_result else 'Unknown'
 
+        # Check current scheduled value
+        cursor.execute("SELECT scheduled FROM application_status WHERE applicant_id = ?", (applicant_id,))
+        scheduled_result = cursor.fetchone()
+        is_rescheduled = scheduled_result[0] is not None if scheduled_result else False
 
         # Extract date from the new_schedule
+        scheduled_datetime = datetime.strptime(new_schedule, '%Y-%m-%d %H:%M:%S')  # Convert to datetime object
         scheduled_date = new_schedule.split(' ')[0]  # Get 'YYYY-MM-DD'
 
         # Check if an entry for the applicant_id already exists in the calendar table
@@ -575,14 +587,14 @@ def update_applicant_schedule():
                 UPDATE calendar 
                 SET date = ?, note = ? 
                 WHERE calendar_id = ?
-            """, (scheduled_date, f"{employer_name} set a schedule for his/her applicant{fname} for {company}", calendar_id))
+            """, (scheduled_date, f"{employer_name} set a schedule for his/her applicant {fname} for {company}", calendar_id))
             
         else:
             # Insert a new calendar entry
             cursor.execute(""" 
                 INSERT INTO calendar (applicant_id, date, note) 
                 VALUES (?, ?, ?)
-            """, (applicant_id, scheduled_date,f"{employer_name} set a schedule for his/her applicant {fname} for {company}"))
+            """, (applicant_id, scheduled_date, f"{employer_name} set a schedule for his/her applicant {fname} for {company}"))
         
         # Update the schedule in the application_status table
         cursor.execute(""" 
@@ -591,7 +603,7 @@ def update_applicant_schedule():
             WHERE applicant_id = ? 
         """, (
             new_schedule, 
-            f"{employer_name} set a schedule for his/her applicant {fname} for {company}",
+            f"Your application at {company} was scheduled at {scheduled_datetime}",
             current_time_pht,
             applicant_id
         ))
@@ -603,11 +615,47 @@ def update_applicant_schedule():
             WHERE Applicant_ID = ?
         """, (new_schedule, applicant_id))
 
+        # Send the scheduling email
+        send_schedule_message(email, company, scheduled_datetime, is_rescheduled)  # Send email to jobseeker
+
     # Commit the changes to both tables and close the connection
     conn.commit()
     conn.close()
 
     return jsonify({'status': 'success'})
+
+def send_schedule_message(email, company, scheduled_date, is_rescheduled=False):
+    sender_email = "reignjosephc.delossantos@gmail.com"
+    password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+
+    # Create the email
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = email
+    message['Subject'] = "BustosPESO - Job Application Status Update"
+
+    # Format the scheduled date into a more readable format
+    formatted_date = scheduled_date.strftime("%B %d, %Y %I:%M %p")  # e.g., "October 10, 2024 12:00 PM"
+
+    # Determine email body based on whether it is a reschedule
+    if is_rescheduled:
+        body = f"Dear User,\n\nWe wanted to inform you that your application at {company} has been rescheduled for {formatted_date}.\n\nBest regards,\nBustosPESO Support Team"
+    else:
+        body = f"Dear User,\n\nWe wanted to inform you that your application at {company} has been scheduled for {formatted_date}.\n\nBest regards,\nBustosPESO Support Team"
+
+    message.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Establish a secure session with SMTP server
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()  # Secure the connection
+            server.login(sender_email, password)  # Login to your email account
+            server.send_message(message)  # Send the email
+        print("Schedule email sent successfully.")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
 
 
 
@@ -653,17 +701,44 @@ def update_interview_status():
         return jsonify({'error': 'An error occurred while updating interview status'}), 500
 
 
+def send_interview_email(email, company):
+    sender_email = "reignjosephc.delossantos@gmail.com"
+    password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+
+    # Create the email
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = email
+    message['Subject'] = "BustosPESO - Job Application Status Update"
+
+    body = f"Dear User,\n\nWe wanted to inform you that your interview for applying at {company} is now being processed. Please wait for the result within a week. If there's still no update, please contact us.\n\nBest regards,\nBustosPESO Support Team"
+    message.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Establish a secure session with SMTP server
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()  # Secure the connection
+            server.login(sender_email, password)  # Login to your email account
+            server.send_message(message)  # Send the email
+        print("Interview email sent successfully.")
+    except Exception as e:
+        print(f"Error sending interview email: {e}")
+
+
+
+
+
 @app.route('/update_interview_result', methods=['POST'])
 def update_interview_result():
     applicant_id = request.form['id']
     result = request.form['result']
+    reason = request.form.get('reason')  # Fetch the rejection reason if provided
 
     # Get current time in Philippine Time (UTC+8)
     philippine_tz = pytz.timezone('Asia/Manila')
     current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
     try:
-        # Establish a connection to the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -672,111 +747,90 @@ def update_interview_result():
         jobseeker = cursor.fetchone()
 
         if jobseeker is None:
-            print(f"Error: Jobseeker ID not found for applicant ID {applicant_id}")
             return jsonify({'status': 'error', 'message': 'Jobseeker ID not found'}), 404
 
-        jobseeker_id = jobseeker[0]    
+        jobseeker_id = jobseeker[0]
 
-        # Fetch job details from the applicant and jobs tables
-        cursor.execute('''
-            SELECT a.job_id, j.company, j.position
-            FROM applicant a
-            JOIN jobs j ON a.job_id = j.Job_ID
+        # Fetch job details and email from the applicant and users tables
+        cursor.execute(''' 
+            SELECT j.company, j.position, u.email  -- Select the company, position, and email fields
+            FROM jobs j
+            JOIN applicant a ON a.job_id = j.Job_ID
+            JOIN users u ON u.User_ID = ?
             WHERE a.Applicant_ID = ?
-        ''', (applicant_id,))
+        ''', (jobseeker_id, applicant_id))
+        
         job_details = cursor.fetchone()
 
         if job_details is None:
-            print(f"Error: Job details not found for applicant ID {applicant_id}")
             return jsonify({'status': 'error', 'message': 'Job details not found'}), 404
 
-        job_id, company, position = job_details
-        print(f"Fetched job details: job_id={job_id}, company={company}, position={position}")
+        company, position, email = job_details  # Unpack the results
 
-        # Determine the status_type based on the result
-        if result == "Passed":
-            status_type = "Passed"
-            status_descriptions = [
-                f"Congratulations! You are now hired!",
-                f"You are now hired at {company} as a {position}."
-            ]
+        if result == "Hire":
+            status_type = "Hire"
+            status_description = f"Congratulations! You are now hired at {company} as a {position}."
 
-           # Get jobseeker details from `users` table
-            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
-            user = cursor.fetchone()
+            # Create the email body for hiring
+            body = f"Dear User,\n\nWe wanted to inform you that you have been hired at {company} as a {position}. If there's still no update, please contact us.\n\nBest regards,\nBustosPESO Support Team"
 
-            if user:
-                picture = user[0]  # profile (picture)
-                fname = user[1]    # fname
-                userType = user[2] # userType
-
-                notification_text = f"{fname}'s application was successfully hired at the company {company}."
-
-                # Insert notification into `admin_notification` table
-                cursor.execute('''
-                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
-
-                print(f"Admin Notification: {notification_text}")
-
-
-        elif result == "Failed":
-            status_type = "Failed"
-            status_descriptions = [
-                f"Your interview did not meet our expectations.",
-                f"Unfortunately, you were not selected for the position at {company}. Please feel free to apply for other opportunities."
-            ]
-
-           # Get jobseeker details from `users` table
-            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
-            user = cursor.fetchone()
-
-            if user:
-                picture = user[0]  # profile (picture)
-                fname = user[1]    # fname
-                userType = user[2] # userType
-
-                notification_text = f"{fname}'s application failed to hired."
-
-                # Insert notification into `admin_notification` table
-                cursor.execute('''
-                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
-
-                print(f"Admin Notification: {notification_text}")
-
+        elif result == "Reject":
+            status_type = "Reject"
+            if reason:
+                status_description = f"Your application was rejected for the following reason: {reason}"
+                body = f"Dear User,\n\nWe wanted to inform you that your interview for applying at {company} is rejected. Reason: {reason}. If there's still no update, please contact us.\n\nBest regards,\nBustosPESO Support Team"
+            else:
+                status_description = f"Unfortunately, you were not selected for the position at {company}."
+                body = f"Dear User,\n\nWe wanted to inform you that your interview for applying at {company} is rejected. If there's still no update, please contact us.\n\nBest regards,\nBustosPESO Support Team"
 
         else:
-            status_type = result  # Use the result as status_type if it's neither Passed nor Failed
-            status_descriptions = [
-                f"Your interview status is {result}."
-            ]
+            status_type = result
+            status_description = f"Your interview status is {result}."
+            body = f"Dear User,\n\nYour interview status is {result}. If there's still no update, please contact us.\n\nBest regards,\nBustosPESO Support Team"
 
-        # Choose a random status description
-        status_description = random.choice(status_descriptions)
-        print(f"Generated status description: {status_description}")
-
-        # Update the result, status_type, status_description, and date_posted in the application_status table
+        # Update the status in the application_status table
         cursor.execute('''
             UPDATE application_status
             SET status_type = ?, date_posted = ?, result = ?, status_description = ?
             WHERE applicant_id = ?
         ''', (status_type, current_time_pht, result, status_description, applicant_id))
 
-        # Commit the changes
         conn.commit()
+
+        # Send email notification
+        send_result_email(email, body)
 
     except Exception as e:
         conn.rollback()
-        print(f"Error: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
+
     finally:
-        # Close the connection
         conn.close()
 
     return jsonify({'status': 'success'})
+
+def send_result_email(to_email, body):
+    sender_email = "reignjosephc.delossantos@gmail.com"
+    password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+
+    # Create the email
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = to_email
+    message['Subject'] = "BustosPESO - Job Application Status Update"
+
+    message.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Establish a secure session with the SMTP server
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()  # Upgrade to a secure connection
+            server.login(sender_email, password)  # Log in to your email account
+            server.send_message(message)  # Send the email
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
 
 @app.route('/fetch_interview_result', methods=['POST'])
 def fetch_interview_result():
@@ -786,6 +840,7 @@ def fetch_interview_result():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Fetch the interview result from the application_status table
         cursor.execute("""
             SELECT result
             FROM application_status
@@ -794,12 +849,18 @@ def fetch_interview_result():
         
         result = cursor.fetchone()
 
-        return jsonify({'result': result[0] if result else None})
+        # Return the result if found, else return None
+        if result:
+            return jsonify({'result': result[0]})
+        else:
+            return jsonify({'result': None})  # Return None if no result found
+
     except Exception as e:
         print(f"Error fetching interview result: {e}")
         return jsonify({'error': 'An error occurred while fetching interview result'}), 500
     finally:
         conn.close()
+
 
 @app.route('/check_interview_availability', methods=['POST'])
 def check_interview_availability():
@@ -1055,6 +1116,7 @@ def update_applicant_status():
         data = request.get_json()
         applicant_id = data.get('applicant_id')
         status = data.get('status')
+        denied_reason = data.get('denied_reason')  # Get denied reason if applicable from textarea
 
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
@@ -1089,7 +1151,6 @@ def update_applicant_status():
         company = job[0]
         print(f"Fetched company: {company}")
 
-
         # Fetch employer fname based on employer_id from users table
         cursor.execute('SELECT fname FROM users WHERE User_ID = ?', (employer_id,))
         employer = cursor.fetchone()
@@ -1099,7 +1160,14 @@ def update_applicant_status():
         else:
             employer_fname = f"Employer ID {employer_id}"
 
-
+        # Fetch applicant's email address
+        cursor.execute('SELECT email FROM users WHERE User_ID = ?', (jobseeker_id,))
+        applicant_email = cursor.fetchone()
+        if applicant_email:
+            email = applicant_email[0]  # Get the email
+        else:
+            print(f"Error: Email not found for jobseeker ID: {jobseeker_id}")
+            return jsonify({'error': 'Email not found for the jobseeker'}), 404
 
         # Define status descriptions based on the status
         if status == "Approved":
@@ -1110,53 +1178,12 @@ def update_applicant_status():
                 f"Alert: The status of your application at {company} is {status}.",
                 f"Info: Your application status at {company} has changed to {status}."
             ]
-
-            # Get jobseeker details from `users` table
-            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
-            user = cursor.fetchone()
-
-            if user:
-                picture = user[0]  # profile (picture)
-                fname = user[1]    # fname
-                userType = user[2] # userType
-
-                notification_text = f"{fname}'s application was {status} by {employer_fname}."
-
-                # Insert notification into `admin_notification` table
-                cursor.execute('''
-                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
-
-                print(f"Admin Notification: {notification_text}")
-
         elif status == "Denied":
             status_descriptions = [
                 f"Your application at {company} is {status} due to a mismatch of your resume.",
                 f"We're sad to inform you that your application is {status}.",
                 f"Alert: The status of your application at {company} is {status}."
             ]
-
-            # Get jobseeker details from `users` table
-            cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
-            user = cursor.fetchone()
-
-            if user:
-                picture = user[0]  # profile (picture)
-                fname = user[1]    # fname
-                userType = user[2] # userType
-
-                notification_text = f"{fname}'s application was {status} by {employer_fname}."
-
-                # Insert notification into `admin_notification` table
-                cursor.execute('''
-                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
-
-                print(f"Admin Notification: {notification_text}")
-
-
         else:
             status_descriptions = [
                 f"Your application at {company} is {status}.",
@@ -1167,12 +1194,6 @@ def update_applicant_status():
         status_description = random.choice(status_descriptions)
         print(f"Generated status description: {status_description}")
 
-        # Get current time in Philippine time (UTC+8)
-        # # philippine_tz = timezone(timedelta(hours=8))
-        # philippine_tz = pytz.timezone('Asia/Manila')
-        # current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
-        print(f"Current Philippine time: {current_time_pht}")
-
         # Update the applicant's status in the applicant table
         cursor.execute('''
             UPDATE applicant
@@ -1182,23 +1203,68 @@ def update_applicant_status():
 
         print(f"Updated applicant ID {applicant_id} status to {status}")
 
-        # Insert into the application_status table
+        # Update the application_status table based on existing records
         cursor.execute('''
-            INSERT INTO application_status (applicant_id, job_id, jobseeker_id, employer_id, status_description, status_type, company, date_posted)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (applicant_id, job_id, jobseeker_id, employer_id, status_description, status, company, current_time_pht))
+            UPDATE application_status
+            SET status_description = ?, status_type = ?, date_posted = ?
+            WHERE applicant_id = ?
+        ''', (status_description, status, current_time_pht, applicant_id))
 
-        print(f"Inserted into application_status: applicant_id={applicant_id}, job_id={job_id}, jobseeker_id={jobseeker_id}, employer_id={employer_id}, status_type={status}, company={company}, date_posted={current_time_pht}")
+        print(f"Updated application_status for applicant_id {applicant_id}")
+
+        # Send email notification
+        if status == "Denied":
+            send_applicant_status_update_email(email, company, status, denied_reason)
+        else:
+            send_applicant_status_update_email(email, company, status)
 
         # Commit the transaction and close the connection
         conn.commit()
         conn.close()
 
-        return jsonify({'message': 'Status updated successfully and inserted into application_status!'})
+        return jsonify({'message': 'Status updated successfully!'})
 
     except Exception as e:
         print(f"Error updating applicant status: {e}")
         return jsonify({'error': 'An error occurred while updating applicant status'}), 500
+
+
+def send_applicant_status_update_email(email, company, status_type, denied_reason=None):
+    try:
+        sender_email = "reignjosephc.delossantos@gmail.com"
+        password = "vfwd oaaz ujog gikm"  # Use app password or OAuth2 for better security
+
+        # Create the email
+        message = MIMEMultipart()
+        message['From'] = sender_email
+        message['To'] = email
+        message['Subject'] = "BustosPESO - Job Application Status Update"
+
+        if status_type == "Denied":
+            body = f"Dear User,\n\nWe wanted to inform you that your application at {company} has been {status_type}."
+            if denied_reason:
+                body += f"\n\nReason: {denied_reason}"
+            body += "\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
+
+        else:  # Assuming status_type is "Approved"
+            body = f"Dear User,\n\nWe wanted to inform you that your application at {company} has been {status_type}. Please wait to be schedule your interview."
+            body += "\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nBustosPESO Support Team"
+
+        # Attach the body with the msg instance
+        message.attach(MIMEText(body, 'plain'))
+
+        # Send the email
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(sender_email, password)
+            server.send_message(message)
+
+        print(f"Email sent successfully to {email}")
+
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
+
 
 
 

@@ -58,25 +58,83 @@
 
 
 <script>
-let currentUserId; // Global variable to hold the current user ID
-
+let currentUserId; // Ensure this is declared at a higher scope if not already
 function denyConfirmation(userId) {
+    const status = 'Denied'; // Define the constant status
     currentUserId = userId; // Store the userId passed to the function
-    console.log(`Denying user with ID: ${userId}`); // Log the userId for confirmation
+    console.log(`THIS IS ${userId} with status: ${status}`); // Log the userId and status for confirmation
     document.getElementById("denyModalFrame").style.display = "block"; // Show the deny modal
     document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    document.getElementById("denySubmitBtn").onclick = function() {
+        updateUserStatus(currentUserId, status); // Call updateUserStatus with userId and status
+    };
+
 }
+
+
+
+
+
+// Update user status
+function updateUserStatus(userId, status) {
+    const reason = document.getElementById("reasonDeny").value; // Get the reason from the textarea
+    console.log(`Updating User ID: ${userId} to status: ${status}`); // Log the userId and status
+
+    // Check for a mismatch
+    if (!userId) {  // Check if userId is set
+        console.log(`No user ID set for updating status`);
+        return; // Exit the function if no user ID is available
+    }
+    
+    fetch(`/update_user_status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, status, reason }) // Include userId, status, and reason in the body
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`); // Handle HTTP errors
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data); // Log the response data
+        if (data.success) {
+            // Refresh the user list after updating status
+            applyControlFilters();
+            closeDenyModal(); // Close modal after success
+            currentUserId = null; // Reset the currentUserId after closing the modal
+        } else {
+            alert('Failed to update status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error); // Log the error
+        alert('An error occurred while updating status');
+    });
+}
+
+
+
+
+
+
+
+
+
+
 function closeDenyModal() {
   // Hide the modal when the close button is clicked
   document.getElementById("denyModalFrame").style.display = "none";
   document.body.style.overflow = '';
   currentUserId = null; // Reset the currentUserId after closing the modal
 }    
-
 function approveUserStatus(userId) {
-    currentUserId = userId; // Store the userId passed to the function
-    console.log(`Approving user with ID: ${userId}`); // Log the userId for confirmation
-    updateUserStatus('Approved'); // Call updateUserStatus with the approved status
+    const status = 'Approved'; // Define the constant status for approval
+    console.log(`Approving user with ID: ${userId} with status: ${status}`); // Log the userId and status for confirmation
+    updateUserStatus(userId, status);
 }
 </script>
 
@@ -130,15 +188,15 @@ function approveUserStatus(userId) {
                             ${user.status === 'Pending' ? `
                                 <button class="approvebtn" onclick="approveUserStatus(${user.User_ID}, 'Approved')">Approve</button>
                                 
-                                <button class="denybtn"style="width:100%;" onclick="denyConfirmation(${user.User_ID})">Deny</button>
-                                
+                                <button class="denybtn" style="width:100%;" onclick="denyConfirmation(${user.User_ID})">Deny</button>
+
                                                                 
                                 <div id="denyModalFrame" class="denyModalFrame" style="display:none;">
                                     <div class="deny-modal-content">
                                     
                                     <label style="display: flex; align-items: center; white-space: nowrap; justify-content: space-between;">Please provide a reason for denying this user:&nbsp;<span class="close" onclick="closeDenyModal()"><img src="static/images/close.png" width="30px" height="30px" alt="Close"></span></label>
                                     <textarea id="reasonDeny" rows="4" cols="50" width="100%" placeholder="Enter reason here..." style="margin-bottom: 1rem;width: 100%; min-height: 50px; max-height: 150px;"></textarea>
-                                    <button class="denybtn" onclick="updateUserStatus(${user.User_ID}, 'Denied')">Submit</button>
+                                    <button id="denySubmitBtn" class="denybtn" style="width:100%;">Submit</button>
                                     </div>
                                 </div>
                             ` : ''}
@@ -187,44 +245,5 @@ function approveUserStatus(userId) {
 
 
 
-// Update user status
-function updateUserStatus(status) {
-    const reason = document.getElementById("reasonDeny").value; // Get the reason from the textarea
-    console.log(`Updating User ID: ${currentUserId} to status: ${status}`); // Log the userId and status
 
-    // Check for a mismatch
-    if (!currentUserId) {  // Check if currentUserId is set
-        console.log(`No user ID set for updating status`);
-        return; // Exit the function if no user ID is available
-    }
-    
-    fetch(`/update_user_status`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ userId: currentUserId, status, reason }) // Include reason in the body
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`); // Handle HTTP errors
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log(data); // Log the response data
-        if (data.success) {
-            // Refresh the user list after updating status
-            applyControlFilters();
-            closeDenyModal(); // Close modal after success
-            currentUserId = null; // Reset the currentUserId after closing the modal
-        } else {
-            alert('Failed to update status');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error); // Log the error
-        alert('An error occurred while updating status');
-    });
-}
 </script>

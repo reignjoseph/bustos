@@ -111,20 +111,6 @@
 
 
 <script>
-// Open Modal
-function checkSession(callback) {
-    $.ajax({
-        url: '/check_session',  // You can create this route to check session status
-        type: 'GET',
-        success: function(response) {
-            callback(true);
-        },
-        error: function() {
-            callback(false);
-        }
-    });
-}
-
 function openArchivedContainer() {
     checkSession(function(isLoggedIn) {
         if (!isLoggedIn) {
