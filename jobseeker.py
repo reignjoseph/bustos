@@ -879,50 +879,70 @@ def applicant():
     file.save(file_path)
     print("File saved to:", file_path)
 
+    # Get employer's email and company name before inserting
+    cursor.execute('''
+        SELECT jobs.company, users.email 
+        FROM jobs 
+        JOIN users ON jobs.employer_id = users.User_ID 
+        WHERE jobs.Job_ID = ?
+    ''', (job_id,))
+    employer_info = cursor.fetchone()
+
+    if not employer_info:
+        print("Employer information not found.")
+        conn.close()
+        return {"error": "Employer information not found."}, 404
+
+    company_name, employer_email = employer_info
+    print("Employer information retrieved:")
+    print(f"Company Name: {company_name}")
+    print(f"Employer Email: {employer_email}")
+
     # Insert the application into the applicant table with 'Pending' status
+    initial_status = 'Pending'
     cursor.execute('''
         INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status, date_request)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         job_id, employer_id, session_id, 
         session.get('user_fname'), session.get('user_email'), 
-        session.get('user_contact'), file_path, 'Pending', 
+        session.get('user_contact'), file_path, initial_status, 
         datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
     ))
     print(f"Application inserted for jobseeker ID {session_id} with file path: {file_path}.")
 
-    # Get employer's email and company name
+    # Retrieve the last inserted applicant ID and its status from applicant table
+    applicant_id = cursor.lastrowid
+    cursor.execute('SELECT status FROM applicant WHERE applicant_id = ?', (applicant_id,))
+    applicant_status = cursor.fetchone()[0]
+
+    # Prepare and insert data into the application_status table using applicant's status
+    status_description = f"Your application at {company_name} is now being processed. Status: {applicant_status}"
+    date_posted = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+
     cursor.execute('''
-        SELECT jobs.company, users.email, jobs.employer_id 
-        FROM jobs 
-        JOIN users ON jobs.employer_id = users.User_ID 
-        WHERE jobs.Job_ID = ?
-    ''', (job_id,))
+        INSERT INTO application_status (
+            applicant_id, job_id, jobseeker_id, employer_id, 
+            status_description, status_type, company, date_posted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        applicant_id, job_id, session_id, employer_id, 
+        status_description, applicant_status, company_name, date_posted
+    ))
+    print(f"Status record created for applicant ID {applicant_id} with status '{applicant_status}'.")
 
-    employer_info = cursor.fetchone()
+    # Send email to the employer
+    send_employer_email_from_applicant(employer_email, session.get('user_fname'), company_name)
+    print("Email sent to employer.")
 
-    if employer_info:
-        company_name = employer_info[0]
-        employer_email = employer_info[1]
+    # Commit and close connection
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return {"success": "Application submitted successfully."}
 
-        print("Employer information retrieved:")
-        print(f"Company Name: {company_name}")
-        print(f"Employer Email: {employer_email}")
-        
-        # Send email to the employer
-        send_employer_email_from_applicant(employer_email, session.get('user_fname'), company_name)
-        print("Email sent to employer.")
 
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return {"success": "Application submitted successfully."}
-    else:
-        print("Employer information not found.")
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return {"error": "Employer information not found."}, 404
+
 
 
 
@@ -1417,41 +1437,61 @@ def use_default_resume():
             file_path = os.path.join('static/images/jobseeker-uploads', resume_form)
 
             # Insert into applicant table using the file path
+            initial_status = 'Pending'
             cursor.execute(''' 
                 INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status, date_request) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (job_id, employer_id, session_id, session.get('user_fname'), session.get('user_email'), session.get('user_contact'), file_path, 'Pending', datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')))
-            
+            ''', (
+                job_id, employer_id, session_id, 
+                session.get('user_fname'), session.get('user_email'), 
+                session.get('user_contact'), file_path, initial_status, 
+                datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
+            ))
 
+            # Retrieve the last inserted applicant ID and its status
+            applicant_id = cursor.lastrowid
+            cursor.execute('SELECT status FROM applicant WHERE applicant_id = ?', (applicant_id,))
+            applicant_status = cursor.fetchone()[0]
 
-        # Get employer's email and company name
-        cursor.execute('''
-        SELECT jobs.company, users.email, jobs.employer_id 
-        FROM jobs 
-        JOIN users ON jobs.employer_id = users.User_ID 
-        WHERE jobs.Job_ID = ?
-        ''', (job_id,))
+            # Get employer's email and company name
+            cursor.execute('''
+                SELECT jobs.company, users.email, jobs.employer_id 
+                FROM jobs 
+                JOIN users ON jobs.employer_id = users.User_ID 
+                WHERE jobs.Job_ID = ?
+            ''', (job_id,))
+            employer_info = cursor.fetchone()            
 
-        employer_info = cursor.fetchone()            
+            if employer_info:
+                company_name, employer_email, employer_id = employer_info
+                print(f"Company Name: {company_name}")
+                print(f"Employer Email: {employer_email}")
+                print(f"Employer ID: {employer_id}")
+                
+                # Insert into application_status
+                status_description = f"Your application at {company_name} is now being processed. Status: {applicant_status}"
+                date_posted = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-        if employer_info:
-            company_name = employer_info[0]
-            employer_email = employer_info[1]
-            employer_id = employer_info[2]                
-            # Print statements to confirm retrieved values
-            print(f"Company Name: {company_name}")
-            print(f"Employer Email: {employer_email}")
-            print(f"Employer ID: {employer_id}")
-            print(f"Job ID Selected: {job_id}")
-            conn.commit()
-            print(f"Default resume used for user ID {session_id}.")
+                cursor.execute('''
+                    INSERT INTO application_status (
+                        applicant_id, job_id, jobseeker_id, employer_id, 
+                        status_description, status_type, company, date_posted
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    applicant_id, job_id, session_id, employer_id, 
+                    status_description, applicant_status, company_name, date_posted
+                ))
+                print(f"Status record created for applicant ID {applicant_id} with status '{applicant_status}'.")
 
-            # Send email to the employer
-            send_employer_email_from_applicant(employer_email, session.get('user_fname'), company_name)
+                conn.commit()
 
-            return {"success": "Default resume used and application submitted."}
-        else:
-            print("Employer information not found.")
-            return {"error": "Employer information not found."}, 404            
+                # Send email to the employer
+                send_employer_email_from_applicant(employer_email, session.get('user_fname'), company_name)
+                print("Email sent to employer.")
+
+                return {"success": "Default resume used and application submitted."}
+            else:
+                print("Employer information not found.")
+                return {"error": "Employer information not found."}, 404            
     
     return {"error": "No default resume found for this user."}, 404

@@ -387,7 +387,7 @@ def count_applicant_and_jobs():
     cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Available' AND request='Approved'")
     job_posted_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM application_status WHERE status_type='Hired'")
+    cursor.execute("SELECT COUNT(*) FROM application_status WHERE status_type='Hire'")
     got_hired_count = cursor.fetchone()[0]
 
     cursor.execute("SELECT COUNT(*) FROM jobs WHERE jobStatus='Unavailable'")

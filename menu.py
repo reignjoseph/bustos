@@ -296,61 +296,61 @@ def announcement():
     return render_template('/menu/announcement.html')
 
 
-# @app.route('/update_announcement_status', methods=['POST'])
-# def update_announcement_status():
-#     try:
-#         # Get current date in the Philippines timezone
-#         timezone = pytz.timezone('Asia/Manila')
-#         current_date_ph = datetime.now(timezone)
+@app.route('/update_announcement_status', methods=['POST'])
+def update_announcement_status():
+    try:
+        # Get current date in the Philippines timezone
+        timezone = pytz.timezone('Asia/Manila')
+        current_date_ph = datetime.now(timezone)
 
-#         # Connect to the database
-#         conn = get_db_connection()
-#         cursor = conn.cursor()
+        # Connect to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-#         # Fetch all announcements
-#         cursor.execute('SELECT announcementID, "When" FROM announcement')
-#         announcements = cursor.fetchall()
+        # Fetch all announcements
+        cursor.execute('SELECT announcementID, "date_effective" FROM announcement')
+        announcements = cursor.fetchall()
 
-#         for row in announcements:
-#             announcement_id = row[0]
-#             when_range = row[1]
+        for row in announcements:
+            announcement_id = row[0]
+            date_effective = row[1]
 
-#             # Ensure the when_range is valid
-#             if ' to ' in when_range:
-#                 # Parse the date range
-#                 start_date_str, end_date_str = when_range.split(' to ')
-#                 start_date = timezone.localize(datetime.strptime(start_date_str, '%Y-%m-%d'))
-#                 end_date = timezone.localize(datetime.strptime(end_date_str, '%Y-%m-%d')) + timedelta(days=1)  # Extend to the end of the day
-#             else:
-#                 # Handle the case of a single date
-#                 start_date = timezone.localize(datetime.strptime(when_range, '%Y-%m-%d'))
-#                 end_date = start_date + timedelta(days=1)  # End of the same day
+            # Ensure the date_effective is valid
+            if ' to ' in date_effective:
+                # Parse the date range
+                start_date_str, end_date_str = date_effective.split(' to ')
+                start_date = timezone.localize(datetime.strptime(start_date_str, '%Y-%m-%d'))
+                end_date = timezone.localize(datetime.strptime(end_date_str, '%Y-%m-%d')) + timedelta(days=1)  # Extend to the end of the day
+            else:
+                # Handle the case of a single date
+                start_date = timezone.localize(datetime.strptime(date_effective, '%Y-%m-%d'))
+                end_date = start_date + timedelta(days=1)  # End of the same day
 
-#             # Debugging: Print current date and the start/end dates
-#             print(f"Current date: {current_date_ph}, Start date: {start_date}, End date: {end_date}")
+            # Debugging: Print current date and the start/end dates
+            print(f"Current date: {current_date_ph}, Start date: {start_date}, End date: {end_date}")
 
-#             # Determine the new status
-#             new_status = "Available" if start_date <= current_date_ph < end_date else "Unavailable"
+            # Determine the new status
+            new_status = "Available" if start_date <= current_date_ph < end_date else "Unavailable"
 
-#             # Fetch current status and print it
-#             cursor.execute('SELECT status FROM announcement WHERE announcementID = ?', (announcement_id,))
-#             current_status = cursor.fetchone()[0]
-#             print(f"Announcement ID: {announcement_id}, Current Status: {current_status}")
+            # Fetch current status and print it
+            cursor.execute('SELECT status FROM announcement WHERE announcementID = ?', (announcement_id,))
+            current_status = cursor.fetchone()[0]
+            print(f"Announcement ID: {announcement_id}, Current Status: {current_status}")
 
-#             # Check if status has changed and print
-#             if current_status != new_status:
-#                 print(f"Announcement ID: {announcement_id}, Status changed from {current_status} to {new_status}")
-#                 # Update the announcement status
-#                 cursor.execute('UPDATE announcement SET status = ? WHERE announcementID = ?', (new_status, announcement_id))
+            # Check if status has changed and print
+            if current_status != new_status:
+                print(f"Announcement ID: {announcement_id}, Status changed from {current_status} to {new_status}")
+                # Update the announcement status
+                cursor.execute('UPDATE announcement SET status = ? WHERE announcementID = ?', (new_status, announcement_id))
 
-#         conn.commit()
-#         conn.close()
+        conn.commit()
+        conn.close()
 
-#         return jsonify(success=True)
+        return jsonify(success=True)
 
-#     except Exception as e:
-#         print(f"Error updating announcement status: {e}")
-#         return jsonify(success=False), 500
+    except Exception as e:
+        print(f"Error updating announcement status: {e}")
+        return jsonify(success=False), 500
 
 
 
@@ -358,7 +358,7 @@ def announcement():
 def fetch_announcements():
     try:
         # Connect to the database
-        # update_announcement_status() 
+        update_announcement_status() 
         print("Announcement status updated.")
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -413,13 +413,17 @@ def check_session():
 
 @app.route('/check_existing_users', methods=['POST'])
 def check_existing_users():
-    email = request.json.get('email')
-    password = request.json.get('password')
-    
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:  # Check for missing fields
+        return jsonify({"error": "Email and password are required."}), 400
+
     conn = get_db_connection()
     user = conn.execute('SELECT email, status, password FROM users WHERE email = ?', (email,)).fetchone()
     conn.close()
-    
+
     if not user:
         return jsonify({"error": "The email provided was not registered."}), 400
     
@@ -434,6 +438,8 @@ def check_existing_users():
             return jsonify({"error": "The Password was incorrect."}), 400
         else:
             return jsonify({"success": "Sending OTP"}), 200
+
+
 
 @app.route('/send_otp_for_signin', methods=['POST'])
 def send_otp_for_signin():

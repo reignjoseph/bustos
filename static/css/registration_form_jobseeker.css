@@ -166,7 +166,7 @@
     border: 1px solid;
     padding: 0px;
     font-weight: bold;
-    padding-left: 3px;
+    padding-left: 0;
     display: grid;
     grid-row: 6;
     margin: 0;
@@ -256,7 +256,7 @@
     width: -webkit-fill-available;
     position: relative;
   }
-.form-group_registration1 .row12a{border: 1px solid;margin: 0;display: flex;font-weight: bold;padding: 3px;padding-left: 3px;font-size: 0.6rem;align-items: flex-start;justify-items: start;flex-direction: column;align-content: center;}.contact_no{grid-column: 2;align-content: center;padding: 3px;}
+.form-group_registration1 .row12a{border: 1px solid;margin: 0;display: flex;font-weight: bold;padding: 3px 0px 0px 0px;font-size: 0.6rem;align-items: flex-start;justify-items: start;flex-direction: column;align-content: center;}.contact_no{grid-column: 2;align-content: center;/* padding: 3px; */}
 .form-group_registration1 .row13a{border: 1px solid;margin: 0;font-weight: bold;/* grid-row: 11; *//* grid-column: 4; */display: flex;padding: 0;flex-direction: column;align-items: flex-start;}.emailaddress{outline: none;width: -webkit-fill-available;}
 .form-group_registration1 .row14a{border: 1px solid;margin: 0;font-weight: bold;/* padding-left: 3px; */grid-column: 1/span 4;display: grid;grid-template-columns: repeat(2, 50%);}
 

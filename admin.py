@@ -136,13 +136,13 @@ def hired_data():
     current_year = datetime.now().year
     years = [str(current_year - i) for i in range(4)]  # ['2024', '2023', '2022', '2021']
     
-    # Query to count applicants by year where status_type is "Passed"
+    # Query to count applicants by year where status_type is "Hire"
     data = {}
     for year in years:
         cur.execute("""
             SELECT COUNT(*)
             FROM application_status
-            WHERE status_type = 'Passed'
+            WHERE status_type = 'Hire'
             AND strftime('%Y', date_posted) = ?
         """, (year,))
         count = cur.fetchone()[0]
@@ -508,8 +508,8 @@ def retrieve_types_of_users():
     cursor.execute("SELECT COUNT(*) as totalhiredjobseekers FROM application_status")
     total_hired_result = cursor.fetchone()
 
-    # Query to count hired jobseekers from the 'application_status' table where result is 'Passed'
-    cursor.execute("SELECT COUNT(*) as hiredjobseekers FROM application_status WHERE result='Passed'")
+    # Query to count hired jobseekers from the 'application_status' table where result is 'Hire'
+    cursor.execute("SELECT COUNT(*) as hiredjobseekers FROM application_status WHERE result='Hire'")
     hired_result = cursor.fetchone()
 
     print("Query executed. Results fetched: ", user_result, total_hired_result, hired_result)  # Debugging line
@@ -540,7 +540,7 @@ def retrieve_types_of_users():
             'inactive': user_result['inactive'],  # Inactive users
             'approved': user_result['approved'],  # Approved users
             'totalhiredjobseekers': total_hired_result['totalhiredjobseekers'],  # Total jobseekers applied
-            'hiredjobseekers': hired_result['hiredjobseekers']  # Hired jobseekers (result = 'Passed')
+            'hiredjobseekers': hired_result['hiredjobseekers']  # Hired jobseekers (result = 'Hire')
         }
     })
 
@@ -635,7 +635,7 @@ def fetch_admin_announcements():
     cursor = conn.cursor()
 
     # Specify the columns to select, excluding "image"
-    query = """SELECT announcementID, "What", "When", "Where", "Requirement", "Description", "date_posted", "status" 
+    query = """SELECT announcementID, "What", "When", "Where", "Requirement", "Description","date_effective", "date_posted", "status" 
                FROM announcement WHERE (popup IS NULL OR popup = '')"""
     params = []
 
@@ -660,10 +660,12 @@ def fetch_admin_announcements():
 
     # Convert to JSON format
     announcements = [{'announcementID': row[0], 'What': row[1], 'When': row[2], 'Where': row[3],
-                     'Requirement': row[4], 'Description': row[5], 'date_posted': row[6], 'status': row[7]} 
+                     'Requirement': row[4], 'Description': row[5],'date_effective':row[6] ,'date_posted': row[7], 'status': row[8]} 
                      for row in rows]
 
     return jsonify(announcements)
+
+
 
 @app.route('/get_announcement/<int:announcementID>', methods=['GET'])
 def get_announcement(announcementID):
@@ -677,12 +679,13 @@ def get_announcement(announcementID):
         return jsonify({
             'announcementID': announcement[0],  # Index 0: announcementID
             'What': announcement[2],              # Index 2: What
-            'Where': announcement[4],             # Index 4: Where
             'When': announcement[3],              # Index 3: When
+            'Where': announcement[4],             # Index 4: Where
             'Requirement': announcement[5],       # Index 5: Requirement
             'Description': announcement[6],       # Index 6: Description
-            'date_posted': announcement[7],       # Index 7: date_posted
-            'status': announcement[8]              # Index 8: status
+            'date_effective': announcement[7],     # Index 7: date_effective
+            'date_posted': announcement[8],       # Index 8: date_posted
+            'status': announcement[9]              # Index 9: status
         })
     else:
         return jsonify({'error': 'Announcement not found'}), 404
@@ -697,15 +700,16 @@ def apply_edit_announcement():
         when = data.get('When')
         requirement = data.get('Requirement')
         description = data.get('Description')
+        date_effective= data.get('date_effective')
         status = data.get('status')  # If you want to update the status as well
 
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('''
             UPDATE announcement 
-            SET "What" = ?, "Where" = ?, "When" = ?, "Requirement" = ?, "Description" = ?, "status" = ?
+            SET "What" = ?, "Where" = ?, "When" = ?, "Requirement" = ?, "Description" = ?,"date_effective"=?, "status" = ?
             WHERE announcementID = ?
-        ''', (what, where, when, requirement, description, status, announcementID))
+        ''', (what, where, when, requirement, description, date_effective,status, announcementID))
 
         conn.commit()
         conn.close()
@@ -742,7 +746,7 @@ def fetch_admin_announcement_archived():
 
         # Query to fetch all announcements where popup is set to 'false'
         query = """
-            SELECT announcementID, "What", "When", "Where", "Requirement", "Description", "date_posted", "status" 
+            SELECT announcementID, "What", "When", "Where", "Requirement", "Description","date_effective",  "date_posted", "status" 
             FROM announcement 
             WHERE popup = 'false'
             ORDER BY date_posted DESC  -- This line sorts the announcements in descending order
@@ -754,7 +758,7 @@ def fetch_admin_announcement_archived():
 
         # Convert to JSON format
         announcements = [{'announcementID': row[0], 'What': row[1], 'When': row[2], 'Where': row[3],
-                         'Requirement': row[4], 'Description': row[5], 'date_posted': row[6], 'status': row[7]} 
+                         'Requirement': row[4], 'Description': row[5],'date_effective': row[6] ,'date_posted': row[7], 'status': row[8]} 
                          for row in rows]
 
         return jsonify(announcements)
@@ -787,15 +791,16 @@ def update_unarchived_admin_announcement():
 @app.route('/insert_announcement', methods=['POST'])
 def insert_announcement():
     try:
-        # Get the form data and print them for debugging
+        # Get the form data and print for debugging
         image = request.files['image']
         what = request.form['what']
         when = request.form['when']  # e.g., '2024-09-21 to 2024-09-27'
         where = request.form['location']
         requirement = request.form['requirement']
         description = request.form['description']
+        date_effective = request.form['date_effective']  # e.g., '2025-01-17 to 2025-02-18' or '2025-01-17'
 
-        print(f"Received form data: what={what}, when={when}, where={where}, requirement={requirement}, description={description}")
+        print(f"Received form data: what={what}, when={when}, where={where}, requirement={requirement}, description={description}, date_effective={date_effective}")
 
         # Save image to the static folder
         image_path = ''
@@ -808,22 +813,40 @@ def insert_announcement():
 
         # Get current date in the Philippines timezone
         timezone = pytz.timezone('Asia/Manila')
-        current_date_ph = datetime.now(timezone)
+        current_date_ph = datetime.now(timezone).date()  # Using date only for comparison
         print(f"Current date in PH timezone: {current_date_ph}")
 
-        # Set status to "Available" directly
-        status = "Available"
-        print(f"Assigned status: {status}")
+        # Parse date_effective to check availability
+        try:
+            # Check if it's a range or single date
+            if 'to' in date_effective:
+                # Parse start and end dates
+                effective_start_str, effective_end_str = date_effective.split(' to ')
+                effective_start = datetime.strptime(effective_start_str.strip(), '%Y-%m-%d').date()
+                effective_end = datetime.strptime(effective_end_str.strip(), '%Y-%m-%d').date()
+                # Determine status based on current date within range
+                status = "Available" if effective_start <= current_date_ph <= effective_end else "Unavailable"
+            else:
+                # Parse single date
+                effective_date = datetime.strptime(date_effective.strip(), '%Y-%m-%d').date()
+                # Determine status based on whether the current date matches the single date
+                status = "Available" if current_date_ph == effective_date else "Unavailable"
+            
+            print(f"Assigned status based on date_effective: {status}")
+
+        except ValueError as e:
+            print(f"Error parsing date_effective: {e}")
+            return jsonify(success=False, error="Invalid date_effective format. Expected 'YYYY-MM-DD to YYYY-MM-DD' or 'YYYY-MM-DD'"), 400
 
         # Insert data into the database
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Insert into the "announcement" table, including date_posted and status
+        # Insert into the "announcement" table, including date_posted, date_effective, and status
         cursor.execute('''
-            INSERT INTO announcement ("image", "What", "When", "Where", "Requirement", "Description", "date_posted", "status")
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (image_path, what, when, where, requirement, description, current_date_ph.strftime('%Y-%m-%d %H:%M:%S'), status))
+            INSERT INTO announcement ("image", "What", "When", "Where", "Requirement", "Description", "date_effective", "date_posted", "status")
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (image_path, what, when, where, requirement, description, date_effective, current_date_ph.strftime('%Y-%m-%d %H:%M:%S'), status))
 
         conn.commit()
         conn.close()
@@ -835,6 +858,9 @@ def insert_announcement():
     except Exception as e:
         print(f"Error inserting announcement: {e}")
         return jsonify(success=False), 500
+
+
+
 
 @app.route('/admin_fetched_jobs', methods=['GET'])
 def admin_fetched_jobs():

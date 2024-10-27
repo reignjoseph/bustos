@@ -258,7 +258,7 @@ function toggleFormsDisplay() {
         exclusiveSectionJobseeker.style.display = 'flex';
 
         // Add required attribute back to specific fields in Jobseeker form
-        document.querySelectorAll('input[name="surname"],input[id="fileInput"] , input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+        document.querySelectorAll('input[name="surname"],input[id="fileInput"] , input[name="firstname"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
             field.setAttribute('required', 'required');
         });
 
@@ -280,7 +280,7 @@ function toggleFormsDisplay() {
         exclusiveSectionJobseeker.style.display = 'none';
 
         // Add required attribute back to specific fields in Employer form
-        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"], input[name="office_type"], input[name="employer_tax_identifier_number"], input[name="employer_sml"], input[name="employer_line_of_business_industry"], input[name="employer_province"], input[name="employer_city"], input[name="employer_barangay"], input[name="employer_president"], input[name="employer_contact"], input[name="employer_position"], input[name="employer_email_address"], input[name="employer_mobile_number"]').forEach(function(field) {
+        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"], input[name="office_type"], input[name="employer_tax_identifier_number"], input[name="employer_line_of_business_industry"], input[name="employer_province"], input[name="employer_city"], input[name="employer_barangay"], input[name="employer_president"], input[name="employer_contact"], input[name="employer_position"], input[name="employer_email_address"], input[name="employer_mobile_number"]').forEach(function(field) {
             field.setAttribute('required', 'required');
         });
 
@@ -290,7 +290,7 @@ function toggleFormsDisplay() {
         });
 
         // Remove required attribute from specific fields in Jobseeker form
-        document.querySelectorAll('input[id="fileInput"],input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+        document.querySelectorAll('input[id="fileInput"],input[name="surname"], input[name="firstname"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
             field.removeAttribute('required');
         });
     }
@@ -482,7 +482,8 @@ function validateAndSubmit() {
                     });
                 } else {
                     form.reportValidity(); // This will trigger any built-in HTML5 validation
-                    validateBusinessName();
+                    if(selectedRole === "Employer") {
+                        validateBusinessName();
                     validateTradeName();
                     validateAcronym();
                     validateTaxIdentifier();
@@ -493,6 +494,13 @@ function validateAndSubmit() {
                     validatePosition();
                     validateFaxNumber();
                     validateEmailAddress();
+                    }
+                    else if(selectedRole === "Jobseeker") {
+                    callJobseekerRequired();
+                    }
+                    else {
+                        alert("Please select a role.");
+                    }
                 }
             }
         },
@@ -503,7 +511,20 @@ function validateAndSubmit() {
 }
 
 
+function callJobseekerRequired(event) {
+    const requiredFields = document.querySelectorAll('.form-group_registration1 input[required]');
+    let isValid = true;
 
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            isValid = false;
+            field.classList.add('error'); // Add error class for empty fields
+        } else {
+            field.classList.remove('error'); // Remove error class if the field is filled
+        }
+    });
+
+}
 
 function insertResume() {
     const fileInput = document.getElementById('fileInput');
