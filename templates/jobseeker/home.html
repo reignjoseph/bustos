@@ -152,7 +152,7 @@ function seeFullDetail(button) {
                     <p class="card-text"><strong>Salary:</strong> ${job.salary}</p>
                     <p class="card-text"><strong>Nature of Work:</strong> ${job.natureOfWork}</p>
                     <p class="card-text"><strong>Position:</strong> ${job.position}</p>
-                    <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" action="/applicant" method="post">
+                    <form id="uploadForm" class="uploadResume" enctype="multipart/form-data" method="post">
                         <input type="hidden" name="job_id" value="${job.Job_ID}" />
                         <input type="hidden" name="employer_id" value="${job.employer_ID}" />
                         <p>Interested in this Job? Send your resume! <br>Upload file (PDF or image)</p>
@@ -325,67 +325,73 @@ function showLocation(address) {
                 return;
             }
 
-            // File selected: Check type and proceed accordingly
-            if (file.type === 'application/pdf') {
-                formData.append('file', file);
-                uploadFile(formData);
-            } else if (file.type.startsWith('image/')) {
-                await convertImageToPDF(file, formData);
-            } else {
-                errorMessageDiv.textContent = 'Only PDF or image files are allowed.';
-            }
-        }
+ // File selected: Check type and proceed accordingly
+                if (file.type === 'application/pdf') {
+                                formData.append('file', file);
+                                await uploadFile(formData);
+                            } else if (file.type.startsWith('image/')) {
+                                await convertImageToPDF(file, formData);
+                            } else {
+                                errorMessageDiv.textContent = 'Only PDF or image files are allowed.';
+                            }
+                        }
+
+
+                        
     });
 });
    
-    async function convertImageToPDF(imageFile, formData) {
-        const { PDFDocument } = PDFLib;
-        const pdfDoc = await PDFDocument.create();
-        const page = pdfDoc.addPage();
+async function convertImageToPDF(imageFile, formData) {
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage();
     
-        const imageBytes = await imageFile.arrayBuffer();
-        let image;
-    
-        if (imageFile.type === 'image/jpeg') {
-            image = await pdfDoc.embedJpg(imageBytes);
-        } else if (imageFile.type === 'image/png') {
-            image = await pdfDoc.embedPng(imageBytes);
-        } else {
-            throw new Error('Unsupported image type');
-        }
-    
-        const { width, height } = image;
-        page.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: page.getWidth(),
-            height: page.getHeight(),
-        });
-    
-        const pdfBytes = await pdfDoc.save();
-        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-    
-        formData.append('file', pdfBlob, imageFile.name.replace(/\.[^/.]+$/, '.pdf'));
-        uploadFile(formData);
+    const imageBytes = await imageFile.arrayBuffer();
+    let image;
+
+    if (imageFile.type === 'image/jpeg') {
+        image = await pdfDoc.embedJpg(imageBytes);
+    } else if (imageFile.type === 'image/png') {
+        image = await pdfDoc.embedPng(imageBytes);
+    } else {
+        throw new Error('Unsupported image type');
     }
-    
-    function uploadFile(formData) {
-        fetch('/applicant', {
+
+    const { width, height } = image;
+    page.drawImage(image, {
+        x: 0,
+        y: 0,
+        width: page.getWidth(),
+        height: page.getHeight(),
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+    formData.append('file', pdfBlob, imageFile.name.replace(/\.[^/.]+$/, '.pdf'));
+    await uploadFile(formData);
+}
+
+async function uploadFile(formData) {
+    try {
+        const response = await fetch('/applicant', {
             method: 'POST',
             body: formData
-        })
-        .then(response => response.text())
-        .then(result => {
-            alert('File uploaded successfully!');
-            location.reload(); // Reload or redirect as needed
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.querySelector('#error-message').textContent = 'Error uploading file.';
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error uploading file.');
+        }
+
+        const result = await response.json();
+        alert('File uploaded successfully! ' + result.success);
+        window.location.reload();
+    } catch (error) {
+        console.error('Error:', error);
+        document.querySelector('#error-message').textContent = error.message || 'Error uploading file.';
     }
-
-
+}
 
 
 
