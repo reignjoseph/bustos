@@ -167,7 +167,7 @@ function seeFullDetail(button) {
                                 </h6>
 
                                 <div style="width: -webkit-fill-available; height: inherit; display: flex; align-items: center; justify-content: space-evenly;">
-                                <button type="submit" id="confirmApply" class="btn btn-primary" onclick="applyForJob()">Yes</button>
+                                <button type="submit" id="confirmApply" class="btn btn-primary">Yes</button>
                                 <button type="button" class="btn btn-secondary" onclick="closeApplyNowModal()">No</button>    
                                 </div>
                             </div>
@@ -190,6 +190,7 @@ function seeFullDetail(button) {
 function openApplyNowModal() {
     document.getElementById('prompt_apply_now').style.display = 'block';
 }
+
 
 function closeApplyNowModal(event) {
     // Check if the click was on the modal backdrop
@@ -280,31 +281,55 @@ function showLocation(address) {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('submit', async function(event) {
         if (event.target && event.target.id === 'uploadForm') {
-            event.preventDefault(); // Prevent the default form submission
+            event.preventDefault(); // Prevent default form submission
 
             const form = event.target;
             const fileInput = form.querySelector('input[type="file"]');
             const file = fileInput.files[0];
             const errorMessageDiv = form.querySelector('#error-message');
+            const jobId = form.querySelector('input[name="job_id"]').value; // Get job ID
+            const employerId = form.querySelector('input[name="employer_id"]').value; // Get employer ID
             const formData = new FormData(form);
 
-            // Clear any previous error messages
+            // Clear previous error messages
             errorMessageDiv.textContent = '';
 
             if (!file) {
-                errorMessageDiv.textContent = 'Please select a file.';
+                // If no file is selected, use default resume
+                errorMessageDiv.textContent = 'No file selected. We will use your default resume.';
+                
+                const formData = new FormData(); // New FormData instance
+                formData.append('job_id', jobId); // Add job ID
+                formData.append('employer_id', employerId); // Add employer ID
+
+                fetch('/use_default_resume', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.success);
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error using default resume:', error);
+                    alert('An error occurred while using the default resume.');
+                });
                 return;
             }
 
+            // File selected: Check type and proceed accordingly
             if (file.type === 'application/pdf') {
-                // If the file is already a PDF, you can directly upload it
                 formData.append('file', file);
                 uploadFile(formData);
             } else if (file.type.startsWith('image/')) {
-                // If the file is an image, convert it to PDF
                 await convertImageToPDF(file, formData);
             } else {
                 errorMessageDiv.textContent = 'Only PDF or image files are allowed.';
@@ -312,55 +337,66 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-async function convertImageToPDF(imageFile, formData) {
-    const { PDFDocument } = PDFLib;
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-
-    const imageBytes = await imageFile.arrayBuffer();
-    let image;
-
-    if (imageFile.type === 'image/jpeg') {
-        image = await pdfDoc.embedJpg(imageBytes);
-    } else if (imageFile.type === 'image/png') {
-        image = await pdfDoc.embedPng(imageBytes);
-    } else {
-        throw new Error('Unsupported image type');
+   
+    async function convertImageToPDF(imageFile, formData) {
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage();
+    
+        const imageBytes = await imageFile.arrayBuffer();
+        let image;
+    
+        if (imageFile.type === 'image/jpeg') {
+            image = await pdfDoc.embedJpg(imageBytes);
+        } else if (imageFile.type === 'image/png') {
+            image = await pdfDoc.embedPng(imageBytes);
+        } else {
+            throw new Error('Unsupported image type');
+        }
+    
+        const { width, height } = image;
+        page.drawImage(image, {
+            x: 0,
+            y: 0,
+            width: page.getWidth(),
+            height: page.getHeight(),
+        });
+    
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+    
+        formData.append('file', pdfBlob, imageFile.name.replace(/\.[^/.]+$/, '.pdf'));
+        uploadFile(formData);
+    }
+    
+    function uploadFile(formData) {
+        fetch('/applicant', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert('File uploaded successfully!');
+            location.reload(); // Reload or redirect as needed
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.querySelector('#error-message').textContent = 'Error uploading file.';
+        });
     }
 
-    const { width, height } = image;
-    page.drawImage(image, {
-        x: 0,
-        y: 0,
-        width: page.getWidth(),
-        height: page.getHeight(),
-    });
 
-    const pdfBytes = await pdfDoc.save();
-    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
 
-    // Append the PDF blob to the FormData object
-    formData.append('file', pdfBlob, imageFile.name.replace(/\.[^/.]+$/, '.pdf'));
-    uploadFile(formData);
-}
 
-function uploadFile(formData) {
-    fetch('/applicant', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(result => {
-        // alert('File uploaded successfully!');
-        location.reload(); // Reload the page or redirect as needed
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.querySelector('#error-message').textContent = 'Error uploading file.';
-    });
-}    
-</script>
+
+
+
+
+
+
+
+    </script>
+    
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Apply default filter when the page loads

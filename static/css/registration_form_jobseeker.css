@@ -525,10 +525,8 @@ input[type="checkbox"]:checked ~ .hidden {
 
 
 #registrationModalLabel{
-    font-size: -8rem;
     display: flex;
-    /* align-items: flex-end; */
-    /* flex-direction: row; */
+    width: -webkit-fill-available;
     position: relative;
 }
 

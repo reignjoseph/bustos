@@ -411,7 +411,29 @@ def check_session():
 
 
 
-
+@app.route('/check_existing_users', methods=['POST'])
+def check_existing_users():
+    email = request.json.get('email')
+    password = request.json.get('password')
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT email, status, password FROM users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    
+    if not user:
+        return jsonify({"error": "The email provided was not registered."}), 400
+    
+    if user['status'] == 'Pending':
+        return jsonify({"error": "This email is pending. Please contact our staff if there’s an issue."}), 400
+    elif user['status'] == 'Denied':
+        return jsonify({"error": "This email has been denied. Please contact our staff if there’s an issue."}), 400
+    elif user['status'] == 'Approved':
+        if not password:
+            return jsonify({"error": "Please put password."}), 400
+        elif password != user['password']:  # Replace with password hash check if necessary
+            return jsonify({"error": "The Password was incorrect."}), 400
+        else:
+            return jsonify({"success": "Sending OTP"}), 200
 
 @app.route('/send_otp_for_signin', methods=['POST'])
 def send_otp_for_signin():
@@ -475,21 +497,30 @@ def send_otp_for_signin():
 
 
 
+
+
 @app.route('/confirm_signin_otp', methods=['POST'])
 def confirm_signin_otp():
-    entered_otp = request.form['otp']
-    email = request.form['email']  # Get email if you want to use it later
-    password = request.form['password']  # Get password if needed
-    
+    entered_otp = request.form.get('otp', '').strip()  # Get OTP and trim whitespace
+    email = request.form.get('email')  # Get email if you want to use it later
+    password = request.form.get('password')  # Get password if needed
+
     if 'otp' not in session:
         return jsonify({"success": False, "error_message": "No OTP generated."}), 400
-    
+
+    if not entered_otp:
+        return jsonify({"success": False, "error_message": "Please put correct OTP."}), 400  # Return error if OTP is empty
+
     if entered_otp == session['otp']:
         # If OTP is valid, clear OTP from session
         session.pop('otp', None)  # Clear the OTP from the session
         return jsonify({"success": True}), 200  # Indicate success
     else:
-        return jsonify({"success": False, "error_message": "Invalid OTP."}), 400
+        return jsonify({"success": False, "error_message": "Invalid OTP."}), 400  # Return error for invalid OTP
+
+
+
+
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
@@ -1081,49 +1112,28 @@ def create_account():
 
 
 
+UPLOAD_FOLDER = 'static/images/jobseeker-uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-
-app.config['UPLOAD_FOLDER'] = 'static/images/jobseeker-uploads'
-app.config['DUMP_FOLDER'] = 'static/dumps'
-
-# Create necessary directories if they don't exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['DUMP_FOLDER'], exist_ok=True)
+# Ensure the upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/upload_resume', methods=['POST'])
 def upload_resume():
-    start_time = time.time()
-    
-    if 'resume' not in request.files:
-        print("No file part in the request.")
-        return jsonify({"message": "No file part"}), 400
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
 
-    file = request.files['resume']
+    file = request.files['file']
+
     if file.filename == '':
-        print("No selected file.")
-        return jsonify({"message": "No selected file"}), 400
+        return jsonify({"error": "No file selected for uploading"}), 400
 
-    # Save the uploaded resume
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-    print(f"Saving file to: {file_path}")
-    file.save(file_path)
-
-    # Prepare the API request to parse the resume
-    url = "https://api.apilayer.com/resume_parser/url?url="
-    headers = {
-        "apikey": "sRD97QBwFuA6Z8oXkfGd8fbOZbeOkHu0"
-    }
-    
-    # Construct the resume URL using the base URL
-    resume_url = f"https://672f0qdk-0fbmnoqs-zqnmrxojxoy8.ac2-preview.marscode.dev/{file_path}"
-    print(f"Requesting resume parsing for URL: {resume_url}")
-    
-    # Record the time before the request
-    request_start_time = time.time()
-    response = requests.get(url + resume_url, headers=headers)
-    request_duration = time.time() - request_start_time
-    print(f"Request duration: {request_duration:.2f} seconds")
-
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")
-
+    if file and file.filename.lower().endswith(('.pdf', '.docx')):
+        # Save file with original filename in the upload directory
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
+        
+        # Return just the filename or any other response required
+        return jsonify({"message": "File uploaded successfully", "file_path": file.filename}), 200  # Change here
+    else:
+        return jsonify({"error": "Allowed file types are .pdf and .docx"}), 400

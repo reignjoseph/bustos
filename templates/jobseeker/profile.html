@@ -8,6 +8,7 @@
                 <button type="button" onclick="showPersonalInfo()" class="button1_profile bg-gray-300 px-4 py-2 rounded ml-2">Personal Information</button>
                 <button type="button" onclick="showPassword()" class="button2_profile bg-gray-300 px-4 py-2 rounded ml-2">Change Password</button>
             </div>
+            
             <div class="profile_display">
                 
                 <!-- THIS IS CONTAINER FOR PERSONAL INFO -->
@@ -16,6 +17,9 @@
                         <h6 style="margin-bottom: 2rem;">INFORMATION
                             <a href="/view_nstp_form" target="_blank">
                                 <img id="view_nstp" style="cursor: pointer; position: absolute; margin: 10px;" src="static/images/nstp_img.png" width="32px" height="auto" class="hover-scale">
+                            </a>
+                            <a href="/view_resume_form" target="_blank">
+                                <img id="view_resume" style="cursor: pointer; position: absolute; margin: 6px; margin-top: 3.5rem;" src="static/images/cv.png" width="40px" height="auto" class="hover-scale">
                             </a>
                             
                             <style>.hover-scale {transition: transform 0.3s ease;}.hover-scale:hover {transform: scale(1.5) translateY(0.3rem);}</style>
@@ -176,6 +180,7 @@ function submitProfilePicture() {
                         if (profileImg) {
                             profileImg.src = e.target.result; // Update image source
                             console.log("Profile image updated successfully."); // Log success
+                            alert("Profile updated successfully!");
                         } else {
                             console.error("Profile image element not found");
                         }
@@ -198,6 +203,9 @@ function submitProfilePicture() {
     }
     return false; // Prevent the default form submission
 }
+
+
+
 function submitBio() {
     const bioInput = document.getElementById('bio');
     const formData = new FormData(document.getElementById('personal-info-form'));

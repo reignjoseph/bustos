@@ -14,12 +14,12 @@
             </div>
         </div>
 
-        <div >
-            <canvas id="applicantStatsChart"></canvas>
+        <div style="min-width: 33rem; max-width: 33rem; justify-self: center;">
+            <canvas id="applicantStatsChart" style="min-width: 33rem !; max-width: 33rem;"></canvas>
         </div>
 
-        <div id="educational-attainment-chart" style="width: 33rem; justify-self: center;">
-            <canvas id="attainmentChart"></canvas>
+        <div id="educational-attainment-chart" style="min-width: 33rem !important; max-width: 33rem !important; justify-self: center;">
+            <canvas id="attainmentChart" style="min-width: 33rem !important; max-width: 33rem !important;"></canvas>
         </div>
 
         <div class="jobsandapplicant">
@@ -389,4 +389,13 @@ removeNoteBtn.addEventListener('click', () => {
     removeNote(); // Remove the note when clicking the remove button
     notePopup.style.display = 'none';
 });
+
+
 </script>
+
+<script>
+    window.addEventListener("beforeunload", function (e) {
+        // Send an AJAX request to mark the user as inactive before closing the tab
+        navigator.sendBeacon('/update_inactive_status');  // Use sendBeacon to send the request before the tab closes
+    });
+    </script>

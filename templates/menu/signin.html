@@ -468,7 +468,7 @@ function resetForm() {
 
 <!-- Sign-in Section -->
 <form id="signin_form" action="/signin" method="post">
-    <div id="otp_error_handler_signin" style="color: red; width: 15rem; white-space: break-spaces; text-align: center;"></div>
+    <div id="signin_error_message" style="color: red; width: 15rem; white-space: break-spaces; text-align: center;"></div>
     <div class="input-box-login">
         <input type="email" id="login_email" name="email" placeholder="Enter email" required>
     </div>
@@ -486,7 +486,10 @@ function resetForm() {
     
     <!-- OTP Modal -->
     <div id="modal_signin_otp" style="display: none;flex-direction: column;justify-content: center;align-items: center;">
-        <label style="align-self: baseline;padding: 10px;background: #ccf4e6;border-radius: 5px;">OTP: <input type="text" id="otp_input" name="otp" required="" style="width: inherit;"></label>
+        <label style="align-self: baseline;padding: 10px;background: #ccf4e6;border-radius: 5px;">OTP: 
+            <!-- <input type="text" id="otp_input" name="otp" required="" style="width: inherit;"> -->
+            <input type="text" id="otp_input" name="otp" required="" style="width: inherit;" minlength="4" maxlength="4" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+        </label>
         <button class="btn-login" type="button" onclick="confirmOtp()" style="width: fit-content;">Confirm OTP</button> 
         <div id="otp_error" style="color:red;"></div>
     </div>
@@ -497,54 +500,87 @@ function resetForm() {
 
 <script>
 function openOtpModal() {
-    const email = document.getElementById('login_email').value; // Get email from input
-    const password = document.getElementById('password').value; // Get password from input
+    const email = document.getElementById('login_email').value.trim(); // Get and trim email from input
+    const password = document.getElementById('password').value.trim(); // Get and trim password from input
+    const errorMessageDiv = document.getElementById('signin_error_message');
 
+    // Clear any previous error messages and reset color
+    errorMessageDiv.textContent = '';
+    errorMessageDiv.style.color = 'red';
+
+    // Check if both email and password are empty
+    if (!email && !password) {
+        errorMessageDiv.textContent = "Please fill the form";
+        return;
+    }
+
+    // First, check if the user email status and password are acceptable
     $.ajax({
-        url: '/send_otp_for_signin',
+        url: '/check_existing_users',
         method: 'POST',
-        data: {
-            email: email,
-            password: password
-        },
+        contentType: 'application/json',
+        data: JSON.stringify({ email: email, password: password }),
         success: function(response) {
-            if (response.success) {
-                // Show the OTP modal
-                document.getElementById('modal_signin_otp').style.display = 'flex'; 
-                
-                // Make email and password fields read-only
-                document.getElementById('login_email').setAttribute('readonly', 'readonly');
-                document.getElementById('password').setAttribute('readonly', 'readonly');
+            if (response.success === "Sending OTP") {
+                // Change message to green if OTP is being sent
+                errorMessageDiv.style.color = 'green';
+                errorMessageDiv.textContent = response.success;
 
-                // Hide the SIGN IN button
-                document.getElementById('signin_button').style.display = 'none';
-                // forgot_password_link
-                document.getElementById('forgot_password_link').style.display='none'
-                
-                // Clear previous error messages
-                document.getElementById('otp_error_handler_signin').textContent = ''; 
-                document.getElementById('otp_error').textContent = ''; // Clear OTP error message
-            } else {
-                // Display the error message returned from the server
-                document.getElementById('otp_error_handler_signin').textContent = response.error_message; 
+                // Set a timer to clear the message after 6 seconds
+                setTimeout(() => {
+                    errorMessageDiv.textContent = ''; // Clear the message
+                }, 6000);
+
+                // Proceed to send OTP
+                $.ajax({
+                    url: '/send_otp_for_signin',
+                    method: 'POST',
+                    data: {
+                        email: email,
+                        password: password
+                    },
+                    success: function(otpResponse) {
+                        if (otpResponse.success) {
+                            // Show the OTP modal
+                            document.getElementById('modal_signin_otp').style.display = 'flex'; 
+                            
+                            // Make email and password fields read-only
+                            document.getElementById('login_email').setAttribute('readonly', 'readonly');
+                            document.getElementById('password').setAttribute('readonly', 'readonly');
+
+                            // Hide the SIGN IN button and forgot password link
+                            document.getElementById('signin_button').style.display = 'none';
+                            document.getElementById('forgot_password_link').style.display = 'none';
+                        }
+                    },
+                    error: function() {
+                        // Handle OTP send error if needed
+                    }
+                });
             }
         },
-        error: function(xhr, status, error) {
-            // Use the status code to differentiate error handling if needed
-            if (xhr.status === 403) {
-                document.getElementById('otp_error_handler_signin').textContent = 'Invalid credentials. Please check your email and password.'; // General message for 403 errors
-            } else if (xhr.status === 404) {
-                document.getElementById('otp_error_handler_signin').textContent = 'The email is not registered.'; // Handle 404 specifically
-            } else {
-                document.getElementById('otp_error_handler_signin').textContent = 'Invalid OTP input.'; // General error message
+        error: function(xhr) {
+            // Display error message if there's an issue (email, password, etc.)
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMessageDiv.textContent = xhr.responseJSON.error;
             }
         }
     });
 }
 
 
+
 function confirmOtp() {
-    const enteredOtp = document.getElementById('otp_input').value; // Get OTP input value
+    const enteredOtp = document.getElementById('otp_input').value.trim(); // Get OTP input value and trim whitespace
+
+    // Clear any previous error messages
+    document.getElementById('otp_error').textContent = '';
+
+    // Check if OTP input is empty
+    if (!enteredOtp) {
+        document.getElementById('otp_error').textContent = "Please put correct OTP";
+        return; // Stop further processing
+    }
 
     $.ajax({
         url: '/confirm_signin_otp',
@@ -558,14 +594,17 @@ function confirmOtp() {
             if (response.success) {
                 document.getElementById('signin_form').submit(); // Submit the form if OTP is valid
             } else {
-                document.getElementById('otp_error').textContent = response.error_message; // Display error message
+                document.getElementById('otp_error').textContent = "Incorrect OTP"; // Display error message for incorrect OTP
             }
         },
-        error: function(xhr, status, error) {
-            document.getElementById('otp_error').textContent = 'An error occurred while verifying OTP.'; // General error message
+        error: function(xhr) {
+            // Handle any unexpected errors
+            document.getElementById('otp_error').textContent = 'Incorrect OTP'; // General error message for unexpected errors
         }
     });
 }
+
+
 </script>
 
 

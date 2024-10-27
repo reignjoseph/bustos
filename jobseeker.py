@@ -12,6 +12,10 @@ from logging import FileHandler
 from main import app
 # import pdfkit   # Import the pdfkit library
 import pytz
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 timezone = pytz.timezone('Asia/Manila')
 philippine_tz = pytz.timezone('Asia/Manila')
 
@@ -84,6 +88,68 @@ def view_nstp_form():
     finally:
         cursor.close()
         conn.close()
+
+
+
+@app.route('/view_resume_form', methods=['GET'])
+def view_resume_form():
+    user_id = session.get('user_id')
+    if user_id is None:
+        return jsonify({'error': 'User not logged in.'}), 401
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT resume_form FROM users WHERE User_ID = ?", (user_id,))
+        result = cursor.fetchone()
+
+        if result:
+            resume_filename = result[0]  # Assuming this contains the filename
+            resume_path = os.path.join('static', 'images', 'jobseeker-uploads', resume_filename)
+
+            # Check if the file exists before trying to send it
+            if os.path.exists(resume_path):
+                # This should serve the PDF correctly
+                return send_from_directory(os.path.dirname(resume_path), os.path.basename(resume_path), as_attachment=False)
+            else:
+                return jsonify({'error': 'PDF not found.'}), 404
+        else:
+            return jsonify({'error': 'PDF not found.'}), 404
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': 'An error occurred while retrieving the PDF.'}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/fetch_all_hidden_jobseeker_notification', methods=['GET'])
@@ -348,6 +414,49 @@ def insert_html2pdf_jobseeker():
 
 
 
+@app.route('/insert_resume', methods=['POST'])
+def insert_resume():
+    if 'resume' not in request.files:
+        print("No resume file part")
+        return {"error": "No resume file"}, 400
+
+    resume_file = request.files['resume']
+
+    if resume_file.filename == '':
+        print("No selected resume file")
+        return {"error": "No selected resume file"}, 400
+
+    if resume_file:
+        # Secure the filename
+        resume_filename = secure_filename(resume_file.filename)
+        resume_file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], resume_filename)
+
+        # Save the resume file
+        resume_file.save(resume_file_path)
+        print(f"Resume saved to {resume_file_path}")
+
+        # Connect to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Get the last User_ID from the users table
+        cursor.execute('SELECT User_ID FROM users ORDER BY User_ID DESC LIMIT 1')
+        last_row = cursor.fetchone()
+
+        if last_row:
+            user_id = last_row[0]
+            # Insert the resume filename into the resume_form field for the last user
+            cursor.execute('UPDATE users SET resume_form = ? WHERE User_ID = ?', (resume_filename, user_id))
+            conn.commit()
+            print(f"Resume filename '{resume_filename}' updated in the users table for User_ID {user_id}.")
+        else:
+            print("No users found in the table.")
+
+        conn.close()
+
+        return {"success": "Resume uploaded successfully."}
+
+    return {"error": "Error processing resume."}, 500
 
 
 
@@ -741,111 +850,83 @@ def applicant():
         employer_id = request.form['employer_id']
         file = request.files['file']
         
-        # Check if the file is provided
-        if not file or file.filename == '':
-            return "No file selected", 400
-        
-        # Check if the file type is allowed
-        if not allowed_file(file.filename):
-            return "File type not allowed", 400
-        
-        # Ensure a safe filename and avoid filename conflicts
-        filename = secure_filename(file.filename)
-        base, ext = os.path.splitext(filename)
-        timestamp = int(time.time())
-        filename = f"{base}_{timestamp}{ext}"
-        file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        
-        # Get user details from session
         jobseeker_id = session.get('user_id')  # Get jobseeker_id from the session
-        jobseeker_name = session.get('user_fname')
-        email = session.get('user_email')
-        contact_no = session.get('user_contact')
-        current_time_pht = datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')        
-
-        # Connect to the database
         conn = sqlite3.connect('trabahanap.db')
         cursor = conn.cursor()
-        
-        # Insert the application into the applicant table with 'Pending' status
-        cursor.execute('''
-            INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status, date_request)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, file_path, 'Pending', current_time_pht))
-        
-        print(f"Received data - Date Request: {current_time_pht}")
-        
-        # Commit the applicant insertion first to ensure data consistency
+
+
+        # Get employer's email and company name
+        cursor.execute('SELECT email, company FROM employers WHERE employer_id = ?', (employer_id,))
+        employer_info = cursor.fetchone()
+        employer_email = employer_info[0]
+        company_name = employer_info[1]
+
+        # Check if a file was uploaded
+        if file and file.filename:
+            # Check if the file type is allowed
+            if not allowed_file(file.filename):
+                return "File type not allowed", 400
+
+            # Ensure a safe filename and avoid filename conflicts
+            filename = secure_filename(file.filename)
+            base, ext = os.path.splitext(filename)
+            timestamp = int(time.time())
+            filename = f"{base}_{timestamp}{ext}"
+            file_path = os.path.join(app.config['JOBSEEKER_UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+
+            # Insert the application into the applicant table with 'Pending' status
+            cursor.execute(''' 
+                INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status, date_request) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (job_id, employer_id, jobseeker_id, session.get('user_fname'), session.get('user_email'), session.get('user_contact'), file_path, 'Pending', datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')))
+            print(f"File uploaded for user ID {jobseeker_id}.")
+
+           # Send email to the employer
+            send_employer_email_from_applicant(employer_email, session.get('user_fname'), company_name)
+
+        # Commit changes and close the connection
         conn.commit()
-
-        # Get the ID of the inserted applicant
-        applicant_id = cursor.lastrowid
-        
-        # Insert logic for notification
-        cursor.execute('SELECT profile, fname, userType FROM users WHERE User_ID = ?', (jobseeker_id,))
-        user = cursor.fetchone()
-        
-        if user:
-            picture = user[0]  # profile (picture)
-            fname = user[1]    # fname
-            userType = user[2] # userType
-        
-            # Get job details from jobs table to retrieve company and location
-            cursor.execute('SELECT Company, location FROM jobs WHERE Job_ID = ?', (job_id,))
-            job = cursor.fetchone()
-            
-            if job:
-                company = job[0]
-                location = job[1]
-
-                # Create notification text
-                notification_text = f"{fname} applied for a job at {company} located in {location}"
-                
-                # Insert notification into admin_notification table
-                cursor.execute('''
-                    INSERT INTO admin_notification (user_id, userType, picture, fname, notification_text, notification_date)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (jobseeker_id, userType, picture, fname, notification_text, current_time_pht))
-
-                print(f"Admin Notification: {notification_text}")
-
-        conn.commit()  # Commit the notification changes
-
-        # Now proceed with the application_status logic after applicant record is fully inserted
-        cursor.execute('''
-            SELECT company FROM jobs WHERE Job_ID = ?
-        ''', (job_id,))
-        job = cursor.fetchone()
-
-        if job:
-            company = job[0]
-            print(f"Fetched company: {company}")
-
-            # Status descriptions for "Pending" status
-            status_descriptions = [
-                f"Your application at {company} is currently under review.",
-                f"The status of your application at {company} is pending further processing.",
-                f"Notification: Your application for the position at {company} is in progress."
-            ]
-
-            # Choose a random status description
-            status_description = random.choice(status_descriptions)
-            print(f"Generated status description: {status_description}")
-
-            # Insert into the application_status table
-            cursor.execute('''
-                INSERT INTO application_status (applicant_id, job_id, jobseeker_id, employer_id, status_description, status_type, company, date_posted)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (applicant_id, job_id, jobseeker_id, employer_id, status_description, 'Pending', company, current_time_pht))
-
-            print(f"Inserted into application_status: applicant_id={applicant_id}, job_id={job_id}, jobseeker_id={jobseeker_id}, employer_id={employer_id}, status_type='Pending', company={company}, date_posted={current_time_pht}")
-
-        conn.commit()  # Commit the application status insertion
         cursor.close()
         conn.close()
 
-        return "Application submitted successfully!", 200
+        return redirect(url_for('jobseeker'))  # Redirect to /jobseeker
+
+
+
+def send_employer_email_from_applicant(email, fname, company):
+    # Email account setup
+    sender_email = "reignjosephc.delossantos@gmail.com"
+    password = "vfwd oaaz ujog gikm"  # Use a secure app-specific password
+
+    # Email content
+    subject = "BustosPESO - Jobseeker Applicant"
+    body = f"""
+    Dear Employer,
+
+    We wanted to inform you that an applicant, {fname}, has applied for a position at {company}.
+    
+    Best regards,
+    BustosPESO Team
+    """
+    
+    # Setting up the message
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['To'] = email
+    message['Subject'] = subject
+    message.attach(MIMEText(body, 'plain'))
+
+    # Sending the email
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message.as_string())
+        print(f"Email sent to {email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+
 
 
 
@@ -1105,6 +1186,8 @@ def jobseeker():
     # Pass the jobs and user data to the template
     return render_template('/jobseeker/jobseeker.html', jobs=jobs, user_data=user_data)
 
+
+
 @app.route('/update_inactive_status', methods=['POST'])
 def update_inactive_status():
     if 'user_id' in session:
@@ -1279,3 +1362,48 @@ def submit_rating():
     return redirect(url_for('jobseeker'))
 
 
+@app.route('/use_default_resume', methods=['GET', 'POST'])
+def use_default_resume():
+    session_id = session.get('user_id')  # Get user ID from session
+    if not session_id:
+        return {"error": "User is not logged in."}, 401
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT resume_form FROM users WHERE User_ID = ?', (session_id,))
+    result = cursor.fetchone()
+
+    if result:
+        resume_form = result[0]
+        
+        if request.method == 'POST':
+            job_id = request.form['job_id']
+            employer_id = request.form['employer_id']
+            
+            # Construct the file path for the default resume
+            file_path = os.path.join('static/images/jobseeker-uploads', resume_form)
+
+            # Insert into applicant table using the file path
+            cursor.execute(''' 
+                INSERT INTO applicant (job_id, employer_id, jobseeker_id, jobseeker_name, email, contact_no, form, status, date_request) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (job_id, employer_id, session_id, session.get('user_fname'), session.get('user_email'), session.get('user_contact'), file_path, 'Pending', datetime.now(philippine_tz).strftime('%Y-%m-%d %H:%M:%S')))
+            
+
+
+            # Get employer's email and company name
+            cursor.execute('SELECT email, company FROM employers WHERE employer_id = ?', (employer_id,))
+            employer_info = cursor.fetchone()
+            employer_email = employer_info[0]
+            company_name = employer_info[1]
+
+            conn.commit()
+            print(f"Default resume used for user ID {session_id}.")
+
+            # Send email to the employer
+            send_employer_email_from_applicant(employer_email, session.get('user_fname'), company_name)
+
+            return {"success": "Default resume used and application submitted."}
+    
+    return {"error": "No default resume found for this user."}, 404

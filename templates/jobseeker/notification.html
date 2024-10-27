@@ -112,60 +112,71 @@
 
 <script>
 function openArchivedContainer() {
-    checkSession(function(isLoggedIn) {
-        if (!isLoggedIn) {
-            console.error('User is not logged in.');
-            return; // Or redirect to login page
-        }
+    document.getElementById('archivedModal').style.display = 'block';
 
-        document.getElementById('archivedModal').style.display = 'block';
-
-        // Use Ajax to fetch hidden notifications
-        $.ajax({
-            url: '/fetch_all_hidden_jobseeker_notification',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                if (data.error) {
-                    console.error('Error:', data.error);
-                    return;
-                }
-
-                const container = document.getElementById('archivedNotificationsContainer');
-                container.innerHTML = ''; // Clear previous content
-
-                if (data.notifications.length === 0) {
-                    container.innerHTML = '<p>No archived notifications found.</p>';
-                } else {
-                    // Append notifications with the specified HTML structure
-                    data.notifications.forEach(notif => {
-    const notificationDiv = document.createElement('div');
-    notificationDiv.className = 'notification-notification';
-    notificationDiv.id = `notification-${notif.NotifID}`;
-    notificationDiv.innerHTML = `
-        <img src="/static/images/unarchive.png" style="    float: right;position: relative; place-self: end;" width="30px" onclick="unarchiveNotification(${notif.NotifID})">
-        <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
-            <div class="profile_notification">
-                <img src="${notif.profile_picture}" class="profile-picture-small" alt="Employer Profile Picture">
-            </div>
-            <div class="notification-content_notification" onclick="showNotificationJobDetails(${notif.Job_ID})">
-                <div class="fname_notification">${notif.employer_fname}</div>
-                <div class="text_notification">${notif.text}</div>
-                <div class="time_notification" data-time="${notif.date_created}"></div>
-            </div>
-        </div>`;
-    container.appendChild(notificationDiv);
-});
-
-                }
-            },
-            error: function(error) {
-                console.error('Error fetching hidden notifications:', error);
+    // Use Ajax to fetch hidden notifications
+    $.ajax({
+        url: '/fetch_all_hidden_jobseeker_notification',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
             }
-        });
+
+            const container = document.getElementById('archivedNotificationsContainer');
+            container.innerHTML = ''; // Clear previous content
+
+            if (data.notifications.length === 0) {
+                container.innerHTML = '<p>No archived notifications found.</p>';
+            } else {
+                // Append notifications with the specified HTML structure
+                data.notifications.forEach(notif => {
+                    const notificationDiv = document.createElement('div');
+                    notificationDiv.className = 'notification-notification';
+                    notificationDiv.id = `notification-${notif.NotifID}`;
+                    notificationDiv.innerHTML = `
+                        <img src="/static/images/unarchive.png" style="float: right; position: relative; place-self: end;" width="30px" onclick="unarchiveNotification(${notif.NotifID})">
+                        <div style="display: grid; width: -webkit-fill-available; justify-content: start; grid-template-columns: min-content 1fr;">
+                            <div class="profile_notification">
+                                <img src="${notif.profile_picture}" class="profile-picture-small" alt="Employer Profile Picture">
+                            </div>
+                            <div class="notification-content_notification" onclick="showNotificationJobDetails(${notif.Job_ID})">
+                                <div class="fname_notification">${notif.employer_fname}</div>
+                                <div class="text_notification">${notif.text}</div>
+                                <div class="time_notification" data-time="${notif.date_created}"></div>
+                            </div>
+                        </div>`;
+                    container.appendChild(notificationDiv);
+                });
+            }
+        },
+        error: function(error) {
+            console.error('Error fetching hidden notifications:', error);
+        }
     });
 }
 
+function checkSession(callback = () => {}) {
+    $.ajax({
+        url: '/check_session',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            if (data.isLoggedIn) {
+                console.log('Session ID:', data.session_id); // Log session ID here
+                callback(true);
+            } else {
+                callback(false);
+            }
+        },
+        error: function(error) {
+            console.error('Error checking session:', error);
+            callback(false);
+        }
+    });
+}
 
 // Close Modal
 function closeArchivedContainer() {

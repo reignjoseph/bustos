@@ -19,11 +19,17 @@
                 <div class="modal fade" id="registrationModal" tabindex="-1" role="dialog" aria-labelledby="registrationModalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header" style="flex-direction: column;">
                                 <h5 class="modal-title" id="registrationModalLabel">Additional Registration Details <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button></h5>
-                                
+                                <div class="exclusiveforjobseekeronly" style="width: -webkit-fill-available; display:none;flex-direction: column; align-content: center; justify-content: center; align-items: baseline;">
+                                    <div style="display: flex;background: antiquewhite;width: -webkit-fill-available;border: 1px solid;border-radius: 5px;padding: 9px;flex-direction: column;align-items: flex-start;gap: 5px;">
+                                        <h6>Upload CV or Resume (PDF/DOCX)</h6>
+                                        <input required type="file" id="fileInput" accept=".docx,.pdf">
+                                        <span type="button" id="uplode_and_parseButton" >Upload</span>        
+                                    </div>
+                                    </div>
                             </div>
                             <div class="modal-body" style="padding: 10px;">
                                 {% include 'menu/registration_form_jobseeker.html' %}
@@ -48,44 +54,153 @@
         </div>
     </form>
 
-    <input type="file" id="fileInput" accept=".pdf" />
-    <button id="submitBtn">Upload and Parse</button>
 
-<script>
-document.getElementById('submitBtn').addEventListener('click', function() {
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
-
-    if (file) {
-        const reader = new FileReader();
-
-        reader.onload = function(event) {
-            const blob = new Blob([event.target.result], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob); // Create a blob URL
-
-            var myHeaders = new Headers();
-            myHeaders.append("apikey", "sRD97QBwFuA6Z8oXkfGd8fbOZbeOkHu0");
-
-            var requestOptions = {
-                method: 'GET',
-                redirect: 'follow',
-                headers: myHeaders
-            };
-
-            fetch(`https://api.apilayer.com/resume_parser/url?url=${encodeURIComponent(url)}`, requestOptions)
-                .then(response => response.text())
-                .then(result => console.log(result))
-                .catch(error => console.log('error', error));
-        };
-
-        reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer
-    } else {
-        console.log('No file selected');
-    }
-});
-
-</script>    
     
+
+
+
+    
+    <script>
+        document.getElementById('uplode_and_parseButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please upload a file.');
+                return;
+            }
+
+            // Create a FormData object
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Upload the file to your Flask backend
+            try {
+    const uploadResponse = await fetch('/upload_resume', {
+        method: 'POST',
+        body: formData
+    });
+    alert("Your uploaded file was being extracted. Please wait for a while");
+    const uploadResult = await uploadResponse.json();
+    if (uploadResult.error) {
+        throw new Error(uploadResult.error);
+    }
+
+    // Use the uploaded file's URL
+    
+    const uploadedFilePath = `https://d35w8m6y-8uynb69i-nyfu9ng9u8i8.ac2-preview.marscode.dev/static/images/jobseeker-uploads/${uploadResult.file_path.split('/').pop()}`;
+    console.log('File URL extracted:', uploadedFilePath);
+                // Now call the parsing API with the uploaded file path
+                const url = 'https://resume-parsing-api2.p.rapidapi.com/processDocument';
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'x-rapidapi-key': '8a9a17395fmshb4d25ba3baafcd4p114887jsnd193d279f1a3',
+                        'x-rapidapi-host': 'resume-parsing-api2.p.rapidapi.com',
+                        
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        extractionDetails: {
+                            name: 'Resume - Extraction',
+                            language: 'English',
+                            fields: [
+                                {
+                                    key: 'personal_info',
+                                    description: 'Personal information of the person',
+                                    type: 'object',
+                                    properties: [
+                                        { key: 'firstname', description: 'first name of the person', type: 'string', example: 'John' },
+                                        { key: 'middlename', description: 'middle name of the person', type: 'string', example: 'Michael' },
+                                        { key: 'lastname', description: 'last name of the person', type: 'string', example: 'Doe' },
+                                        { key: 'suffix', description: 'suffix of the person', type: 'string', example: 'Jr.' },
+                                        { key: 'email', description: 'email of the person', type: 'string', example: 'john.doe@example.com' },
+                                        { key: 'phone', description: 'phone number of the person', type: 'string', example: '+1234567890' },
+                                        { key: 'address', description: 'full address of the person', type: 'string', example: '123 Main St, Quezon City, Metro Manila' },
+                                        { key: 'municipality', description: 'municipality of the address', type: 'string', example: 'Quezon City' },
+                                        { key: 'province', description: 'province of the address', type: 'string', example: 'Metro Manila' },
+                                        { key: 'barangay', description: 'barangay of the address', type: 'string', example: 'Bagong Pag-asa' },
+                                        { key: 'birthdate', description: 'birthdate of the person', type: 'string', example: '1990-01-01' },
+                                        { key: 'religion', description: 'religion of the person', type: 'string', example: 'Christian' }
+                                    ]
+                                },
+                                {
+                                    key: 'work_experience',
+                                    description: 'Work experience of the person',
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: [
+                                            { key: 'companyname', description: 'name of the company', type: 'string', example: 'Tech Solutions Inc.' },
+                                            { key: 'companyaddress', description: 'address of the company', type: 'string', example: '456 Business Rd, Makati City' },
+                                            { key: 'companyposition', description: 'position held at the company', type: 'string', example: 'Software Engineer' }
+                                        ]
+                                    }
+                                },
+                                {
+                                    key: 'skills',
+                                    description: 'Skills of the person',
+                                    type: 'array',
+                                    items: {
+                                        type: 'string'
+                                    }
+                                }
+                            ]
+                        },
+                        file: uploadedFilePath
+                    })
+                };
+
+                const response = await fetch(url, options);
+                const result = await response.json();
+                console.log('Parsed Resume Data:', result);
+                alert("You resume was done extracted, ");
+                // Populate input fields with parsed data
+                const personalInfo = result.personal_info || {};
+                document.getElementById('firstname').value = personalInfo.firstname || '';
+                document.getElementById('middlename').value = personalInfo.middlename || '';
+                document.getElementById('surname').value = personalInfo.lastname || '';
+                document.getElementById('suffix').value = personalInfo.suffix || '';
+                document.getElementById('emailaddress').value = personalInfo.email || '';
+                document.getElementById('contactnumber').value = personalInfo.phone || '';
+                document.getElementById('municipality').value = personalInfo.municipality || '';
+                document.getElementById('province').value = personalInfo.province || '';
+                document.getElementById('barangay').value = personalInfo.barangay || '';
+                document.getElementById('birthdate').value = personalInfo.birthdate || '';
+                document.getElementById('religion').value = personalInfo.religion || '';
+
+                // Process work experience
+                const workExperience = result.work_experience || [];
+                for (let i = 0; i < Math.min(workExperience.length, 3); i++) {
+                    const experience = workExperience[i];
+                    document.getElementById(`companyname${i}`).value = experience.companyname || '';
+                    document.getElementById(`companyaddress${i}`).value = experience.companyaddress || '';
+                    document.getElementById(`companyposition${i}`).value = experience.companyposition || '';
+                }
+
+                // Extract and populate skills
+                const skills = result.skills || [];
+                document.getElementById('skill_others').value = skills.join(', ');
+
+                // Console logs to verify population
+                console.log('First Name:', document.getElementById('firstname').value);
+                console.log('Middle Name:', document.getElementById('middlename').value);
+                console.log('Last Name:', document.getElementById('surname').value);
+                console.log('Suffix:', document.getElementById('suffix').value);
+                console.log('Email Address:', document.getElementById('emailaddress').value);
+                console.log('Contact Number:', document.getElementById('contactnumber').value);
+                console.log('Municipality:', document.getElementById('municipality').value);
+                console.log('Province:', document.getElementById('province').value);
+                console.log('Barangay:', document.getElementById('barangay').value);
+                console.log('Birthdate:', document.getElementById('birthdate').value);
+                console.log('Religion:', document.getElementById('religion').value);
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+
 </main>
 
 
@@ -131,37 +246,51 @@ function toggleFormsDisplay() {
     var selectedRole = document.querySelector('input[name="role"]:checked').value;
     var jobseekerForm = document.querySelector(".form-container_registration_jobseeker");
     var employerForm = document.querySelector(".form-container_registration_employer");
-    var exclusiveSection = document.querySelector('.exclusiveforemployeronly');
+    var exclusiveSectionEmployer = document.querySelector('.exclusiveforemployeronly');
+    var exclusiveSectionJobseeker = document.querySelector('.exclusiveforjobseekeronly');
+
 
     // Show the jobseeker form if "Jobseeker" is selected, hide the employer form
     if (selectedRole === "Jobseeker") {
         jobseekerForm.style.display = "block"; // Show Jobseeker form
         employerForm.style.display = "none";   // Hide Employer form
-        exclusiveSection.style.display = 'none'; 
+        exclusiveSectionEmployer.style.display = 'none'; 
+        exclusiveSectionJobseeker.style.display = 'flex';
 
         // Add required attribute back to specific fields in Jobseeker form
-        document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+        document.querySelectorAll('input[name="surname"],input[id="fileInput"] , input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
             field.setAttribute('required', 'required');
         });
 
-        // Remove required attribute from specific fields in Employer form
-        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"]').forEach(function(field) {
+        // Remove required attribute from all fields in Employer form
+        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"], input[name="office_type"], input[name="employer_tax_identifier_number"], input[name="employer_sml"], input[name="employer_line_of_business_industry"], input[name="employer_province"], input[name="employer_city"], input[name="employer_barangay"], input[name="employer_president"], input[name="employer_contact"], input[name="employer_position"], input[name="employer_email_address"], input[name="employer_mobile_number"]').forEach(function(field) {
             field.removeAttribute('required');
+        });
+
+        // Remove required attribute from select fields in Employer form
+        document.querySelectorAll('select[name="employer_province"], select[name="employer_city"], select[name="employer_barangay"]').forEach(function(selectField) {
+            selectField.removeAttribute('required');
         });
     } 
     // Show the employer form if "Employer" is selected, hide the jobseeker form
     else if (selectedRole === "Employer") {
         jobseekerForm.style.display = "none";  // Hide Jobseeker form
         employerForm.style.display = "block";  // Show Employer form
-        exclusiveSection.style.display = 'flex';
+        exclusiveSectionEmployer.style.display = 'flex';
+        exclusiveSectionJobseeker.style.display = 'none';
 
         // Add required attribute back to specific fields in Employer form
-        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"]').forEach(function(field) {
+        document.querySelectorAll('input[name="employer_business"], input[name="employer_trade"], input[name="employer_acronym"], input[name="office_type"], input[name="employer_tax_identifier_number"], input[name="employer_sml"], input[name="employer_line_of_business_industry"], input[name="employer_province"], input[name="employer_city"], input[name="employer_barangay"], input[name="employer_president"], input[name="employer_contact"], input[name="employer_position"], input[name="employer_email_address"], input[name="employer_mobile_number"]').forEach(function(field) {
             field.setAttribute('required', 'required');
         });
 
+        // Add required attribute to select fields in Employer form
+        document.querySelectorAll('select[name="employer_province"], select[name="employer_city"], select[name="employer_barangay"]').forEach(function(selectField) {
+            selectField.setAttribute('required', 'required');
+        });
+
         // Remove required attribute from specific fields in Jobseeker form
-        document.querySelectorAll('input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
+        document.querySelectorAll('input[id="fileInput"],input[name="surname"], input[name="firstname"], input[name="middlename"], input[name="birthdate"], input[name="sex"], input[name="address"], input[name="barangay"], input[name="municipality"], input[name="province"], input[name="religion"], input[name="civilstatus"], input[name="contact_no"], input[name="emailaddress"]').forEach(function(field) {
             field.removeAttribute('required');
         });
     }
@@ -339,6 +468,9 @@ function validateAndSubmit() {
                             var formClass = selectedRole === "Jobseeker" ? '.form-container_registration_jobseeker' : '.form-container_registration_employer';
 
                             generateAndUploadPDF(formClass, pdfFilename, uploadUrl, email).then(() => {
+                                if (selectedRole === "Jobseeker") {
+                                    insertResume(); // Call insertResume only for job seekers
+                                }
                                 window.location.href = "/signin"; // Redirect to signin
                             }).catch((error) => {
                                 alert("Error generating or uploading the PDF. Please try again.");
@@ -369,6 +501,45 @@ function validateAndSubmit() {
         }
     });
 }
+
+
+
+
+function insertResume() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    // Log the file details to the console
+    console.log('File:', file);
+
+    if (!file) {
+        alert('Please select a resume file to upload.');
+        return;
+    }
+
+    // Create a FormData object to send the file
+    const formData = new FormData();
+    formData.append('resume', file);
+
+    // Send the file to the backend
+    fetch('/insert_resume', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Registration Form is submitted. Wait for Registration Approval to be sent to your email.');
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading resume:', error);
+        alert('An error occurred while uploading the resume.');
+    });
+}
+
 
 
 function validateBusinessName() {
